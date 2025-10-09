@@ -1,0 +1,307 @@
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link {
+    color: #fff;
+    border-bottom: 1px solid #007AFF;
+    background-color: white !important;
+}
+
+.arrow-navtabs .nav-item .nav-link.active:before {
+    border-top-color: #007AFF !important;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #007AFF !important;
+    border-color: #007AFF !important;
+}
+
+.btn-light {
+    color: #007AFF;
+    background-color: #F0F7FF !important;
+    border-color: #F0F7FF !important;
+}
+
+.bg-primary {
+    --vz-bg-opacity: 1;
+    background-color: #007AFF !important;
+}
+
+/* .text-white {
+    --vz-text-opacity: 1;
+    color: #007AFF !important;
+} */
+
+.border-primary {
+    border-color: #ced4da !important;
+}
+
+.page-link {
+    position: relative;
+    display: block;
+    color: #4F80E1;
+    text-decoration: none;
+    background-color: #F0F7FF;
+    border: 1px solid #F0F7FF;
+}
+
+.btn-success-new {
+    color: #fff;
+    background-color: #007AFF;
+    border-color: #007AFF;
+}
+
+.btn-success-new:hover {
+    color: #fff;
+    background-color: #007AFF;
+    border-color: #007AFF;
+}
+
+.btn-success {
+    color: #605BFF;
+    background-color: #F0EFFF;
+    border-color: #F0EFFF;
+}
+
+.btn-success:hover {
+    color: #605BFF;
+    background-color: #F0EFFF;
+    border-color: #F0EFFF;
+}
+
+.btn-secondary {
+    color: #22C55E;
+    background-color: #DCFCE7;
+    border-color: #DCFCE7;
+}
+
+.btn-secondary:hover {
+    color: #22C55E;
+    background-color: #DCFCE7;
+    border-color: #DCFCE7;
+}
+
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: #4F80E1;
+    border-color: #4F80E1;
+}
+
+[data-layout=vertical][data-sidebar-size=sm] .navbar-menu .navbar-nav .nav-item:hover>a.menu-link {
+    position: relative;
+    width: calc(200px + 70px);
+    color: #fff;
+    background-color: #F0F7FF;
+    -webkit-transition: none;
+    transition: none;
+}
+
+.btn-info {
+    color: #1A88FF;
+    background-color: #E3F6FF;
+    border-color: #E3F6FF;
+}
+
+.btn-info:hover {
+    color: #1A88FF;
+    background-color: #E3F6FF;
+    border-color: #E3F6FF;
+}
+
+.flatpickr-months {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    background-color: #1A88FF;
+    border-radius: 5px 5px 0 0;
+}
+
+.fc-toolbar-chunk .btn-group .btn {
+    color: #ffffff;
+    background-color: rgba(53, 119, 241, .15);
+    border: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.fc-toolbar-chunk .fc-today-button {
+    background-color: #007AFF !important;
+    border: #007AFF;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    background-color: #007AFF;
+    color: #fff;
+}
+
+[data-layout="vertical"][data-sidebar="dark"] .navbar-nav .nav-link[data-bs-toggle="collapse"][aria-expanded="true"] {
+    color: #1A88FF;
+    background-color: #f0f8ff;
+    border-color: #f0f8ff;
+}
+
+[data-layout=vertical][data-sidebar=dark][data-sidebar-size=sm] .navbar-menu .navbar-nav .nav-sm .nav-item:hover>.nav-link {
+    color: #000000eb;
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: white;
+    opacity: 1;
+}
+
+div.dataTables_wrapper div.dataTables_processing.card {
+    background: transparent;
+}
+
+/* Import Statistics Modal Styles */
+#importStatsModal .modal-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border-bottom: none;
+}
+
+#importStatsModal .modal-header .btn-close-white {
+    filter: brightness(0) invert(1);
+}
+
+#importStatsModal .avatar-sm {
+    width: 3rem;
+    height: 3rem;
+}
+
+#importStatsModal .avatar-xs {
+    width: 2rem;
+    height: 2rem;
+}
+
+#importStatsModal .avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+#importStatsModal .card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+#importStatsModal .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#importStatsModal .border-primary {
+    border-color: #007AFF !important;
+}
+
+#importStatsModal .border-success {
+    border-color: #28a745 !important;
+}
+
+#importStatsModal .border-warning {
+    border-color: #ffc107 !important;
+}
+
+#importStatsModal .bg-primary-subtle {
+    background-color: rgba(0, 122, 255, 0.1) !important;
+}
+
+#importStatsModal .bg-success-subtle {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+}
+
+#importStatsModal .bg-warning-subtle {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+#importStatsModal .text-primary {
+    color: #007AFF !important;
+}
+
+#importStatsModal .text-success {
+    color: #28a745 !important;
+}
+
+#importStatsModal .text-warning {
+    color: #ffc107 !important;
+}
+
+#importStatsModal .alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #055160;
+}
+
+#importStatsModal .alert-info .alert-heading {
+    color: #055160;
+}
+
+#importStatsModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+/* Animation for statistics cards */
+#importStatsModal .card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Stagger animation for cards */
+#importStatsModal .col-md-4:nth-child(1) .card {
+    animation-delay: 0.1s;
+}
+
+#importStatsModal .col-md-4:nth-child(2) .card {
+    animation-delay: 0.2s;
+}
+
+#importStatsModal .col-md-4:nth-child(3) .card {
+    animation-delay: 0.3s;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0 !important;
+}
+
+.quick-links-button {
+    position: fixed;
+    top: 50%;
+    right: -40px;
+    font-weight: 600;
+    /* Adjust the right property for your desired spacing */
+    transform: translateY(-50%) rotate(90deg);
+    cursor: pointer;
+    background-color: #fff;
+    color: #000000;
+    /* Text color on hover */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+    /* Add transitions for smooth hover effect */
+}
+
+.quick-links-button:hover {
+    background-color: #009EF7;
+    color: #fff;
+    /* Text color on hover */
+}
+
+
+table.dataTable {
+    width: 100% !important;
+}

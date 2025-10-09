@@ -1,0 +1,1 @@
+<button  class="btn btn-sm btn-primary show-progress-report-modal" data-target="#progressReportModal" data-url="{{route ('grade-book.get-report',[$data['student']->id,$data['student_behaviour_skill']->id])}}">Get Report</button>

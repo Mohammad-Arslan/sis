@@ -1,0 +1,135 @@
+@extends('layouts.master')
+
+@section('content')
+    <div class="row">
+
+        <!-- <div class="col-lg-12">
+                                <div class="alert alert-success" role="alert">
+                                    A simple Success alert with <a href="#" class="alert-link">an example
+                                        link</a>. Give it a click if you like.
+                                </div>
+                            </div> -->
+        @if (isset($designation))
+            @include('settings.designations.edit_designations')
+        @else
+            @permission('add-designation')
+                @include('settings.designations.add_designation')
+            @endpermission
+        @endif
+
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header align-items-center d-flex">
+                    <h4 class="card-title mb-0 flex-grow-1">Designation List</h4>
+                    <div class="flex-shrink-0">
+                        <!-- Buttons with Label -->
+                        {{-- <a class="btn btn-sm btn-primary btn-label waves-effect waves-light" href=""><i
+                                class="ri-upload-2-line label-icon align-middle fs-16 me-2"></i> Import</a>
+                        <a class="btn btn-sm btn-success btn-label waves-effect waves-light" href=""><i
+                                class="ri-download-2-line label-icon align-middle fs-16 me-2"></i> Export</a> --}}
+                    </div>
+                </div><!-- end card header -->
+                <div class="card-body">
+                    <table id="designation-data-table"
+                        class="table table-bordered table-striped align-middle table-nowrap mb-0" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Designation</th>
+                                <th>Abbreviation</th>
+                                <th>Company Name</th>
+                                <th>Role</th>
+                                <th>For School</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>ID</th>
+                                <th>Designation</th>
+                                <th>Abbreviation</th>
+                                <th>Company Name</th>
+                                <th>Role</th>
+                                <th>For School</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+
+@push('header_scripts')
+@endpush
+
+@push('footer_scripts')
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $.extend($.fn.dataTableExt.oStdClasses, {
+                "sFilterInput": "form-control",
+                "sLengthSelect": "form-control"
+            });
+
+            $('#designation-data-table').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                bLengthChange: false,
+                pageLength: 10,
+                scrollX: true,
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search..."
+                },
+                ajax: "{{ route('designations.index') }}",
+                columns: [{
+                        data: 'id',
+                        name: 'id',
+                        width: "5%"
+                    },
+                    {
+                        data: 'designation_name',
+                        name: 'designation_name'
+                    },
+                    {
+                        data: 'abbreviation',
+                        name: 'abbreviation'
+                    },
+                    {
+                        data: 'company_name',
+                        name: 'company_name'
+                    },
+                    {
+                        data: 'role_name',
+                        name: 'role_name'
+                    },
+                    {
+                        data: 'for_school',
+                        name: 'for_school'
+                    },
+                    {
+                        data: 'created_at',
+                        name: 'created_at',
+                        width: "15%"
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        width: "5%",
+                        sClass: "text-center"
+                    },
+                ]
+            });
+        });
+    </script>
+@endpush
