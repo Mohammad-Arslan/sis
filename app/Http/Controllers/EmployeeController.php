@@ -1310,47 +1310,50 @@ class EmployeeController extends Controller
         ]);
 
         try {
-            // Set execution time for large imports
-            set_time_limit(1800); // 30 minutes
+            // Generate unique import ID
+            $importId = uniqid('emp_import_', true);
             
-            $import = new ImportEmployee();
+            // Store file temporarily
+            $file = $request->file('file');
+            $fileName = $importId . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('imports/employees', $fileName);
+            
+            // Dispatch job to queue
+            \App\Jobs\ProcessEmployeeImport::dispatch(
+                $filePath,
+                $importId,
+                auth()->id()
+            )->onQueue('imports');
+            
+            Log::info('Employee import job dispatched', [
+                'import_id' => $importId,
+                'file_path' => $filePath,
+                'user_id' => auth()->id()
+            ]);
 
-            Excel::import($import, $request->file('file'));
-
-            $stats = $import->getImportStats();
-
-            // Return JSON response for AJAX requests
+            // Return JSON response with import ID for WebSocket subscription
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => "Import completed successfully!",
-                    'imported_count' => $stats['imported'],
-                    'skipped_count' => $stats['skipped'],
-                    'total_processed' => $stats['total_processed'],
-                    'total_rows' => $stats['total_rows'],
-                    'errors' => $stats['errors']
+                    'success' => true,
+                    'message' => 'Import started successfully! Processing in background...',
+                    'import_id' => $importId
                 ]);
             }
 
-            // Return redirect response for regular form submissions
-            $message = "Import completed successfully!\n";
-            $message .= "Imported: {$stats['imported']} employees\n";
-            $message .= "Skipped: {$stats['skipped']} rows\n";
-            $message .= "Errors: {$stats['errors']} rows";
-
-            if ($stats['errors'] > 0) {
-                $message .= "\n\nPlease check the logs for detailed error information.";
-            }
-
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with([
+                'success' => 'Import started successfully! Processing in background...',
+                'import_id' => $importId
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Employee import failed: ' . $e->getMessage(), [
+            Log::error('Employee import dispatch failed: ' . $e->getMessage(), [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Import failed: ' . $e->getMessage()
                 ], 500);
             }

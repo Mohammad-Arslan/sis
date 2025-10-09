@@ -64,6 +64,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     private $designationCache = [];
     private $existingEmailCache = [];
     private $existingCnicCache = [];
+    
+    // Progress callback
+    private $progressCallback = null;
 
     public function __construct()
     {
@@ -252,6 +255,24 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     }
 
     /**
+     * Set progress callback for real-time updates
+     */
+    public function setProgressCallback(callable $callback): void
+    {
+        $this->progressCallback = $callback;
+    }
+
+    /**
+     * Trigger progress callback
+     */
+    private function triggerProgressCallback(): void
+    {
+        if ($this->progressCallback && $this->totalRowsProcessed % 10 === 0) {
+            call_user_func($this->progressCallback, $this->getImportStats());
+        }
+    }
+
+    /**
      * Parse date values from Excel
      */
     private function parseDate($value, $format = 'Y-m-d')
@@ -371,6 +392,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         // Increment total rows processed (including headers and empty rows)
         $this->totalRowsProcessed++;
         
+        // Trigger progress callback
+        $this->triggerProgressCallback();
+        
         try {
             // Skip header row (check if first_name contains header-like text)
             if (isset($row['first_name']) && in_array(strtolower(trim($row['first_name'])), ['first_name', 'first name', 'name', 'prefix', 'last_name', 'last name'])) {
@@ -411,14 +435,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 return null;
             }
 
-            // Check if employee already exists by CNIC or email (using cached data)
+            // Get email and CNIC for upsert logic
             $email = strtolower(trim($row['email']));
             $cnic = trim($row['cnic']);
-            
-            if (isset($this->existingEmailCache[$email]) || isset($this->existingCnicCache[$cnic])) {
-                $this->skippedCount++;
-                return null; // Skip this row
-            }
 
             // Only increment row number when we're actually processing a valid data row
             $this->currentRowNumber++;
@@ -862,11 +881,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
             }
 
-            $this->importedCount++;
-
             DB::beginTransaction();
 
-            // Create new User record
+            // Upsert User record (update if exists, create if not)
             $userData = [
                 'name' => trim($row['first_name']) . ' ' . (trim($row['last_name'] ?? '')),
                 'first_name' => trim($row['first_name']),
@@ -875,10 +892,21 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'CNIC' => $cnic,
                 'gender' => trim($row['gender'] ?? ''),
                 'date_of_birth' => $this->parseDate($row['date_of_birth'] ?? null),
-                'password' => Hash::make($row['password'] ?? 'password123'), // Default password
             ];
 
-            $user = User::create($userData);
+            // Check if user exists
+            $user = User::where('email', $email)->orWhere('CNIC', $cnic)->first();
+            $isNewUser = !$user;
+
+            if ($user) {
+                // Update existing user
+                $user->update($userData);
+            } else {
+                // Create new user with password
+                $userData['password'] = Hash::make($row['password'] ?? 'password123');
+                $user = User::create($userData);
+                $this->importedCount++;
+            }
 
             // Create new Employee record
             $employeeData = [
@@ -933,10 +961,6 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 }
             }
 
-            // Generate employee ID for new employee
-            $maxEmployeeId = Employee::max('employee_id');
-            $employeeData['employee_id'] = $maxEmployeeId ? $maxEmployeeId + 1 : 1001;
-            
             if (!empty($row['pin_code'])) {
                 $employeeData['pin_code'] = trim($row['pin_code']);
             }
@@ -944,24 +968,42 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             if (!empty($row['card_no'])) {
                 $employeeData['card_no'] = trim($row['card_no']);
             }
-            // Create new employee
-            $employee = Employee::create($employeeData);
             
-            // Assign leave quotas for new employees
-            if (!empty($employeeData['designation_id'])) {
-                $designationLeaveQuotas = DesignationLeaveQuota::where('designation_id', $employeeData['designation_id'])->get();
+            // Upsert employee (update if exists, create if not)
+            $employee = Employee::where('user_id', $user->id)->first();
+            
+            if ($employee) {
+                // Update existing employee
+                $employee->update($employeeData);
+                $this->skippedCount++;
+            } else {
+                // Generate employee ID for new employee
+                $maxEmployeeId = Employee::max('employee_id');
+                $employeeData['employee_id'] = $maxEmployeeId ? $maxEmployeeId + 1 : 1001;
                 
-                foreach ($designationLeaveQuotas as $quota) {
-                    EmployeeLeaveQuota::create([
-                        'employee_id' => $employee->id,
-                        'designation_id' => $quota->designation_id,
-                        'leave_type_id' => $quota->leave_type_id,
-                        'no_of_allowed_leaves' => $quota->no_of_allowed_leaves
-                    ]);
+                // Create new employee
+                $employee = Employee::create($employeeData);
+                
+                // Assign leave quotas for new employees only
+                if (!empty($employeeData['designation_id'])) {
+                    $designationLeaveQuotas = DesignationLeaveQuota::where('designation_id', $employeeData['designation_id'])->get();
+                    
+                    foreach ($designationLeaveQuotas as $quota) {
+                        EmployeeLeaveQuota::updateOrCreate(
+                            [
+                                'employee_id' => $employee->id,
+                                'leave_type_id' => $quota->leave_type_id,
+                            ],
+                            [
+                                'designation_id' => $quota->designation_id,
+                                'no_of_allowed_leaves' => $quota->no_of_allowed_leaves
+                            ]
+                        );
+                    }
                 }
             }
 
-            // Update caches to prevent duplicates
+            // Update caches
             $this->existingEmailCache[$email] = true;
             $this->existingCnicCache[$cnic] = true;
 

@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+Broadcast::channel('employee-import.{importId}', function ($user, $importId) {
+    // Allow authenticated users to listen to their import progress
+    return $user !== null;
+});
