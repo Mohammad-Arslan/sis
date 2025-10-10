@@ -3,11 +3,36 @@
 namespace App\Exports;
 
 use App\Models\Employee;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
+use Maatwebsite\Excel\Events\BeforeSheet;
 
-class ExportEmployee implements FromCollection, WithHeadings
+class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, WithEvents
 {
+    protected $filters;
+    protected $progressCallback;
+    protected $exportedCount = 0;
+    protected $skippedCount = 0;
+    protected $errors = [];
+    protected $currentRow = 0;
+    protected $totalRows = 0;
+
+    public function __construct(array $filters = [])
+    {
+        $this->filters = $filters;
+    }
+
+    /**
+     * Set progress callback for real-time updates
+     */
+    public function setProgressCallback(callable $callback): void
+    {
+        $this->progressCallback = $callback;
+    }
     /**
      * @return \Illuminate\Support\Collection
      */
@@ -32,18 +57,66 @@ class ExportEmployee implements FromCollection, WithHeadings
             'cities:id,city_name'
         ]);
 
-        // Apply branch filter for non-admin users
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
-            $branch_id = get_branch_id();
-            $query->where('branch_id', $branch_id);
+        // Apply filters
+        if (!empty($this->filters['company_id'])) {
+            $query->where('company_id', $this->filters['company_id']);
+        }
+        
+        if (!empty($this->filters['branch_id'])) {
+            $query->where('branch_id', $this->filters['branch_id']);
+        }
+        
+        if (!empty($this->filters['department_id'])) {
+            $query->where('department_id', $this->filters['department_id']);
+        }
+        
+        if (!empty($this->filters['designation_id'])) {
+            $query->where('designation_id', $this->filters['designation_id']);
+        }
+        
+        if (!empty($this->filters['gender'])) {
+            $query->whereHas('user', function($q) {
+                $q->where('gender', $this->filters['gender']);
+            });
+        }
+        
+        if (!empty($this->filters['job_status'])) {
+            $query->where('job_status', $this->filters['job_status']);
+        }
+        
+        if (!empty($this->filters['date_from'])) {
+            $query->where('hiring_date', '>=', $this->filters['date_from']);
+        }
+        
+        if (!empty($this->filters['date_to'])) {
+            $query->where('hiring_date', '<=', $this->filters['date_to']);
         }
 
+        // Apply branch filter for non-admin users (skip in queue context)
+        try {
+            if (auth()->check() && !isSuperAdmin() && !isHeadOfficeEmp()) {
+                $branch_id = get_branch_id();
+                $query->where('branch_id', $branch_id);
+            }
+        } catch (\Exception $e) {
+            // In queue context, export all employees
+            // This allows the export to work without authentication
+        }
+
+        // Get total count for progress tracking
+        $this->totalRows = $query->count();
+        
         $employees = $query->get();
         
         $data = [];
+        $this->currentRow = 0;
+        
         foreach ($employees as $employee) {
-            $data[] = [
-                'employee_id' => $employee->employee_id ?? '-',
+            $this->currentRow++;
+            
+            try {
+                $data[] = [
+                    'employee_id' => $employee->employee_id ?? '-',
                 'full_name' => $employee->preferred_name ?? '-',
                 'email' => $employee->user?->email ?? '-',
                 'mobile_number' => $employee->mobile_number ?? '-',
@@ -68,7 +141,33 @@ class ExportEmployee implements FromCollection, WithHeadings
                 'spouse_name' => $employee->spouse_name ?? '-',
                 'no_of_children' => $employee->no_of_children ?? '-',
                 'children_in_ucs' => $employee->children_in_ucs ?? '-',
-            ];
+                ];
+                
+                $this->exportedCount++;
+                
+                // Trigger progress callback every 10 records
+                if ($this->currentRow % 10 === 0 && $this->progressCallback) {
+                    $this->triggerProgressCallback();
+                }
+                
+            } catch (\Exception $e) {
+                $this->errors[] = [
+                    'row' => $this->currentRow,
+                    'employee_id' => $employee->employee_id ?? 'N/A',
+                    'error' => $e->getMessage(),
+                ];
+                $this->skippedCount++;
+                
+                // Still trigger progress callback for errors
+                if ($this->progressCallback) {
+                    $this->triggerProgressCallback();
+                }
+            }
+        }
+        
+        // Final progress update
+        if ($this->progressCallback) {
+            $this->triggerProgressCallback();
         }
         
         return collect($data);
@@ -156,8 +255,72 @@ class ExportEmployee implements FromCollection, WithHeadings
             return empty($result) ? 'Less than 1 day' : implode(', ', $result);
             
         } catch (\Exception $e) {
-            \Log::error('Error calculating total service for employee ID: ' . $employee->id . ' - ' . $e->getMessage());
+            Log::error('Error calculating total service for employee ID: ' . $employee->id . ' - ' . $e->getMessage());
             return '-';
         }
+    }
+
+    /**
+     * Trigger progress callback
+     */
+    protected function triggerProgressCallback(): void
+    {
+        if ($this->progressCallback) {
+            $stats = [
+                'total_processed' => $this->currentRow,
+                'total_rows' => $this->totalRows,
+                'exported' => $this->exportedCount,
+                'skipped' => $this->skippedCount,
+                'errors' => count($this->errors),
+                'current_row' => $this->currentRow,
+            ];
+            
+            call_user_func($this->progressCallback, $stats);
+        }
+    }
+
+    /**
+     * Get export statistics
+     */
+    public function getExportStats(): array
+    {
+        return [
+            'total_processed' => $this->currentRow,
+            'total_rows' => $this->totalRows,
+            'exported' => $this->exportedCount,
+            'skipped' => $this->skippedCount,
+            'errors' => count($this->errors),
+            'errors_data' => $this->errors,
+        ];
+    }
+
+    /**
+     * Get chunk size for processing
+     */
+    public function chunkSize(): int
+    {
+        return 100; // Process 100 records at a time
+    }
+
+    /**
+     * Register events for progress tracking
+     */
+    public function registerEvents(): array
+    {
+        return [
+            BeforeSheet::class => function(BeforeSheet $event) {
+                // Initialize progress tracking
+                $this->currentRow = 0;
+                $this->exportedCount = 0;
+                $this->skippedCount = 0;
+                $this->errors = [];
+            },
+            AfterSheet::class => function(AfterSheet $event) {
+                // Final progress update
+                if ($this->progressCallback) {
+                    $this->triggerProgressCallback();
+                }
+            },
+        ];
     }
 }

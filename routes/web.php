@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Broadcast;
 use App\Http\Controllers\AssetCategoryController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AttendanceReportController;
@@ -1130,3 +1131,11 @@ Route::get('/test-websocket', function () {
 
 // Import Statistics Route
 Route::get('/import-stats', [App\Http\Controllers\EmployeeController::class, 'getImportStats'])->middleware('auth')->name('import.stats');
+
+// Export Routes
+Route::post('/employees/export', [App\Http\Controllers\EmployeeController::class, 'exportEmployees'])->middleware('auth')->name('employees.export');
+Route::get('/export-stats', [App\Http\Controllers\EmployeeController::class, 'getExportStats'])->middleware('auth')->name('export.stats');
+Route::get('/export-download', [App\Http\Controllers\EmployeeController::class, 'downloadExport'])->middleware('auth')->name('export.download');
+
+// Broadcasting Authentication Routes
+Broadcast::routes(['middleware' => ['auth']]);

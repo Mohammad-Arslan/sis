@@ -12,9 +12,9 @@
                     <button type="button"
                         class="btn btn-sm btn-primary btn-label waves-effect waves-light import-employees-btn"
                         href=""><i class="ri-upload-2-line label-icon align-middle fs-16 me-2"></i> Import</button>
-                    <a href="{{ route('employees.download-template') }}" class="btn btn-sm btn-success-new btn-label waves-effect waves-light">
-                        <i class="ri-download-2-line label-icon align-middle fs-16 me-2"></i> Export Template
-                    </a>
+                    <button type="button" class="btn btn-sm btn-success-new btn-label waves-effect waves-light" id="exportEmployeesBtn">
+                        <i class="ri-download-2-line label-icon align-middle fs-16 me-2"></i> Export Employees
+                    </button>
                     <a href="{{ route('employees.create') }}?tab=basic_info" class="btn btn-success-new btn-label btn-sm">
                         <i class="ri-user-line label-icon align-middle fs-16 me-2"></i> Add New Employee
                     </a>
@@ -160,6 +160,7 @@
 @endpush
 
 @push('footer_scripts')
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script type="text/javascript">
         // Global variable for DataTable
         var employeeTable;
@@ -767,6 +768,236 @@ This report was generated automatically by the SuperNova SIS system.`;
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
         }
+
+        // Export functionality
+        let exportId = null;
+        let exportChannel = null;
+
+        // Handle direct export button click
+        $(document).on('click', '#exportEmployeesBtn', function() {
+            const exportBtn = $(this);
+            
+            // Disable button and show loading
+            exportBtn.prop('disabled', true);
+            exportBtn.html('<i class="ri-loader-4-line ri-spin me-1"></i> Starting Export...');
+            
+            // Create form data with no filters (export all data)
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            
+            // Submit via AJAX
+            fetch('{{ route("employees.export") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    exportId = data.export_id;
+                    
+                    // Show progress modal
+                    const progressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
+                    progressModal.show();
+                    
+                    // Load initial progress data
+                    loadExportProgress(data.export_id);
+                    
+                    // Connect to WebSocket
+                    connectToExportChannel(exportId);
+                    
+                    // Reset export button
+                    exportBtn.prop('disabled', false);
+                    exportBtn.html('<i class="ri-download-2-line me-1"></i> Export Employees');
+                } else {
+                    throw new Error(data.message || 'Export failed');
+                }
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                alert('Export failed: ' + error.message);
+                
+                // Re-enable button
+                exportBtn.prop('disabled', false);
+                exportBtn.html('<i class="ri-download-2-line me-1"></i> Export Employees');
+            });
+        });
+
+        // Connect to WebSocket channel for real-time updates
+        function connectToExportChannel(exportId) {
+            // Initialize Pusher/Reverb
+            const pusher = new Pusher('{{ config("broadcasting.connections.reverb.key") }}', {
+                wsHost: '{{ config("broadcasting.connections.reverb.options.host") }}',
+                wsPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                wssPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                forceTLS: {{ config('broadcasting.connections.reverb.options.scheme') === 'https' ? 'true' : 'false' }},
+                enabledTransports: ['ws', 'wss'],
+                cluster: 'mt1',
+                disableStats: true
+            });
+
+            // Subscribe to public channel
+            exportChannel = pusher.subscribe('employee-export.' + exportId);
+            
+            // Listen for progress updates
+            exportChannel.bind('export.progress', function(data) {
+                console.log('Export progress update:', data);
+                updateExportProgress(data);
+            });
+
+            // Handle connection errors
+            pusher.connection.bind('error', function(err) {
+                console.error('Export WebSocket connection error:', err);
+            });
+
+            // Handle successful connection
+            pusher.connection.bind('connected', function() {
+                console.log('Connected to Export WebSocket');
+            });
+        }
+
+        // Update export progress UI
+        function updateExportProgress(data) {
+            const progressBar = document.getElementById('exportProgressBar');
+            const progressText = document.getElementById('exportProgressText');
+            const progressPercentage = document.getElementById('exportProgressPercentage');
+            const progressStatus = document.getElementById('exportProgressStatus');
+            const progressMessage = document.getElementById('exportProgressMessage');
+            const progressMessageText = document.getElementById('exportProgressMessageText');
+            
+            const processedCount = document.getElementById('exportProcessedCount');
+            const totalRows = document.getElementById('exportTotalRows');
+            const exportedCount = document.getElementById('exportedCount');
+            const skippedCount = document.getElementById('exportSkippedCount');
+            const currentRow = document.getElementById('exportCurrentRow');
+            const errorsCard = document.getElementById('exportErrorsCard');
+            const errorCount = document.getElementById('exportErrorCount');
+            const errorsTableBody = document.getElementById('exportErrorsTableBody');
+            const downloadBtn = document.getElementById('exportDownloadBtn');
+            
+            // Update progress bar
+            const percentage = data.percentage || 0;
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressText.textContent = percentage.toFixed(1) + '%';
+            progressPercentage.textContent = percentage.toFixed(1) + '%';
+            
+            // Update counts
+            processedCount.textContent = data.processed || 0;
+            totalRows.textContent = data.total || 0;
+            exportedCount.textContent = data.exported || 0;
+            skippedCount.textContent = data.skipped || 0;
+            currentRow.textContent = data.current_row || 0;
+            
+            // Update status
+            progressStatus.textContent = getExportStatusText(data.status);
+            progressStatus.className = 'badge fs-6 ' + getExportStatusBadgeClass(data.status);
+            progressMessageText.textContent = data.message || 'Processing...';
+            
+            // Update message alert class based on status
+            progressMessage.className = 'alert ' + getExportAlertClass(data.status);
+            
+            // Handle errors display
+            if (data.errors && data.errors > 0) {
+                errorsCard.style.display = 'block';
+                errorCount.textContent = data.errors;
+            }
+            
+            // Handle completion
+            if (data.status === 'completed') {
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-success');
+                progressStatus.classList.remove('bg-info');
+                progressStatus.classList.add('bg-success');
+                
+                // Show download button
+                downloadBtn.style.display = 'inline-block';
+                downloadBtn.onclick = function() {
+                    window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
+                };
+                
+                // Auto-scroll to errors if any
+                if (data.errors > 0) {
+                    const errorsCollapse = document.getElementById('exportErrorsCollapse');
+                    const bsCollapse = new bootstrap.Collapse(errorsCollapse, {show: true});
+                }
+                
+            } else if (data.status === 'failed') {
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-danger');
+                progressStatus.classList.remove('bg-info');
+                progressStatus.classList.add('bg-danger');
+            }
+        }
+
+        // Get export status text
+        function getExportStatusText(status) {
+            const statusMap = {
+                'starting': 'Starting export...',
+                'processing': 'Processing employees...',
+                'completed': 'Export completed!',
+                'failed': 'Export failed!'
+            };
+            return statusMap[status] || 'Processing...';
+        }
+
+        // Get export status badge class
+        function getExportStatusBadgeClass(status) {
+            const statusMap = {
+                'starting': 'bg-warning',
+                'processing': 'bg-info',
+                'completed': 'bg-success',
+                'failed': 'bg-danger'
+            };
+            return statusMap[status] || 'bg-info';
+        }
+
+        // Get export alert class
+        function getExportAlertClass(status) {
+            const statusMap = {
+                'starting': 'alert-info',
+                'processing': 'alert-info',
+                'completed': 'alert-success',
+                'failed': 'alert-danger'
+            };
+            return statusMap[status] || 'alert-info';
+        }
+
+        // Load export progress data
+        function loadExportProgress(exportId) {
+            fetch(`{{ route('export.stats') }}?export_id=${exportId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.export_id) {
+                        // Update UI with current progress
+                        updateExportProgress({
+                            processed: data.processed_rows,
+                            total: data.total_rows,
+                            exported: data.imported_count,
+                            skipped: data.skipped_count,
+                            errors: data.error_count,
+                            current_row: data.current_row,
+                            percentage: data.progress_percentage,
+                            status: data.status,
+                            message: data.current_message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading export progress:', error);
+                });
+        }
+
+        // Add event listener for modal show to reload progress
+        document.getElementById('exportProgressModal').addEventListener('show.bs.modal', function () {
+            if (exportId) {
+                loadExportProgress(exportId);
+            }
+        });
     </script>
 @endpush
 
@@ -786,4 +1017,125 @@ This report was generated automatically by the SuperNova SIS system.`;
       </div>
     </div>
   </div>
+</div>
+
+
+<!-- Export Progress Modal -->
+<div class="modal fade" id="exportProgressModal" tabindex="-1" aria-labelledby="exportProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="exportProgressModalLabel">
+                    <i class="ri-download-2-line me-2"></i>Employee Export Progress
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Overview -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Overall Progress</h6>
+                            <span class="badge bg-success fs-6" id="exportProgressPercentage">0%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 30px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                 role="progressbar" 
+                                 id="exportProgressBar" 
+                                 style="width: 0%"
+                                 aria-valuenow="0" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                <span id="exportProgressText">0%</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span id="exportProcessedCount">0</span>
+                            <span id="exportTotalRows">0</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h6 class="text-muted mb-2">Status</h6>
+                            <span class="badge bg-info fs-6" id="exportProgressStatus">Initializing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-success h-100">
+                            <div class="card-body text-center">
+                                <i class="ri-check-line text-success fs-1 mb-2"></i>
+                                <h6 class="text-success mb-1">Exported</h6>
+                                <h3 class="mb-0 text-success" id="exportedCount">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-warning h-100">
+                            <div class="card-body text-center">
+                                <i class="ri-skip-forward-line text-warning fs-1 mb-2"></i>
+                                <h6 class="text-warning mb-1">Skipped</h6>
+                                <h3 class="mb-0 text-warning" id="exportSkippedCount">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-info h-100">
+                            <div class="card-body text-center">
+                                <i class="ri-number-1 text-info fs-1 mb-2"></i>
+                                <h6 class="text-info mb-1">Current Row</h6>
+                                <h3 class="mb-0 text-info" id="exportCurrentRow">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Status -->
+                <div class="alert alert-info" id="exportProgressMessage">
+                    <i class="ri-information-line me-2"></i>
+                    <span id="exportProgressMessageText">Starting export...</span>
+                </div>
+
+                <!-- Errors Log (Collapsible) -->
+                <div class="card" id="exportErrorsCard" style="display: none;">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#exportErrorsCollapse">
+                                <i class="ri-error-warning-line text-danger me-2"></i>
+                                Export Errors (<span id="exportErrorCount">0</span>)
+                            </button>
+                        </h6>
+                    </div>
+                    <div id="exportErrorsCollapse" class="collapse">
+                        <div class="card-body">
+                            <div class="table-responsive" style="max-height: 300px;">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Employee ID</th>
+                                            <th>Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="exportErrorsTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="exportCloseModalBtn">
+                    <i class="ri-close-line me-1"></i>Close
+                </button>
+                <button type="button" class="btn btn-success-new" id="exportDownloadBtn" style="display: none;">
+                    <i class="ri-download-2-line me-1"></i>Download File
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

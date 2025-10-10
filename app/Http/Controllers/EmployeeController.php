@@ -43,9 +43,12 @@ use App\Models\EmployeeOfficialLeaveDay;
 use Illuminate\Support\Facades\Validator;
 use App\Imports\ImportEmployee;
 use App\Exports\EmployeeTemplateExport;
+use App\Exports\ExportEmployee;
+use App\Jobs\ProcessEmployeeExport;
 use App\Models\ImportProgress;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
@@ -1339,7 +1342,7 @@ class EmployeeController extends Controller
             Log::info('Employee import job dispatched', [
                 'import_id' => $importId,
                 'file_path' => $filePath,
-                'user_id' => auth()->id()
+                'user_id' => Auth::id(),
             ]);
 
             // Return JSON response with import ID for WebSocket subscription
@@ -1407,5 +1410,143 @@ class EmployeeController extends Controller
             'started_at' => $importProgress->started_at,
             'completed_at' => $importProgress->completed_at,
         ]);
+    }
+
+    /**
+     * Export all employees with real-time progress
+     */
+    public function exportEmployees(Request $request)
+    {
+        // No validation needed since we're exporting all data without filters
+
+        try {
+            // Generate unique export ID
+            $exportId = uniqid('emp_export_', true);
+            
+            // Create export progress record
+            $exportProgress = ImportProgress::create([
+                'import_id' => $exportId,
+                'import_type' => 'employee_export',
+                'user_id' => auth()->id(),
+                'file_name' => 'employee_export_' . date('Y-m-d_H-i-s') . '.xlsx',
+                'status' => 'pending',
+                'current_message' => 'Export queued for processing...',
+            ]);
+            
+            // No filters - export all employees
+            $filters = [];
+            
+            // Dispatch job to queue
+            ProcessEmployeeExport::dispatch(
+                $exportId,
+                auth()->id(),
+                $filters
+            );
+            
+            Log::info('Employee export job dispatched', [
+                'export_id' => $exportId,
+                'filters' => $filters,
+                'user_id' => Auth::id(),
+            ]);
+
+            // Return JSON response with export ID for WebSocket subscription
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Export started successfully! Processing in background...',
+                    'export_id' => $exportId
+                ]);
+            }
+
+            return redirect()->back()->with([
+                'success' => 'Export started successfully! Processing in background...',
+                'export_id' => $exportId
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Employee export dispatch failed: ' . $e->getMessage(), [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Export failed: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get export statistics
+     */
+    public function getExportStats(Request $request)
+    {
+        $exportId = $request->get('export_id');
+        
+        if (!$exportId) {
+            return response()->json(['error' => 'Export ID required'], 400);
+        }
+        
+        $exportProgress = ImportProgress::where('import_id', $exportId)
+            ->where('import_type', 'employee_export')
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$exportProgress) {
+            return response()->json(['error' => 'Export not found'], 404);
+        }
+        
+        return response()->json([
+            'export_id' => $exportProgress->import_id,
+            'status' => $exportProgress->status,
+            'total_rows' => $exportProgress->total_rows,
+            'processed_rows' => $exportProgress->processed_rows,
+            'imported_count' => $exportProgress->imported_count,
+            'skipped_count' => $exportProgress->skipped_count,
+            'error_count' => $exportProgress->error_count,
+            'current_row' => $exportProgress->current_row,
+            'current_message' => $exportProgress->current_message,
+            'errors' => $exportProgress->errors,
+            'progress_percentage' => $exportProgress->progress_percentage,
+            'started_at' => $exportProgress->started_at,
+            'completed_at' => $exportProgress->completed_at,
+        ]);
+    }
+
+    /**
+     * Download completed export file
+     */
+    public function downloadExport(Request $request)
+    {
+        $exportId = $request->get('export_id');
+        
+        if (!$exportId) {
+            return response()->json(['error' => 'Export ID required'], 400);
+        }
+        
+        $exportProgress = ImportProgress::where('import_id', $exportId)
+            ->where('import_type', 'employee_export')
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$exportProgress) {
+            return response()->json(['error' => 'Export not found'], 404);
+        }
+        
+        if ($exportProgress->status !== 'completed') {
+            return response()->json(['error' => 'Export not completed yet'], 400);
+        }
+        
+        $filePath = 'exports/employees/employee_export_' . $exportId . '.xlsx';
+        
+        if (!Storage::exists($filePath)) {
+            return response()->json(['error' => 'Export file not found'], 404);
+        }
+        
+        return Storage::download($filePath, $exportProgress->file_name);
     }
 }
