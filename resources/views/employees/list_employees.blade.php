@@ -15,6 +15,9 @@
                     <button type="button" class="btn btn-sm btn-success-new btn-label waves-effect waves-light" id="exportEmployeesBtn">
                         <i class="ri-download-2-line label-icon align-middle fs-16 me-2"></i> Export Employees
                     </button>
+                    <button type="button" class="btn btn-sm btn-info btn-label waves-effect waves-light" id="viewExportProgressBtn" style="display: none;">
+                        <i class="ri-eye-line label-icon align-middle fs-16 me-2"></i> View Export Progress
+                    </button>
                     <a href="{{ route('employees.create') }}?tab=basic_info" class="btn btn-success-new btn-label btn-sm">
                         <i class="ri-user-line label-icon align-middle fs-16 me-2"></i> Add New Employee
                     </a>
@@ -772,6 +775,7 @@ This report was generated automatically by the SuperNova SIS system.`;
         // Export functionality
         let exportId = null;
         let exportChannel = null;
+        let isExportInProgress = false;
 
         // Handle direct export button click
         $(document).on('click', '#exportEmployeesBtn', function() {
@@ -799,10 +803,14 @@ This report was generated automatically by the SuperNova SIS system.`;
             .then(data => {
                 if (data.success) {
                     exportId = data.export_id;
+                    isExportInProgress = true;
                     
                     // Show progress modal
                     const progressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
                     progressModal.show();
+                    
+                    // Show view progress button
+                    $('#viewExportProgressBtn').show();
                     
                     // Load initial progress data
                     loadExportProgress(data.export_id);
@@ -914,11 +922,20 @@ This report was generated automatically by the SuperNova SIS system.`;
                 progressStatus.classList.remove('bg-info');
                 progressStatus.classList.add('bg-success');
                 
+                // Hide view progress button and reset export state
+                $('#viewExportProgressBtn').hide();
+                isExportInProgress = false;
+                
                 // Show download button
                 downloadBtn.style.display = 'inline-block';
                 downloadBtn.onclick = function() {
                     window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
                 };
+                
+                // Auto-download the file
+                setTimeout(() => {
+                    window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
+                }, 2000); // 2 second delay to show completion message
                 
                 // Auto-scroll to errors if any
                 if (data.errors > 0) {
@@ -931,6 +948,10 @@ This report was generated automatically by the SuperNova SIS system.`;
                 progressBar.classList.add('bg-danger');
                 progressStatus.classList.remove('bg-info');
                 progressStatus.classList.add('bg-danger');
+                
+                // Hide view progress button on failure
+                $('#viewExportProgressBtn').hide();
+                isExportInProgress = false;
             }
         }
 
@@ -966,6 +987,23 @@ This report was generated automatically by the SuperNova SIS system.`;
             };
             return statusMap[status] || 'alert-info';
         }
+
+        // Handle view export progress button click
+        $(document).on('click', '#viewExportProgressBtn', function() {
+            if (exportId) {
+                // Show progress modal
+                const progressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
+                progressModal.show();
+                
+                // Load current progress data
+                loadExportProgress(exportId);
+                
+                // Reconnect to WebSocket if not already connected
+                if (!exportChannel) {
+                    connectToExportChannel(exportId);
+                }
+            }
+        });
 
         // Load export progress data
         function loadExportProgress(exportId) {

@@ -90,11 +90,23 @@ class ProcessEmployeeExport implements ShouldQueue
                 $this->updateProgress($stats, $exportProgress);
             });
 
-            // Generate file path
+            // Generate file path (local disk uses app as root)
             $this->filePath = 'exports/employees/employee_export_' . $this->exportId . '.xlsx';
             
-            // Process the export
-            Excel::store($export, $this->filePath);
+            // Ensure directory exists (local disk uses app as root)
+            $fullPath = storage_path('app/' . $this->filePath);
+            $directory = dirname($fullPath);
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            
+            // Process the export with explicit local disk
+            Excel::store($export, $this->filePath, 'local');
+
+            // Verify file was created
+            if (!Storage::disk('local')->exists($this->filePath)) {
+                throw new \Exception('Export file was not created successfully');
+            }
 
             // Get final statistics
             $stats = $export->getExportStats();

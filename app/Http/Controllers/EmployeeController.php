@@ -1441,7 +1441,7 @@ class EmployeeController extends Controller
                 $exportId,
                 auth()->id(),
                 $filters
-            );
+            )->onQueue('exports');
             
             Log::info('Employee export job dispatched', [
                 'export_id' => $exportId,
@@ -1541,12 +1541,13 @@ class EmployeeController extends Controller
             return response()->json(['error' => 'Export not completed yet'], 400);
         }
         
+        // File path (local disk uses storage/app as root)
         $filePath = 'exports/employees/employee_export_' . $exportId . '.xlsx';
         
-        if (!Storage::exists($filePath)) {
-            return response()->json(['error' => 'Export file not found'], 404);
+        if (!Storage::disk('local')->exists($filePath)) {
+            return response()->json(['error' => 'Export file not found. Please try exporting again.'], 404);
         }
         
-        return Storage::download($filePath, $exportProgress->file_name);
+        return Storage::disk('local')->download($filePath, $exportProgress->file_name);
     }
 }
