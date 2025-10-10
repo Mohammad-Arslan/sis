@@ -1122,3 +1122,11 @@ Route::middleware(['auth'])->group(function () {
     // Resource routes come last
     Route::resource('exit-interview-feedbacks', App\Http\Controllers\ExitInterviewFeedbackController::class);
 });
+
+// WebSocket Connection Test Route (Development/Testing)
+Route::get('/test-websocket', function () {
+    return view('test-websocket');
+})->middleware('auth')->name('test.websocket');
+
+// Import Statistics Route
+Route::get('/import-stats', [App\Http\Controllers\EmployeeController::class, 'getImportStats'])->middleware('auth')->name('import.stats');

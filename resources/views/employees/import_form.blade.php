@@ -79,70 +79,132 @@
                                 </div>
                             </form>
 
-                            <!-- Real-time Progress Card -->
-                            <div class="card border-info mt-3" id="progressCard" style="display: none;">
-                                <div class="card-header bg-info text-white">
-                                    <h5 class="card-title mb-0">
-                                        <i class="mdi mdi-progress-clock me-1"></i> Import Progress
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span id="progressStatus">Initializing...</span>
-                                            <span id="progressPercentage">0%</span>
+                            <!-- Real-time Progress Modal -->
+                            <div class="modal fade" id="progressModal" tabindex="-1" aria-labelledby="progressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title" id="progressModalLabel">
+                                                <i class="mdi mdi-progress-clock me-2"></i>Employee Import Progress
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <div class="progress" style="height: 25px;">
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                                 role="progressbar" 
-                                                 id="progressBar" 
-                                                 style="width: 0%"
-                                                 aria-valuenow="0" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                                0%
+                                        <div class="modal-body">
+                                            <!-- Progress Overview -->
+                                            <div class="row mb-4">
+                                                <div class="col-md-8">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <h6 class="mb-0">Overall Progress</h6>
+                                                        <span class="badge bg-primary fs-6" id="progressPercentage">0%</span>
+                                                    </div>
+                                                    <div class="progress mb-2" style="height: 30px;">
+                                                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                                             role="progressbar" 
+                                                             id="progressBar" 
+                                                             style="width: 0%"
+                                                             aria-valuenow="0" 
+                                                             aria-valuemin="0" 
+                                                             aria-valuemax="100">
+                                                            <span id="progressText">0%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex justify-content-between text-muted small">
+                                                        <span id="processedCount">0</span>
+                                                        <span id="totalRows">0</span>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center">
+                                                        <h6 class="text-muted mb-2">Status</h6>
+                                                        <span class="badge bg-info fs-6" id="progressStatus">Initializing</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="row text-center">
-                                        <div class="col-md-3">
-                                            <div class="card border-success">
-                                                <div class="card-body py-2">
-                                                    <h6 class="mb-0 text-success">Processed</h6>
-                                                    <h4 class="mb-0" id="processedCount">0</h4>
+                                            <!-- Statistics Cards -->
+                                            <div class="row mb-4">
+                                                <div class="col-md-3">
+                                                    <div class="card border-success h-100">
+                                                        <div class="card-body text-center">
+                                                            <i class="mdi mdi-check-circle text-success fs-1 mb-2"></i>
+                                                            <h6 class="text-success mb-1">Imported</h6>
+                                                            <h3 class="mb-0 text-success" id="importedCount">0</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card border-warning h-100">
+                                                        <div class="card-body text-center">
+                                                            <i class="mdi mdi-skip-next text-warning fs-1 mb-2"></i>
+                                                            <h6 class="text-warning mb-1">Skipped</h6>
+                                                            <h3 class="mb-0 text-warning" id="skippedCount">0</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card border-danger h-100">
+                                                        <div class="card-body text-center">
+                                                            <i class="mdi mdi-alert-circle text-danger fs-1 mb-2"></i>
+                                                            <h6 class="text-danger mb-1">Errors</h6>
+                                                            <h3 class="mb-0 text-danger" id="errorsCount">0</h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="card border-info h-100">
+                                                        <div class="card-body text-center">
+                                                            <i class="mdi mdi-counter text-info fs-1 mb-2"></i>
+                                                            <h6 class="text-info mb-1">Current Row</h6>
+                                                            <h3 class="mb-0 text-info" id="currentRow">0</h3>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="card border-primary">
-                                                <div class="card-body py-2">
-                                                    <h6 class="mb-0 text-primary">Imported</h6>
-                                                    <h4 class="mb-0" id="importedCount">0</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="card border-warning">
-                                                <div class="card-body py-2">
-                                                    <h6 class="mb-0 text-warning">Skipped</h6>
-                                                    <h4 class="mb-0" id="skippedCount">0</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="card border-danger">
-                                                <div class="card-body py-2">
-                                                    <h6 class="mb-0 text-danger">Errors</h6>
-                                                    <h4 class="mb-0" id="errorsCount">0</h4>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="alert alert-info mt-3" id="progressMessage">
-                                        <i class="mdi mdi-information-outline me-1"></i>
-                                        <span id="progressMessageText">Starting import...</span>
+                                            <!-- Current Status -->
+                                            <div class="alert alert-info" id="progressMessage">
+                                                <i class="mdi mdi-information-outline me-2"></i>
+                                                <span id="progressMessageText">Starting import...</span>
+                                            </div>
+
+                                            <!-- Errors Log (Collapsible) -->
+                                            <div class="card" id="errorsCard" style="display: none;">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">
+                                                        <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#errorsCollapse">
+                                                            <i class="mdi mdi-alert-circle text-danger me-2"></i>
+                                                            Import Errors (<span id="errorCount">0</span>)
+                                                        </button>
+                                                    </h6>
+                                                </div>
+                                                <div id="errorsCollapse" class="collapse">
+                                                    <div class="card-body">
+                                                        <div class="table-responsive" style="max-height: 300px;">
+                                                            <table class="table table-sm table-hover">
+                                                                <thead class="table-dark">
+                                                                    <tr>
+                                                                        <th>Row</th>
+                                                                        <th>Field</th>
+                                                                        <th>Error</th>
+                                                                        <th>Value</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="errorsTableBody">
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeModalBtn">
+                                                <i class="mdi mdi-close me-1"></i>Close
+                                            </button>
+                                            <button type="button" class="btn btn-success" id="viewResultsBtn" style="display: none;">
+                                                <i class="mdi mdi-eye me-1"></i>View Results
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -316,9 +378,12 @@
             if (data.success) {
                 importId = data.import_id;
                 
-                // Show progress card
-                progressCard.style.display = 'block';
-                progressCard.scrollIntoView({ behavior: 'smooth' });
+                // Show progress modal
+                const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+                progressModal.show();
+                
+                // Load initial progress data
+                loadImportProgress(data.import_id);
                 
                 // Connect to WebSocket
                 connectToImportChannel(importId);
@@ -375,52 +440,88 @@
     // Update progress UI
     function updateProgress(data) {
         const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
         const progressPercentage = document.getElementById('progressPercentage');
         const progressStatus = document.getElementById('progressStatus');
         const progressMessage = document.getElementById('progressMessage');
         const progressMessageText = document.getElementById('progressMessageText');
         
         const processedCount = document.getElementById('processedCount');
+        const totalRows = document.getElementById('totalRows');
         const importedCount = document.getElementById('importedCount');
         const skippedCount = document.getElementById('skippedCount');
         const errorsCount = document.getElementById('errorsCount');
+        const currentRow = document.getElementById('currentRow');
+        const errorsCard = document.getElementById('errorsCard');
+        const errorCount = document.getElementById('errorCount');
+        const errorsTableBody = document.getElementById('errorsTableBody');
+        const viewResultsBtn = document.getElementById('viewResultsBtn');
         
         // Update progress bar
         const percentage = data.percentage || 0;
         progressBar.style.width = percentage + '%';
         progressBar.setAttribute('aria-valuenow', percentage);
-        progressBar.textContent = percentage.toFixed(1) + '%';
+        progressText.textContent = percentage.toFixed(1) + '%';
         progressPercentage.textContent = percentage.toFixed(1) + '%';
         
         // Update counts
         processedCount.textContent = data.processed || 0;
+        totalRows.textContent = data.total || 0;
         importedCount.textContent = data.imported || 0;
         skippedCount.textContent = data.skipped || 0;
         errorsCount.textContent = data.errors || 0;
+        currentRow.textContent = data.current_row || 0;
         
         // Update status
         progressStatus.textContent = getStatusText(data.status);
+        progressStatus.className = 'badge fs-6 ' + getStatusBadgeClass(data.status);
         progressMessageText.textContent = data.message || 'Processing...';
         
         // Update message alert class based on status
-        progressMessage.className = 'alert mt-3 ' + getAlertClass(data.status);
+        progressMessage.className = 'alert ' + getAlertClass(data.status);
+        
+        // Handle errors display
+        if (data.errors && data.errors > 0) {
+            errorsCard.style.display = 'block';
+            errorCount.textContent = data.errors;
+            
+            // Update errors table if errors data is available
+            if (data.errors_data && data.errors_data.length > 0) {
+                errorsTableBody.innerHTML = '';
+                data.errors_data.forEach(error => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${error.row}</td>
+                        <td>${error.field || 'N/A'}</td>
+                        <td class="text-danger">${error.error}</td>
+                        <td class="text-muted">${error.value || 'N/A'}</td>
+                    `;
+                    errorsTableBody.appendChild(row);
+                });
+            }
+        }
         
         // Handle completion
         if (data.status === 'completed') {
             progressBar.classList.remove('progress-bar-animated');
             progressBar.classList.add('bg-success');
+            progressStatus.classList.remove('bg-info');
+            progressStatus.classList.add('bg-success');
             
-            setTimeout(function() {
-                alert('Import completed successfully!\nImported: ' + data.imported + '\nSkipped: ' + data.skipped + '\nErrors: ' + data.errors);
-                
-                // Optionally redirect or reload
-                // window.location.href = '{{ route("employees.index") }}';
-            }, 1000);
+            // Show view results button
+            viewResultsBtn.style.display = 'inline-block';
+            
+            // Auto-scroll to errors if any
+            if (data.errors > 0) {
+                const errorsCollapse = document.getElementById('errorsCollapse');
+                const bsCollapse = new bootstrap.Collapse(errorsCollapse, {show: true});
+            }
+            
         } else if (data.status === 'failed') {
             progressBar.classList.remove('progress-bar-animated');
             progressBar.classList.add('bg-danger');
-            
-            alert('Import failed: ' + data.message);
+            progressStatus.classList.remove('bg-info');
+            progressStatus.classList.add('bg-danger');
         }
     }
 
@@ -435,16 +536,60 @@
         return statusMap[status] || 'Processing...';
     }
 
-    // Get alert class based on status
+    // Get status badge class
+    function getStatusBadgeClass(status) {
+        const statusMap = {
+            'starting': 'bg-warning',
+            'processing': 'bg-info',
+            'completed': 'bg-success',
+            'failed': 'bg-danger'
+        };
+        return statusMap[status] || 'bg-info';
+    }
+
+    // Get alert class
     function getAlertClass(status) {
-        const classMap = {
+        const statusMap = {
             'starting': 'alert-info',
             'processing': 'alert-info',
             'completed': 'alert-success',
             'failed': 'alert-danger'
         };
-        return classMap[status] || 'alert-info';
+        return statusMap[status] || 'alert-info';
     }
+
+    // Load import progress data
+    function loadImportProgress(importId) {
+        fetch(`{{ route('import.stats') }}?import_id=${importId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.import_id) {
+                    // Update UI with current progress
+                    updateProgress({
+                        processed: data.processed_rows,
+                        total: data.total_rows,
+                        imported: data.imported_count,
+                        skipped: data.skipped_count,
+                        errors: data.error_count,
+                        current_row: data.current_row,
+                        percentage: data.progress_percentage,
+                        status: data.status,
+                        message: data.current_message,
+                        errors_data: data.errors || []
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading import progress:', error);
+            });
+    }
+
+    // Add event listener for modal show to reload progress
+    document.getElementById('progressModal').addEventListener('show.bs.modal', function () {
+        if (importId) {
+            loadImportProgress(importId);
+        }
+    });
 </script>
 @endpush
 @endsection 

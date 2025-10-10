@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Events\EmployeeImportProgress;
 use App\Imports\ImportEmployee;
+use App\Models\ImportProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -48,27 +49,44 @@ class ProcessEmployeeImport implements ShouldQueue
                 'user_id' => $this->userId
             ]);
 
-            // Initialize cache for tracking progress
-            $this->initializeCache();
+            // Get import progress record
+            $importProgress = ImportProgress::where('import_id', $this->importId)->first();
+            
+            if (!$importProgress) {
+                Log::error("Import progress record not found for ID: {$this->importId}");
+                return;
+            }
+
+            // Mark as started
+            $importProgress->markAsStarted();
+
+            // Get total rows for progress calculation
+            $totalRows = Excel::toCollection(new ImportEmployee(), Storage::path($this->filePath))->flatten(1)->count();
+            
+            // Update total rows in database
+            $importProgress->updateProgress([
+                'total_rows' => $totalRows,
+                'current_message' => 'Import process initiated.',
+            ]);
 
             // Broadcast initial status
             broadcast(new EmployeeImportProgress(
                 $this->importId,
                 0,
-                0,
+                $totalRows,
                 0,
                 0,
                 0,
                 'starting',
-                'Initializing import...'
+                'Import process initiated.'
             ))->toOthers();
 
             // Create import instance with progress callback
-            $import = new ImportEmployee();
+            $import = new ImportEmployee($this->importId);
             
             // Set up progress tracking
-            $import->setProgressCallback(function($stats) {
-                $this->updateProgress($stats);
+            $import->setProgressCallback(function($stats) use ($importProgress) {
+                $this->updateProgress($stats, $importProgress);
             });
 
             // Process the import
@@ -77,8 +95,8 @@ class ProcessEmployeeImport implements ShouldQueue
             // Get final statistics
             $stats = $import->getImportStats();
 
-            // Update cache with final stats
-            Cache::put("employee_import_{$this->importId}_stats", $stats, now()->addHours(24));
+            // Mark as completed
+            $importProgress->markAsCompleted();
 
             // Broadcast completion
             broadcast(new EmployeeImportProgress(
@@ -108,6 +126,12 @@ class ProcessEmployeeImport implements ShouldQueue
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
+            // Mark as failed
+            $importProgress = ImportProgress::where('import_id', $this->importId)->first();
+            if ($importProgress) {
+                $importProgress->markAsFailed($e->getMessage());
+            }
 
             // Broadcast error
             broadcast(new EmployeeImportProgress(
@@ -148,10 +172,16 @@ class ProcessEmployeeImport implements ShouldQueue
     /**
      * Update progress and broadcast
      */
-    protected function updateProgress(array $stats): void
+    protected function updateProgress(array $stats, ImportProgress $importProgress): void
     {
-        // Update cache
-        Cache::put("employee_import_{$this->importId}_stats", $stats, now()->addHours(24));
+        // Update database progress
+        $importProgress->updateProgress([
+            'processed_rows' => $stats['total_processed'] ?? 0,
+            'imported_count' => $stats['imported'] ?? 0,
+            'skipped_count' => $stats['skipped'] ?? 0,
+            'error_count' => $stats['errors'] ?? 0,
+            'current_message' => 'Processing employees...',
+        ]);
 
         // Broadcast progress
         broadcast(new EmployeeImportProgress(

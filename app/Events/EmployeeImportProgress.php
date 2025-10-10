@@ -78,6 +78,7 @@ class EmployeeImportProgress implements ShouldBroadcast
             'imported' => $this->imported,
             'skipped' => $this->skipped,
             'errors' => $this->errors,
+            'current_row' => $this->processed, // Use processed as current row
             'percentage' => $this->total > 0 ? round(($this->processed / $this->total) * 100, 2) : 0,
             'status' => $this->status,
             'message' => $this->message,

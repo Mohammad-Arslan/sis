@@ -17,6 +17,7 @@ use App\Models\Designation;
 use App\Models\DesignationType;
 use App\Models\EmployeeLeaveQuota;
 use App\Models\DesignationLeaveQuota;
+use App\Models\ImportProgress;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -37,7 +38,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
 use PDOException;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -50,6 +50,10 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     public $errors = [];
     public $currentRowNumber = 0; // Track current row number
     public $totalRowsProcessed = 0; // Track total rows including headers and empty rows
+    
+    // Import tracking
+    protected $importId;
+    protected $importProgress;
     
     // Cache for lookup tables to avoid repeated database queries
     private $countryCache = [];
@@ -68,18 +72,21 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     // Progress callback
     private $progressCallback = null;
 
-    public function __construct()
+    public function __construct($importId = null)
     {
+        $this->importId = $importId;
+        
         // Set dynamic PHP configuration for large imports
         $this->setDynamicConfiguration();
         
         // Pre-load all lookup tables into memory for faster access
         $this->preloadLookupTables();
-        // Clear the custom log file at the start of each import session
-        $logPath = storage_path('logs/employee_import.log');
-        if (File::exists($logPath)) {
-            File::put($logPath, '');
+        
+        // Initialize import progress tracking
+        if ($this->importId) {
+            $this->importProgress = ImportProgress::where('import_id', $this->importId)->first();
         }
+        
         // Reset row counter
         $this->currentRowNumber = 0;
     }
@@ -263,12 +270,35 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     }
 
     /**
-     * Trigger progress callback
+     * Trigger progress callback and update database
      */
     private function triggerProgressCallback(): void
     {
         if ($this->progressCallback && $this->totalRowsProcessed % 10 === 0) {
             call_user_func($this->progressCallback, $this->getImportStats());
+        }
+        
+        // Update database progress
+        if ($this->importProgress) {
+            $this->importProgress->updateProgress([
+                'processed_rows' => $this->totalRowsProcessed,
+                'imported_count' => $this->importedCount,
+                'skipped_count' => $this->skippedCount,
+                'error_count' => count($this->errors),
+                'current_row' => $this->currentRowNumber,
+                'current_message' => "Processing row {$this->currentRowNumber}...",
+            ]);
+        }
+    }
+
+    /**
+     * Add error to database and local array
+     */
+    private function addError(array $errorData): void
+    {
+        $this->errors[] = $errorData;
+        if ($this->importProgress) {
+            $this->importProgress->addError($errorData);
         }
     }
 
@@ -421,16 +451,15 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 $this->skippedCount++;
                 Log::warning("Skipping row due to missing essential fields", ['row' => $row]);
                 
-                // Write to custom log file
-                $logEntry = [
+                // Add error to database
+                $this->addError([
                     'type' => 'missing_fields',
-                    'row' => $this->currentRowNumber + 1, // Use +1 since we haven't incremented yet
+                    'row' => $this->currentRowNumber + 1,
                     'field' => null,
                     'error' => 'Missing essential fields: first_name, email, or cnic',
                     'value' => 'first_name: ' . ($row['first_name'] ?? 'empty') . ', email: ' . ($row['email'] ?? 'empty') . ', cnic: ' . ($row['cnic'] ?? 'empty'),
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
                 
                 return null;
             }
@@ -447,94 +476,82 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             if (strtolower($maritalStatus) === 'married') {
                 // For married people, marriage date is required
                 if (empty($row['date_of_marriage'])) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'date_of_marriage',
                         'error' => 'Date of marriage is required when marital status is Married',
                         'value' => $row['date_of_marriage'] ?? '',
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 // For married people, number of children is required (can be 0)
                 if (!isset($row['no_of_children']) || $row['no_of_children'] === '' || !is_numeric($row['no_of_children'])) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'no_of_children',
                         'error' => 'Number of children is required when marital status is Married (can be 0)',
                         'value' => $row['no_of_children'] ?? '',
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 // For married people, children in UCS is required (can be 0)
                 if (!isset($row['children_in_ucs']) || $row['children_in_ucs'] === '' || !is_numeric($row['children_in_ucs'])) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'children_in_ucs',
                         'error' => 'Children in UCS is required when marital status is Married (can be 0)',
                         'value' => $row['children_in_ucs'] ?? '',
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
             } else {
                 // For single/unmarried people, marriage-related fields should be empty
                 if (!empty($row['date_of_marriage'])) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'date_of_marriage',
                         'error' => 'Date of marriage should be empty when marital status is not Married',
                         'value' => $row['date_of_marriage'],
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 if (!empty($row['no_of_children']) && $row['no_of_children'] != 0) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'no_of_children',
                         'error' => 'Number of children should be 0 or empty when marital status is not Married',
                         'value' => $row['no_of_children'],
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 if (!empty($row['children_in_ucs']) && $row['children_in_ucs'] != 0) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'children_in_ucs',
                         'error' => 'Children in UCS should be 0 or empty when marital status is not Married',
                         'value' => $row['children_in_ucs'],
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
@@ -547,46 +564,40 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $probationEndDate = $this->parseDate($row['probation_end_date'] ?? null);
 
             if ($hiringDate && $confirmDate && $confirmDate <= $hiringDate) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'validation_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'confirm_date',
                     'error' => 'Confirm date must be after hiring date',
                     'value' => $row['confirm_date'] ?? '',
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
                 $this->skippedCount++;
                 return null;
             }
 
             if ($hiringDate && $regularDate && $regularDate <= $hiringDate) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'validation_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'regular_date',
                     'error' => 'Regular date must be after hiring date',
                     'value' => $row['regular_date'] ?? '',
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
                 $this->skippedCount++;
                 return null;
             }
 
             if ($hiringDate && $probationEndDate && $probationEndDate <= $hiringDate) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'validation_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'probation_end_date',
                     'error' => 'Probation end date must be after hiring date',
                     'value' => $row['probation_end_date'] ?? '',
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
                 $this->skippedCount++;
                 return null;
             }
@@ -599,31 +610,27 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             // If passport number is provided, issue_date and expiry_date are required
             if (!empty($passportNumber)) {
                 if (empty($issueDate)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'issue_date',
                         'error' => 'Issue date is required when passport number is provided',
                         'value' => $issueDate,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 if (empty($expiryDate)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'expiry_date',
                         'error' => 'Expiry date is required when passport number is provided',
                         'value' => $expiryDate,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
@@ -632,16 +639,14 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             // If issue_date or expiry_date is provided, passport_number is required
             if (!empty($issueDate) || !empty($expiryDate)) {
                 if (empty($passportNumber)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'passport_number',
                         'error' => 'Passport number is required when issue date or expiry date is provided',
                         'value' => $passportNumber,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
@@ -655,31 +660,27 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             // If job status is Regular, probation fields should be empty
             if (strtolower($jobStatus) === 'regular') {
                 if (!empty($probationEndDate)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'probation_end_date',
                         'error' => 'Probation end date should be empty when job status is Regular',
                         'value' => $probationEndDate,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 if (!empty($probationExtended)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'probation_extended',
                         'error' => 'Probation extended should be empty when job status is Regular',
                         'value' => $probationExtended,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
@@ -688,47 +689,41 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             // If job status is Probation, probation fields are required
             if (strtolower($jobStatus) === 'probation') {
                 if (empty($probationEndDate)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'probation_end_date',
                         'error' => 'Probation end date is required when job status is Probation',
                         'value' => $probationEndDate,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 if (empty($probationExtended)) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'probation_extended',
                         'error' => 'Probation extended is required when job status is Probation',
                         'value' => $probationExtended,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
                 
                 // Validate probation_extended values (case insensitive)
                 if (!empty($probationExtended) && !in_array(strtolower($probationExtended), ['yes', 'no'])) {
-                    $logEntry = [
+                    $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
                         'field' => 'probation_extended',
                         'error' => 'Probation extended must be Yes or No',
                         'value' => $probationExtended,
                         'timestamp' => now()->toDateTimeString(),
-                    ];
-                    $this->errors[] = $logEntry;
-                    File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                    ]);
                     $this->skippedCount++;
                     return null;
                 }
@@ -752,133 +747,113 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
 
             // Log errors for missing lookup records
             if (!$nationalityId && !empty($row['nationality'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'nationality',
                     'error' => 'Nationality does not exist in the system',
                     'value' => $row['nationality'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$religionId && !empty($row['religion'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'religion',
                     'error' => 'Religion does not exist in the system',
                     'value' => $row['religion'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$countryId && !empty($row['country'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'country',
                     'error' => 'Country does not exist in the system',
                     'value' => $row['country'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$stateId && !empty($row['state'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'state',
                     'error' => 'State does not exist in the system',
                     'value' => $row['state'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$cityId && !empty($row['city'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'city',
                     'error' => 'City does not exist in the system',
                     'value' => $row['city'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$companyId && !empty($row['company'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'company',
                     'error' => 'Company does not exist in the system',
                     'value' => $row['company'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$regionId && !empty($row['region'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'region',
                     'error' => 'Region does not exist in the system',
                     'value' => $row['region'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$branchId && !empty($row['branch'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'branch',
                     'error' => 'Branch does not exist in the system',
                     'value' => $row['branch'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$departmentId && !empty($row['department'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'department',
                     'error' => 'Department does not exist in the system',
                     'value' => $row['department'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             if (!$designationId && !empty($row['designation'])) {
-                $logEntry = [
+                $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
                     'field' => 'designation',
                     'error' => 'Designation does not exist in the system',
                     'value' => $row['designation'],
                     'timestamp' => now()->toDateTimeString(),
-                ];
-                $this->errors[] = $logEntry;
-                File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+                ]);
             }
 
             DB::beginTransaction();
@@ -1039,18 +1014,15 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'trace' => $e->getTraceAsString()
             ]);
             
-            // Write to custom log file
-            $logEntry = [
+            // Add error to database
+            $this->addError([
                 'type' => 'import_error',
                 'row' => $this->currentRowNumber,
                 'field' => null,
                 'error' => $errorMessage,
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
                 'value' => 'Row data: ' . json_encode(array_slice($row, 0, 5)), // Show first 5 fields
                 'timestamp' => now()->toDateTimeString(),
-            ];
-            File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+            ]);
             
             $this->errors[] = [
                 'row' => $this->currentRowNumber,
@@ -1267,16 +1239,15 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $problematicValue = "Check all required fields";
         }
         
-        // Write to custom log file
-        $logEntry = [
+        // Add error to database
+        $this->addError([
             'type' => 'import_error',
             'row' => $this->currentRowNumber,
             'field' => $fieldName,
             'error' => $cleanErrorMessage,
             'value' => $problematicValue,
             'timestamp' => now()->toDateTimeString(),
-        ];
-        File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+        ]);
         
         $this->errors[] = [
             'error' => $errorMessage,
@@ -1334,16 +1305,15 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'values' => $failure->values()
             ]);
             
-            // Write to custom log file
-            $logEntry = [
+            // Add error to database
+            $this->addError([
                 'type' => 'validation_error',
                 'row' => $this->currentRowNumber, // Use custom counter instead of failure->row()
                 'field' => $failure->attribute(),
                 'error' => $errorMessage,
                 'value' => $failure->values()[$failure->attribute()] ?? 'N/A',
                 'timestamp' => now()->toDateTimeString(),
-            ];
-            File::append(storage_path('logs/employee_import.log'), json_encode($logEntry) . PHP_EOL);
+            ]);
             
             $this->errors[] = [
                 'row' => $this->currentRowNumber, // Use custom counter instead of failure->row()

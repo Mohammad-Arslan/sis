@@ -43,6 +43,7 @@ use App\Models\EmployeeOfficialLeaveDay;
 use Illuminate\Support\Facades\Validator;
 use App\Imports\ImportEmployee;
 use App\Exports\EmployeeTemplateExport;
+use App\Models\ImportProgress;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
@@ -1318,6 +1319,16 @@ class EmployeeController extends Controller
             $fileName = $importId . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('imports/employees', $fileName);
             
+            // Create import progress record
+            $importProgress = ImportProgress::create([
+                'import_id' => $importId,
+                'import_type' => 'employee',
+                'user_id' => auth()->id(),
+                'file_name' => $file->getClientOriginalName(),
+                'status' => 'pending',
+                'current_message' => 'Import queued for processing...',
+            ]);
+            
             // Dispatch job to queue
             \App\Jobs\ProcessEmployeeImport::dispatch(
                 $filePath,
@@ -1365,18 +1376,36 @@ class EmployeeController extends Controller
     /**
      * Get import statistics
      */
-    public function getImportStats()
+    public function getImportStats(Request $request)
     {
-        $logPath = storage_path('logs/employee_import.log');
-        $logContent = '';
+        $importId = $request->get('import_id');
         
-        if (File::exists($logPath)) {
-            $logContent = File::get($logPath);
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+        
+        $importProgress = ImportProgress::where('import_id', $importId)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$importProgress) {
+            return response()->json(['error' => 'Import not found'], 404);
         }
         
         return response()->json([
-            'log_content' => $logContent,
-            'log_file_exists' => File::exists($logPath)
+            'import_id' => $importProgress->import_id,
+            'status' => $importProgress->status,
+            'total_rows' => $importProgress->total_rows,
+            'processed_rows' => $importProgress->processed_rows,
+            'imported_count' => $importProgress->imported_count,
+            'skipped_count' => $importProgress->skipped_count,
+            'error_count' => $importProgress->error_count,
+            'current_row' => $importProgress->current_row,
+            'current_message' => $importProgress->current_message,
+            'errors' => $importProgress->errors,
+            'progress_percentage' => $importProgress->progress_percentage,
+            'started_at' => $importProgress->started_at,
+            'completed_at' => $importProgress->completed_at,
         ]);
     }
 }
