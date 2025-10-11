@@ -45,6 +45,7 @@ use App\Imports\ImportEmployee;
 use App\Exports\EmployeeTemplateExport;
 use App\Exports\ExportEmployee;
 use App\Jobs\ProcessEmployeeExport;
+use App\Jobs\ProcessEmployeeImport;
 use App\Models\ImportProgress;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -1333,11 +1334,11 @@ class EmployeeController extends Controller
             ]);
             
             // Dispatch job to queue
-            \App\Jobs\ProcessEmployeeImport::dispatch(
+            ProcessEmployeeImport::dispatch(
                 $filePath,
                 $importId,
                 auth()->id()
-            )->onQueue('imports');
+            );
             
             Log::info('Employee import job dispatched', [
                 'import_id' => $importId,
@@ -1441,7 +1442,7 @@ class EmployeeController extends Controller
                 $exportId,
                 auth()->id(),
                 $filters
-            )->onQueue('exports');
+            );
             
             Log::info('Employee export job dispatched', [
                 'export_id' => $exportId,

@@ -156,6 +156,261 @@
             </div>
         </div>
     </div>
+
+    <!-- Include the import modal -->
+    @include('employees.employee_import_modal')
+
+    <!-- Modal for Import Logs -->
+    <div class="modal fade" id="importLogsModal" tabindex="-1" aria-labelledby="importLogsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="importLogsModalLabel">Import Error Logs</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="importLogsContent">
+            <!-- Logs will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Progress Modal -->
+    <div class="modal fade" id="importProgressModal" tabindex="-1" aria-labelledby="importProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="importProgressModalLabel">
+                        <i class="ri-upload-cloud-2-line me-2"></i>Employee Import Progress
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                                 role="progressbar" 
+                                 style="width: 0%" 
+                                 id="importProgressBar">0%</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span id="importProgressText">Starting import...</span>
+                            <span id="importProgressPercentage">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Statistics -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-primary h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-primary fs-1 mb-2"></i>
+                                    <h6 class="text-primary mb-1">Total Rows</h6>
+                                    <h3 class="mb-0 text-primary" id="importTotalRows">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-check-line text-success fs-1 mb-2"></i>
+                                    <h6 class="text-success mb-1">Imported</h6>
+                                    <h3 class="mb-0 text-success" id="importedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-skip-forward-line text-warning fs-1 mb-2"></i>
+                                    <h6 class="text-warning mb-1">Skipped</h6>
+                                    <h3 class="mb-0 text-warning" id="importSkippedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-info fs-1 mb-2"></i>
+                                    <h6 class="text-info mb-1">Current Row</h6>
+                                    <h3 class="mb-0 text-info" id="importCurrentRow">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Status -->
+                    <div class="alert alert-info" id="importProgressMessage">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="spinner-border spinner-border-sm text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Status:</strong> <span id="importProgressStatus">Preparing...</span>
+                                <br>
+                                <span id="importProgressMessageText">Initializing import process...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Details (hidden by default) -->
+                    <div class="card border-danger" id="importErrorsCard" style="display: none;">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">
+                                <i class="ri-error-warning-line me-2"></i>
+                                Import Errors (<span id="importErrorCount">0</span>)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Field</th>
+                                            <th>Error</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="importErrorsTableBody">
+                                        <!-- Error rows will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="importCloseBtn" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="importDownloadBtn" style="display: none;">
+                        <i class="ri-download-line me-1"></i>Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Progress Modal -->
+    <div class="modal fade" id="exportProgressModal" tabindex="-1" aria-labelledby="exportProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="exportProgressModalLabel">
+                        <i class="ri-download-2-line me-2"></i>Employee Export Progress
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                 role="progressbar" 
+                                 style="width: 0%" 
+                                 id="exportProgressBar">0%</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span id="exportProgressText">Starting export...</span>
+                            <span id="exportProgressPercentage">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Statistics -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-primary h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-primary fs-1 mb-2"></i>
+                                    <h6 class="text-primary mb-1">Total Rows</h6>
+                                    <h3 class="mb-0 text-primary" id="exportTotalRows">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-check-line text-success fs-1 mb-2"></i>
+                                    <h6 class="text-success mb-1">Exported</h6>
+                                    <h3 class="mb-0 text-success" id="exportedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-skip-forward-line text-warning fs-1 mb-2"></i>
+                                    <h6 class="text-warning mb-1">Skipped</h6>
+                                    <h3 class="mb-0 text-warning" id="exportSkippedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-info fs-1 mb-2"></i>
+                                    <h6 class="text-info mb-1">Current Row</h6>
+                                    <h3 class="mb-0 text-info" id="exportCurrentRow">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Status -->
+                    <div class="alert alert-info" id="exportProgressMessage">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="spinner-border spinner-border-sm text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Status:</strong> <span id="exportProgressStatus">Preparing...</span>
+                                <br>
+                                <span id="exportProgressMessageText">Initializing export process...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Details (hidden by default) -->
+                    <div class="card border-danger" id="exportErrorsCard" style="display: none;">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">
+                                <i class="ri-error-warning-line me-2"></i>
+                                Export Errors (<span id="exportErrorCount">0</span>)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Employee ID</th>
+                                            <th>Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="exportErrorsTableBody">
+                                        <!-- Error rows will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="exportCloseModalBtn">
+                        <i class="ri-close-line me-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-success-new" id="exportDownloadBtn" style="display: none;">
+                        <i class="ri-download-2-line me-1"></i>Download File
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 
@@ -459,26 +714,41 @@
                     success: function(result) {
                         clearInterval(progressInterval);
                         $('#progressBar').css('width', '100%').text('100%');
-                        $('#progressText').text('Import completed successfully!');
+                        $('#progressText').text('Import started successfully!');
                         $('#importEmployeesModal').modal('hide');
                         
-                        if (result.success) {
+                        if (result.success && result.import_id) {
+                            // Show import progress modal
+                            $('#importProgressModal').modal('show');
+                            
+                            // Load initial progress data
+                            loadImportProgress(result.import_id);
+                            
+                            // Connect to WebSocket
+                            connectToImportChannel(result.import_id);
+                            
+                            // Start progress polling as backup
+                            importProgressInterval = setInterval(function() {
+                                loadImportProgress(result.import_id);
+                            }, 2000);
+                        } else if (result.success) {
+                            // Fallback for immediate completion
                             $('#successMessage').text(result.success);
-                        }
-                        
-                        const importedCount = result.imported_count || 0;
-                        const skippedCount = result.skipped_count || 0;
-                        const totalProcessed = result.total_processed || (importedCount + skippedCount);
-                        
-                        $('#totalProcessed').text(totalProcessed);
-                        $('#importedCount').text(importedCount);
-                        $('#skippedCount').text(skippedCount);
-                        $('#importedCountText').text(importedCount);
-                        $('#skippedCountText').text(skippedCount);
-                        
-                        // Only show stats modal if there were actual imports or skips
-                        if (totalProcessed > 0) {
-                            $('#importStatsModal').modal('show');
+                            
+                            const importedCount = result.imported_count || 0;
+                            const skippedCount = result.skipped_count || 0;
+                            const totalProcessed = result.total_processed || (importedCount + skippedCount);
+                            
+                            $('#totalProcessed').text(totalProcessed);
+                            $('#importedCount').text(importedCount);
+                            $('#skippedCount').text(skippedCount);
+                            $('#importedCountText').text(importedCount);
+                            $('#skippedCountText').text(skippedCount);
+                            
+                            // Only show stats modal if there were actual imports or skips
+                            if (totalProcessed > 0) {
+                                $('#importStatsModal').modal('show');
+                            }
                         }
                         
                         form[0].reset();
@@ -559,8 +829,23 @@
             // Reset submit button
             $('#uploadBtn').prop('disabled', false).html('Upload');
             
-            // Show the modal
-            $('#importEmployeesModal').modal('show');
+            // Show the modal using Bootstrap 5 API
+            const importModal = document.getElementById('importEmployeesModal');
+            if (importModal) {
+                // Remove any existing aria-hidden attribute that might be causing issues
+                importModal.removeAttribute('aria-hidden');
+                
+                const modalInstance = new bootstrap.Modal(importModal, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                modalInstance.show();
+                
+                console.log('Import modal should be showing now');
+            } else {
+                console.error('Import modal element not found');
+            }
         });
         
         // Handle modal close events to ensure proper cleanup
@@ -571,6 +856,35 @@
             $('#progressBar').css('width', '0%').text('0%');
             $('#progressText').text('Preparing upload...');
             $('#uploadBtn').prop('disabled', false).html('Upload');
+        });
+
+        // Handle import progress modal close events
+        $('#importProgressModal').on('hidden.bs.modal', function() {
+            // Disconnect from WebSocket
+            if (importChannel) {
+                importChannel.unsubscribe();
+                importChannel = null;
+            }
+            
+            // Clear progress polling
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+                importProgressInterval = null;
+            }
+            
+            // Reset progress UI
+            $('#importProgressBar').css('width', '0%').text('0%');
+            $('#importProgressPercentage').text('0%');
+            $('#importProgressText').text('Starting import...');
+            $('#importTotalRows').text('0');
+            $('#importedCount').text('0');
+            $('#importSkippedCount').text('0');
+            $('#importCurrentRow').text('0');
+            $('#importErrorsCard').hide();
+            $('#importDownloadBtn').hide();
+            
+            // Refresh the employee table
+            $('#employee-table').DataTable().ajax.reload();
         });
 
         // Handle logs button click
@@ -835,6 +1149,190 @@ This report was generated automatically by the SuperNova SIS system.`;
             });
         });
 
+        // Import Progress Tracking Variables
+        let importChannel = null;
+        let importProgressInterval = null;
+
+        // Connect to Import WebSocket channel for real-time updates
+        function connectToImportChannel(importId) {
+            // Initialize Pusher/Reverb
+            const pusher = new Pusher('{{ config("broadcasting.connections.reverb.key") }}', {
+                wsHost: '{{ config("broadcasting.connections.reverb.options.host") }}',
+                wsPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                wssPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                forceTLS: {{ config('broadcasting.connections.reverb.options.scheme') === 'https' ? 'true' : 'false' }},
+                enabledTransports: ['ws', 'wss'],
+                cluster: 'mt1',
+                disableStats: true
+            });
+
+            // Subscribe to public channel
+            importChannel = pusher.subscribe('employee-import.' + importId);
+            
+            // Listen for progress updates
+            importChannel.bind('import.progress', function(data) {
+                console.log('Import progress update:', data);
+                updateImportProgress(data);
+            });
+
+            // Handle connection errors
+            pusher.connection.bind('error', function(err) {
+                console.error('Import WebSocket connection error:', err);
+            });
+
+            // Handle successful connection
+            pusher.connection.bind('connected', function() {
+                console.log('Connected to Import WebSocket');
+            });
+        }
+
+        // Update import progress UI
+        function updateImportProgress(data) {
+            const progressBar = document.getElementById('importProgressBar');
+            const progressText = document.getElementById('importProgressText');
+            const progressPercentage = document.getElementById('importProgressPercentage');
+            const progressStatus = document.getElementById('importProgressStatus');
+            const progressMessageText = document.getElementById('importProgressMessageText');
+            const progressMessageContainer = document.getElementById('importProgressMessage');
+            
+            // Update counts
+            const totalRows = document.getElementById('importTotalRows');
+            const importedCount = document.getElementById('importedCount');
+            const skippedCount = document.getElementById('importSkippedCount');
+            const currentRow = document.getElementById('importCurrentRow');
+            const errorsCard = document.getElementById('importErrorsCard');
+            const errorCount = document.getElementById('importErrorCount');
+            const errorsTableBody = document.getElementById('importErrorsTableBody');
+            const downloadBtn = document.getElementById('importDownloadBtn');
+            
+            // Update counts
+            totalRows.textContent = data.total || 0;
+            importedCount.textContent = data.imported || 0;
+            skippedCount.textContent = data.skipped || 0;
+            currentRow.textContent = data.current_row || 0;
+            
+            // Update status
+            progressStatus.textContent = getImportStatusText(data.status);
+            progressStatus.className = 'badge fs-6 ' + getImportStatusBadgeClass(data.status);
+            progressMessageText.textContent = data.message || 'Processing...';
+            
+            // Update progress bar
+            const percentage = data.percentage || 0;
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage.toFixed(1) + '%';
+            progressPercentage.textContent = percentage.toFixed(1) + '%';
+            
+            // Update progress text
+            progressText.textContent = `${data.processed || 0} of ${data.total || 0} rows processed`;
+            
+            // Handle different statuses
+            if (data.status === 'completed') {
+                progressMessageContainer.className = 'alert alert-success';
+                progressMessageContainer.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="ri-check-circle-fill text-success fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <strong>Import Completed!</strong><br>
+                            ${data.message || 'Import completed successfully!'}
+                        </div>
+                    </div>
+                `;
+                downloadBtn.style.display = 'inline-block';
+                
+                // Stop progress polling
+                if (importProgressInterval) {
+                    clearInterval(importProgressInterval);
+                    importProgressInterval = null;
+                }
+            } else if (data.status === 'failed') {
+                progressMessageContainer.className = 'alert alert-danger';
+                progressMessageContainer.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <i class="ri-error-warning-fill text-danger fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <strong>Import Failed!</strong><br>
+                            ${data.message || 'Import failed with errors.'}
+                        </div>
+                    </div>
+                `;
+                
+                // Stop progress polling
+                if (importProgressInterval) {
+                    clearInterval(importProgressInterval);
+                    importProgressInterval = null;
+                }
+            } else {
+                progressMessageContainer.className = 'alert alert-info';
+                progressMessageContainer.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="spinner-border spinner-border-sm text-info" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <strong>Status:</strong> <span class="badge fs-6 ${getImportStatusBadgeClass(data.status)}">${getImportStatusText(data.status)}</span><br>
+                            ${data.message || 'Processing...'}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Show errors if any
+            if (data.errors && data.errors > 0) {
+                errorsCard.style.display = 'block';
+                errorCount.textContent = data.errors;
+            }
+        }
+
+        // Get import status text
+        function getImportStatusText(status) {
+            switch (status) {
+                case 'starting': return 'Starting';
+                case 'processing': return 'Processing';
+                case 'completed': return 'Completed';
+                case 'failed': return 'Failed';
+                default: return 'Unknown';
+            }
+        }
+
+        // Get import status badge class
+        function getImportStatusBadgeClass(status) {
+            switch (status) {
+                case 'starting': return 'bg-info';
+                case 'processing': return 'bg-primary';
+                case 'completed': return 'bg-success';
+                case 'failed': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Load import progress data
+        function loadImportProgress(importId) {
+            $.ajax({
+                url: '{{ route("employees.import-stats") }}',
+                method: 'GET',
+                data: { import_id: importId },
+                success: function(data) {
+                    updateImportProgress({
+                        processed: data.processed_rows,
+                        total: data.total_rows,
+                        imported: data.imported_count,
+                        skipped: data.skipped_count,
+                        errors: data.error_count,
+                        current_row: data.current_row,
+                        percentage: data.progress_percentage,
+                        status: data.status,
+                        message: data.current_message
+                    });
+                }
+            });
+        }
+
         // Connect to WebSocket channel for real-time updates
         function connectToExportChannel(exportId) {
             // Initialize Pusher/Reverb
@@ -870,6 +1368,8 @@ This report was generated automatically by the SuperNova SIS system.`;
 
         // Update export progress UI
         function updateExportProgress(data) {
+            console.log('updateExportProgress called with data:', data);
+            
             const progressBar = document.getElementById('exportProgressBar');
             const progressText = document.getElementById('exportProgressText');
             const progressPercentage = document.getElementById('exportProgressPercentage');
@@ -877,7 +1377,6 @@ This report was generated automatically by the SuperNova SIS system.`;
             const progressMessage = document.getElementById('exportProgressMessage');
             const progressMessageText = document.getElementById('exportProgressMessageText');
             
-            const processedCount = document.getElementById('exportProcessedCount');
             const totalRows = document.getElementById('exportTotalRows');
             const exportedCount = document.getElementById('exportedCount');
             const skippedCount = document.getElementById('exportSkippedCount');
@@ -887,50 +1386,88 @@ This report was generated automatically by the SuperNova SIS system.`;
             const errorsTableBody = document.getElementById('exportErrorsTableBody');
             const downloadBtn = document.getElementById('exportDownloadBtn');
             
-            // Update progress bar
+            // Debug: Check which elements are missing
+            const missingElements = [];
+            if (!progressBar) missingElements.push('exportProgressBar');
+            if (!progressText) missingElements.push('exportProgressText');
+            if (!progressPercentage) missingElements.push('exportProgressPercentage');
+            if (!progressStatus) missingElements.push('exportProgressStatus');
+            if (!progressMessage) missingElements.push('exportProgressMessage');
+            if (!progressMessageText) missingElements.push('exportProgressMessageText');
+            if (!totalRows) missingElements.push('exportTotalRows');
+            if (!exportedCount) missingElements.push('exportedCount');
+            if (!skippedCount) missingElements.push('exportSkippedCount');
+            if (!currentRow) missingElements.push('exportCurrentRow');
+            
+            if (missingElements.length > 0) {
+                console.warn('Missing export progress elements:', missingElements);
+            }
+            
+            // Update progress bar with null checks
             const percentage = data.percentage || 0;
-            progressBar.style.width = percentage + '%';
-            progressBar.setAttribute('aria-valuenow', percentage);
-            progressText.textContent = percentage.toFixed(1) + '%';
-            progressPercentage.textContent = percentage.toFixed(1) + '%';
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+                progressBar.setAttribute('aria-valuenow', percentage);
+            }
+            if (progressText) {
+                progressText.textContent = percentage.toFixed(1) + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = percentage.toFixed(1) + '%';
+            }
             
-            // Update counts
-            processedCount.textContent = data.processed || 0;
-            totalRows.textContent = data.total || 0;
-            exportedCount.textContent = data.exported || 0;
-            skippedCount.textContent = data.skipped || 0;
-            currentRow.textContent = data.current_row || 0;
+            // Update counts with null checks
+            if (totalRows) totalRows.textContent = data.total || 0;
+            if (exportedCount) exportedCount.textContent = data.exported || 0;
+            if (skippedCount) skippedCount.textContent = data.skipped || 0;
+            if (currentRow) currentRow.textContent = data.current_row || 0;
             
-            // Update status
-            progressStatus.textContent = getExportStatusText(data.status);
-            progressStatus.className = 'badge fs-6 ' + getExportStatusBadgeClass(data.status);
-            progressMessageText.textContent = data.message || 'Processing...';
+            // Update status with null checks
+            if (progressStatus) {
+                progressStatus.textContent = getExportStatusText(data.status);
+                progressStatus.className = 'badge fs-6 ' + getExportStatusBadgeClass(data.status);
+            }
+            if (progressMessageText) {
+                progressMessageText.textContent = data.message || 'Processing...';
+            }
             
             // Update message alert class based on status
-            progressMessage.className = 'alert ' + getExportAlertClass(data.status);
+            if (progressMessage) {
+                progressMessage.className = 'alert ' + getExportAlertClass(data.status);
+            }
             
             // Handle errors display
             if (data.errors && data.errors > 0) {
-                errorsCard.style.display = 'block';
-                errorCount.textContent = data.errors;
+                if (errorsCard) {
+                    errorsCard.style.display = 'block';
+                }
+                if (errorCount) {
+                    errorCount.textContent = data.errors;
+                }
             }
             
             // Handle completion
             if (data.status === 'completed') {
-                progressBar.classList.remove('progress-bar-animated');
-                progressBar.classList.add('bg-success');
-                progressStatus.classList.remove('bg-info');
-                progressStatus.classList.add('bg-success');
+                if (progressBar) {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-success');
+                }
+                if (progressStatus) {
+                    progressStatus.classList.remove('bg-info');
+                    progressStatus.classList.add('bg-success');
+                }
                 
                 // Hide view progress button and reset export state
                 $('#viewExportProgressBtn').hide();
                 isExportInProgress = false;
                 
-                // Show download button
-                downloadBtn.style.display = 'inline-block';
-                downloadBtn.onclick = function() {
-                    window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
-                };
+                // Show download button with null check
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'inline-block';
+                    downloadBtn.onclick = function() {
+                        window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
+                    };
+                }
                 
                 // Auto-download the file
                 setTimeout(() => {
@@ -940,14 +1477,20 @@ This report was generated automatically by the SuperNova SIS system.`;
                 // Auto-scroll to errors if any
                 if (data.errors > 0) {
                     const errorsCollapse = document.getElementById('exportErrorsCollapse');
-                    const bsCollapse = new bootstrap.Collapse(errorsCollapse, {show: true});
+                    if (errorsCollapse) {
+                        const bsCollapse = new bootstrap.Collapse(errorsCollapse, {show: true});
+                    }
                 }
                 
             } else if (data.status === 'failed') {
-                progressBar.classList.remove('progress-bar-animated');
-                progressBar.classList.add('bg-danger');
-                progressStatus.classList.remove('bg-info');
-                progressStatus.classList.add('bg-danger');
+                if (progressBar) {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-danger');
+                }
+                if (progressStatus) {
+                    progressStatus.classList.remove('bg-info');
+                    progressStatus.classList.add('bg-danger');
+                }
                 
                 // Hide view progress button on failure
                 $('#viewExportProgressBtn').hide();
@@ -1038,142 +1581,3 @@ This report was generated automatically by the SuperNova SIS system.`;
         });
     </script>
 @endpush
-
-<!-- Include the import modal -->
-@include('employees.employee_import_modal')
-
-<!-- Modal for Import Logs -->
-<div class="modal fade" id="importLogsModal" tabindex="-1" aria-labelledby="importLogsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="importLogsModalLabel">Import Error Logs</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="importLogsContent">
-        <!-- Logs will be loaded here -->
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- Export Progress Modal -->
-<div class="modal fade" id="exportProgressModal" tabindex="-1" aria-labelledby="exportProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="exportProgressModalLabel">
-                    <i class="ri-download-2-line me-2"></i>Employee Export Progress
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Progress Overview -->
-                <div class="row mb-4">
-                    <div class="col-md-8">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Overall Progress</h6>
-                            <span class="badge bg-success fs-6" id="exportProgressPercentage">0%</span>
-                        </div>
-                        <div class="progress mb-2" style="height: 30px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
-                                 role="progressbar" 
-                                 id="exportProgressBar" 
-                                 style="width: 0%"
-                                 aria-valuenow="0" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                <span id="exportProgressText">0%</span>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between text-muted small">
-                            <span id="exportProcessedCount">0</span>
-                            <span id="exportTotalRows">0</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <h6 class="text-muted mb-2">Status</h6>
-                            <span class="badge bg-info fs-6" id="exportProgressStatus">Initializing</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Statistics Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card border-success h-100">
-                            <div class="card-body text-center">
-                                <i class="ri-check-line text-success fs-1 mb-2"></i>
-                                <h6 class="text-success mb-1">Exported</h6>
-                                <h3 class="mb-0 text-success" id="exportedCount">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-warning h-100">
-                            <div class="card-body text-center">
-                                <i class="ri-skip-forward-line text-warning fs-1 mb-2"></i>
-                                <h6 class="text-warning mb-1">Skipped</h6>
-                                <h3 class="mb-0 text-warning" id="exportSkippedCount">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card border-info h-100">
-                            <div class="card-body text-center">
-                                <i class="ri-number-1 text-info fs-1 mb-2"></i>
-                                <h6 class="text-info mb-1">Current Row</h6>
-                                <h3 class="mb-0 text-info" id="exportCurrentRow">0</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current Status -->
-                <div class="alert alert-info" id="exportProgressMessage">
-                    <i class="ri-information-line me-2"></i>
-                    <span id="exportProgressMessageText">Starting export...</span>
-                </div>
-
-                <!-- Errors Log (Collapsible) -->
-                <div class="card" id="exportErrorsCard" style="display: none;">
-                    <div class="card-header">
-                        <h6 class="mb-0">
-                            <button class="btn btn-link text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#exportErrorsCollapse">
-                                <i class="ri-error-warning-line text-danger me-2"></i>
-                                Export Errors (<span id="exportErrorCount">0</span>)
-                            </button>
-                        </h6>
-                    </div>
-                    <div id="exportErrorsCollapse" class="collapse">
-                        <div class="card-body">
-                            <div class="table-responsive" style="max-height: 300px;">
-                                <table class="table table-sm table-hover">
-                                    <thead class="table-dark">
-                                        <tr>
-                                            <th>Row</th>
-                                            <th>Employee ID</th>
-                                            <th>Error</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="exportErrorsTableBody">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="exportCloseModalBtn">
-                    <i class="ri-close-line me-1"></i>Close
-                </button>
-                <button type="button" class="btn btn-success-new" id="exportDownloadBtn" style="display: none;">
-                    <i class="ri-download-2-line me-1"></i>Download File
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
