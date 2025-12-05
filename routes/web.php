@@ -818,6 +818,52 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('make-bank-default', [BankAccountController::class, 'make_bank_default'])->name('make-bank-default');
 
         Route::resources(['building-type' => BuildingTypeController::class]);
+        
+        // Unified Geographic Settings Routes
+        Route::prefix('geographic-settings')->name('geographic-settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\GeographicSettingsController::class, 'index'])->name('index');
+            Route::get('/countries/{country}', [App\Http\Controllers\GeographicSettingsController::class, 'getCountry'])->name('get-country');
+            Route::get('/states/{state}', [App\Http\Controllers\GeographicSettingsController::class, 'getState'])->name('get-state');
+            Route::get('/cities/{city}', [App\Http\Controllers\GeographicSettingsController::class, 'getCity'])->name('get-city');
+            Route::get('/towns/{town}', [App\Http\Controllers\GeographicSettingsController::class, 'getTown'])->name('get-town');
+            Route::get('/regions/{region}', [App\Http\Controllers\GeographicSettingsController::class, 'getRegion'])->name('get-region');
+            Route::get('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'getBuildingType'])->name('get-building-type');
+            
+            Route::get('/countries-data', [App\Http\Controllers\GeographicSettingsController::class, 'getCountries'])->name('get-countries');
+            Route::get('/states-data', [App\Http\Controllers\GeographicSettingsController::class, 'getStates'])->name('get-states');
+            Route::get('/cities-data', [App\Http\Controllers\GeographicSettingsController::class, 'getCities'])->name('get-cities');
+            Route::get('/towns-data', [App\Http\Controllers\GeographicSettingsController::class, 'getTowns'])->name('get-towns');
+            Route::get('/regions-data', [App\Http\Controllers\GeographicSettingsController::class, 'getRegions'])->name('get-regions');
+            Route::get('/building-types-data', [App\Http\Controllers\GeographicSettingsController::class, 'getBuildingTypes'])->name('get-building-types');
+            
+            Route::get('/states-by-country', [App\Http\Controllers\GeographicSettingsController::class, 'getStatesByCountry'])->name('get-states-by-country');
+            Route::get('/cities-by-state', [App\Http\Controllers\GeographicSettingsController::class, 'getCitiesByState'])->name('get-cities-by-state');
+            
+            Route::post('/countries', [App\Http\Controllers\GeographicSettingsController::class, 'storeCountry'])->name('store-country');
+            Route::put('/countries/{country}', [App\Http\Controllers\GeographicSettingsController::class, 'updateCountry'])->name('update-country');
+            Route::delete('/countries/{country}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyCountry'])->name('destroy-country');
+            
+            Route::post('/states', [App\Http\Controllers\GeographicSettingsController::class, 'storeState'])->name('store-state');
+            Route::put('/states/{state}', [App\Http\Controllers\GeographicSettingsController::class, 'updateState'])->name('update-state');
+            Route::delete('/states/{state}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyState'])->name('destroy-state');
+            
+            Route::post('/cities', [App\Http\Controllers\GeographicSettingsController::class, 'storeCity'])->name('store-city');
+            Route::put('/cities/{city}', [App\Http\Controllers\GeographicSettingsController::class, 'updateCity'])->name('update-city');
+            Route::delete('/cities/{city}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyCity'])->name('destroy-city');
+            
+            Route::post('/towns', [App\Http\Controllers\GeographicSettingsController::class, 'storeTown'])->name('store-town');
+            Route::put('/towns/{town}', [App\Http\Controllers\GeographicSettingsController::class, 'updateTown'])->name('update-town');
+            Route::delete('/towns/{town}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyTown'])->name('destroy-town');
+            
+            Route::post('/regions', [App\Http\Controllers\GeographicSettingsController::class, 'storeRegion'])->name('store-region');
+            Route::put('/regions/{region}', [App\Http\Controllers\GeographicSettingsController::class, 'updateRegion'])->name('update-region');
+            Route::delete('/regions/{region}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyRegion'])->name('destroy-region');
+            
+            Route::post('/building-types', [App\Http\Controllers\GeographicSettingsController::class, 'storeBuildingType'])->name('store-building-type');
+            Route::put('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'updateBuildingType'])->name('update-building-type');
+            Route::delete('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyBuildingType'])->name('destroy-building-type');
+        });
+        
         Route::resources(['language' => LanguageController::class]);
         Route::resources(['academic-year' => AcademicYearController::class]);
         Route::resources(['system-modules' => SystemModuleController::class]);

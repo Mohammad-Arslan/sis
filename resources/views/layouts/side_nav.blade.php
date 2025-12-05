@@ -1331,27 +1331,17 @@
             <li class="nav-item">
                 <a class="nav-link menu-link {{ Request::is('building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? '' : 'collapsed' }}"
                     href="#sidebarMultilevel" data-bs-toggle="collapse" role="button"
-                    aria-expanded="{{ Request::is('building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'true' : 'false' }}"
+                    aria-expanded="{{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'true' : 'false' }}"
                     aria-controls="sidebarMultilevel">
                     <i class="ri-settings-2-line"></i> <span data-key="t-multi-level">Setting</span>
                 </a>
-                <div class="collapse menu-dropdown {{ Request::is('building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'show' : '' }}"
+                <div class="collapse menu-dropdown {{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'show' : '' }}"
                     id="sidebarMultilevel">
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
-                            <a href="{{ route('building-type.index') }}"
-                                class="nav-link {{ Request::is('building-type') ? 'active' : '' }}"
-                                data-key="t-projects">Building Types</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('cities.index') }}"
-                                class="nav-link {{ Request::is('cities') ? 'active' : '' }}"
-                                data-key="t-crypto">Cities</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('countries.index') }}"
-                                class="nav-link {{ Request::is('countries') ? 'active' : '' }}"
-                                data-key="t-crm">Countries</a>
+                            <a href="{{ route('geographic-settings.index') }}"
+                                class="nav-link {{ Request::is('geographic-settings*') ? 'active' : '' }}"
+                                data-key="t-geographic">Geographic & Location</a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('classes.index') }}"
@@ -1482,11 +1472,6 @@
                                 data-key="t-projects">Student Previous School</a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('regions.index') }}"
-                                class="nav-link {{ Request::is('regions') ? 'active' : '' }}"
-                                data-key="t-projects">Regions</a>
-                        </li>
-                        <li class="nav-item">
                             <a href="#sidebarStudentsMulti"
                                 class="nav-link {{ Request::is('withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason') ? '' : 'collapsed' }}"
                                 data-bs-toggle="collapse" role="button"
@@ -1573,11 +1558,6 @@
                                 data-key="t-projects">Sections</a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('states.index') }}"
-                                class="nav-link {{ Request::is('states') ? 'active' : '' }}"
-                                data-key="t-ecommerce">States</a>
-                        </li>
-                        <li class="nav-item">
                             <a href="{{ route('subject-groups.index') }}"
                                 class="nav-link {{ Request::is('subject-groups') ? 'active' : '' }}"
                                 data-key="t-ecommerce">Subject Groups</a>
@@ -1596,11 +1576,6 @@
                         <a href="{{ route('system-notifications.index') }}" class="nav-link" data-key="t-projects">
                             System Notifications </a>
                 </li> --}}
-                        <li class="nav-item">
-                            <a href="{{ route('towns.index') }}"
-                                class="nav-link {{ Request::is('towns') ? 'active' : '' }}"
-                                data-key="t-projects">Towns</a>
-                        </li>
                         <li class="nav-item">
                             <a href="{{ route('inquiry-type.index') }}"
                                 class="nav-link {{ Request::is('inquiry-type') ? 'active' : '' }}"

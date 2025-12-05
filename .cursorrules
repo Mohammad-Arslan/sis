@@ -22,7 +22,7 @@ When writing code, **MUST** leverage the latest features of Laravel 12 and PHP 8
 - Utilize improved directory organization for better scalability
 
 #### Authentication & Security
-- Use `secureValidate()` method for stricter password policies and enhanced form validation
+- Use `validate()` method for request validation with proper validation rules
 - Implement improved authentication mechanisms
 - Leverage enhanced security features for API endpoints
 
@@ -109,13 +109,15 @@ $newUser->email = $newEmail;
 $newUser->updated_at = now();
 ```
 
-#### Using secureValidate() (Laravel 12)
+#### Using validate() (Laravel)
 ```php
-// ✅ GOOD: Use secureValidate() for enhanced validation
-$request->secureValidate();
+// ✅ GOOD: Use validate() for request validation
+$validated = $request->validate([
+    'field' => 'required|string|max:255',
+]);
 
-// ❌ BAD: Use standard validate() when secureValidate() is available
-$request->validate();
+// ❌ BAD: secureValidate() does not exist in Laravel
+$request->secureValidate();
 ```
 
 #### Using Asynchronous Caching (Laravel 12)
@@ -353,7 +355,7 @@ Cache::remember('key', 3600, fn() => expensiveOperation());
 ## Code Review Checklist
 - [ ] Follows DRY principle
 - [ ] Adheres to SOLID principles
-- [ ] **Uses latest Laravel 12 features** (async caching, secureValidate(), GraphQL, etc.)
+- [ ] **Uses latest Laravel 12 features** (async caching, improved validation, GraphQL, etc.)
 - [ ] **Uses latest PHP 8.5 features** (pipe operator, clone with, URI extension, #[\NoDiscard], etc.)
 - [ ] Has proper error handling
 - [ ] Includes validation
