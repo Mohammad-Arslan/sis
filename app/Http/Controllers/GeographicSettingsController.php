@@ -8,20 +8,39 @@ use App\Models\State;
 use App\Models\Town;
 use App\Models\Region;
 use App\Models\BuildingType;
+use App\Services\GeographicSettingsService;
+use App\Http\Requests\GeographicSettings\StoreCountryRequest;
+use App\Http\Requests\GeographicSettings\UpdateCountryRequest;
+use App\Http\Requests\GeographicSettings\StoreStateRequest;
+use App\Http\Requests\GeographicSettings\UpdateStateRequest;
+use App\Http\Requests\GeographicSettings\StoreCityRequest;
+use App\Http\Requests\GeographicSettings\UpdateCityRequest;
+use App\Http\Requests\GeographicSettings\StoreTownRequest;
+use App\Http\Requests\GeographicSettings\UpdateTownRequest;
+use App\Http\Requests\GeographicSettings\StoreRegionRequest;
+use App\Http\Requests\GeographicSettings\UpdateRegionRequest;
+use App\Http\Requests\GeographicSettings\StoreBuildingTypeRequest;
+use App\Http\Requests\GeographicSettings\UpdateBuildingTypeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 
 class GeographicSettingsController extends Controller
 {
+    public function __construct(
+        private readonly GeographicSettingsService $service
+    ) {}
+
     /**
      * Display the unified geographic settings page
      */
-    public function index(): \Illuminate\View\View
+    public function index(): View
     {
-        $countries = Country::all();
-        $regions = Region::all();
-        $buildingTypes = BuildingType::all();
+        $countries = $this->service->getCountries();
+        $regions = $this->service->getRegions();
+        $buildingTypes = $this->service->getBuildingTypes();
         
         return view('settings.geographic.index', compact('countries', 'regions', 'buildingTypes'));
     }
@@ -31,23 +50,17 @@ class GeographicSettingsController extends Controller
      */
     public function getCountries(Request $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $data = Country::query();
-            
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('action', function ($row) {
-                    $html = '<div class="d-flex gap-2">';
-                    $html .= '<button onclick="openCountryModal(' . $row->id . ')" class="btn btn-sm btn-primary" title="Edit"><i class="ri-edit-line"></i></button>';
-                    $html .= '<button onclick="deleteCountry(' . $row->id . ')" class="btn btn-sm btn-danger" title="Delete"><i class="ri-delete-bin-line"></i></button>';
-                    $html .= '</div>';
-                    return $html;
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request'], 400);
         }
+
+        $data = Country::query();
         
-        return response()->json(['error' => 'Invalid request'], 400);
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Country'))
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
     /**
@@ -55,30 +68,22 @@ class GeographicSettingsController extends Controller
      */
     public function getStates(Request $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $data = State::with('countries');
-            
-            if ($request->country_id && $request->country_id > 0) {
-                $data = $data->where('country_id', $request->country_id);
-            }
-            
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('country_name', function ($row) {
-                    return $row->countries?->country_name ?? 'N/A';
-                })
-                ->addColumn('action', function ($row) {
-                    $html = '<div class="d-flex gap-2">';
-                    $html .= '<button onclick="openStateModal(' . $row->id . ')" class="btn btn-sm btn-primary" title="Edit"><i class="ri-edit-line"></i></button>';
-                    $html .= '<button onclick="deleteState(' . $row->id . ')" class="btn btn-sm btn-danger" title="Delete"><i class="ri-delete-bin-line"></i></button>';
-                    $html .= '</div>';
-                    return $html;
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request'], 400);
+        }
+
+        $data = State::with('countries');
+        
+        if ($request->country_id && $request->country_id > 0) {
+            $data = $data->where('country_id', $request->country_id);
         }
         
-        return response()->json(['error' => 'Invalid request'], 400);
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('country_name', fn($row) => $row->countries?->country_name ?? 'N/A')
+            ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'State'))
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
     /**
@@ -86,39 +91,27 @@ class GeographicSettingsController extends Controller
      */
     public function getCities(Request $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $data = City::with('states.countries');
-            
-            if ($request->state_id && $request->state_id > 0) {
-                $data = $data->where('state_id', $request->state_id);
-            }
-            
-            if ($request->country_id && $request->country_id > 0) {
-                $data = $data->whereHas('states.countries', function ($query) use ($request) {
-                    $query->where('countries.id', $request->country_id);
-                });
-            }
-            
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('state_name', function ($row) {
-                    return $row->states?->state_name ?? 'N/A';
-                })
-                ->addColumn('country_name', function ($row) {
-                    return $row->states?->countries?->country_name ?? 'N/A';
-                })
-                ->addColumn('action', function ($row) {
-                    $html = '<div class="d-flex gap-2">';
-                    $html .= '<button onclick="openCityModal(' . $row->id . ')" class="btn btn-sm btn-primary" title="Edit"><i class="ri-edit-line"></i></button>';
-                    $html .= '<button onclick="deleteCity(' . $row->id . ')" class="btn btn-sm btn-danger" title="Delete"><i class="ri-delete-bin-line"></i></button>';
-                    $html .= '</div>';
-                    return $html;
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request'], 400);
+        }
+
+        $data = City::with('states.countries');
+        
+        if ($request->state_id && $request->state_id > 0) {
+            $data = $data->where('state_id', $request->state_id);
         }
         
-        return response()->json(['error' => 'Invalid request'], 400);
+        if ($request->country_id && $request->country_id > 0) {
+            $data = $data->whereHas('states.countries', fn($query) => $query->where('countries.id', $request->country_id));
+        }
+        
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('state_name', fn($row) => $row->states?->state_name ?? 'N/A')
+            ->addColumn('country_name', fn($row) => $row->states?->countries?->country_name ?? 'N/A')
+            ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'City'))
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
     /**
@@ -126,36 +119,24 @@ class GeographicSettingsController extends Controller
      */
     public function getTowns(Request $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $data = Town::with(['cities.states.countries']);
-            
-            if ($request->city_id && $request->city_id > 0) {
-                $data = $data->where('city_id', $request->city_id);
-            }
-            
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('city_name', function ($row) {
-                    return $row->cities?->city_name ?? 'N/A';
-                })
-                ->addColumn('state_name', function ($row) {
-                    return $row->cities?->states?->state_name ?? 'N/A';
-                })
-                ->addColumn('country_name', function ($row) {
-                    return $row->cities?->states?->countries?->country_name ?? 'N/A';
-                })
-                ->addColumn('action', function ($row) {
-                    $html = '<div class="d-flex gap-2">';
-                    $html .= '<button onclick="openTownModal(' . $row->id . ')" class="btn btn-sm btn-primary" title="Edit"><i class="ri-edit-line"></i></button>';
-                    $html .= '<button onclick="deleteTown(' . $row->id . ')" class="btn btn-sm btn-danger" title="Delete"><i class="ri-delete-bin-line"></i></button>';
-                    $html .= '</div>';
-                    return $html;
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request'], 400);
+        }
+
+        $data = Town::with(['cities.states.countries']);
+        
+        if ($request->city_id && $request->city_id > 0) {
+            $data = $data->where('city_id', $request->city_id);
         }
         
-        return response()->json(['error' => 'Invalid request'], 400);
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('city_name', fn($row) => $row->cities?->city_name ?? 'N/A')
+            ->addColumn('state_name', fn($row) => $row->cities?->states?->state_name ?? 'N/A')
+            ->addColumn('country_name', fn($row) => $row->cities?->states?->countries?->country_name ?? 'N/A')
+            ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Town'))
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
     /**
@@ -163,23 +144,17 @@ class GeographicSettingsController extends Controller
      */
     public function getRegions(Request $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $data = Region::query();
-            
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('action', function ($row) {
-                    $html = '<div class="d-flex gap-2">';
-                    $html .= '<button onclick="openRegionModal(' . $row->id . ')" class="btn btn-sm btn-primary" title="Edit"><i class="ri-edit-line"></i></button>';
-                    $html .= '<button onclick="deleteRegion(' . $row->id . ')" class="btn btn-sm btn-danger" title="Delete"><i class="ri-delete-bin-line"></i></button>';
-                    $html .= '</div>';
-                    return $html;
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request'], 400);
         }
+
+        $data = Region::query();
         
-        return response()->json(['error' => 'Invalid request'], 400);
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Region'))
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
     /**
@@ -187,63 +162,64 @@ class GeographicSettingsController extends Controller
      */
     public function getBuildingTypes(Request $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $data = BuildingType::query();
-            
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('action', function ($row) {
-                    $html = '<div class="d-flex gap-2">';
-                    $html .= '<button onclick="openBuildingTypeModal(' . $row->id . ')" class="btn btn-sm btn-primary" title="Edit"><i class="ri-edit-line"></i></button>';
-                    $html .= '<button onclick="deleteBuildingType(' . $row->id . ')" class="btn btn-sm btn-danger" title="Delete"><i class="ri-delete-bin-line"></i></button>';
-                    $html .= '</div>';
-                    return $html;
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        if (!$request->ajax()) {
+            return response()->json(['error' => 'Invalid request'], 400);
         }
+
+        $data = BuildingType::query();
         
-        return response()->json(['error' => 'Invalid request'], 400);
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'BuildingType'))
+            ->rawColumns(['action'])
+            ->make(true);
     }
 
     /**
      * Store a new country
      */
-    public function storeCountry(Request $request): JsonResponse
+    public function storeCountry(StoreCountryRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'country_name' => 'required|unique:countries,country_name',
-            'abbreviation' => 'required',
-            'country_code' => 'required',
-        ]);
+        try {
+            $country = $this->service->createCountry($request->validated());
 
-        $country = Country::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Country created successfully.',
-            'data' => $country
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Country created successfully.',
+                'data' => $country
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create country', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create country. Please try again.'
+            ], 500);
+        }
     }
 
     /**
      * Update a country
      */
-    public function updateCountry(Request $request, Country $country): JsonResponse
+    public function updateCountry(UpdateCountryRequest $request, Country $country): JsonResponse
     {
-        $validated = $request->validate([
-            'country_name' => 'required|unique:countries,country_name,' . $country->id,
-            'abbreviation' => 'required',
-            'country_code' => 'required',
-        ]);
+        try {
+            $country = $this->service->updateCountry($country, $request->validated());
 
-        $country->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Country updated successfully.',
-            'data' => $country->fresh()
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Country updated successfully.',
+                'data' => $country
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update country', [
+                'country_id' => $country->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update country. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -252,55 +228,74 @@ class GeographicSettingsController extends Controller
     public function destroyCountry(Country $country): JsonResponse
     {
         try {
-            $country->delete();
+            $this->service->deleteCountry($country);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Country deleted successfully.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete country. It may be in use.'
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete country', [
+                'country_id' => $country->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete country. Please try again.'
+            ], 500);
         }
     }
 
     /**
      * Store a new state
      */
-    public function storeState(Request $request): JsonResponse
+    public function storeState(StoreStateRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'state_name' => 'required|unique:states,state_name',
-            'country_id' => 'required|exists:countries,id',
-        ]);
+        try {
+            $state = $this->service->createState($request->validated());
 
-        $state = State::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'State created successfully.',
-            'data' => $state->load('countries')
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'State created successfully.',
+                'data' => $state
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create state', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create state. Please try again.'
+            ], 500);
+        }
     }
 
     /**
      * Update a state
      */
-    public function updateState(Request $request, State $state): JsonResponse
+    public function updateState(UpdateStateRequest $request, State $state): JsonResponse
     {
-        $validated = $request->validate([
-            'state_name' => 'required|unique:states,state_name,' . $state->id,
-            'country_id' => 'required|exists:countries,id',
-        ]);
+        try {
+            $state = $this->service->updateState($state, $request->validated());
 
-        $state->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'State updated successfully.',
-            'data' => $state->fresh()->load('countries')
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'State updated successfully.',
+                'data' => $state
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update state', [
+                'state_id' => $state->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update state. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -309,57 +304,74 @@ class GeographicSettingsController extends Controller
     public function destroyState(State $state): JsonResponse
     {
         try {
-            $state->delete();
+            $this->service->deleteState($state);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'State deleted successfully.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete state. It may be in use.'
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete state', [
+                'state_id' => $state->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete state. Please try again.'
+            ], 500);
         }
     }
 
     /**
      * Store a new city
      */
-    public function storeCity(Request $request): JsonResponse
+    public function storeCity(StoreCityRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'city_name' => 'required|unique:cities,city_name',
-            'abbreviation' => 'required',
-            'state_id' => 'required|exists:states,id',
-        ]);
+        try {
+            $city = $this->service->createCity($request->validated());
 
-        $city = City::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'City created successfully.',
-            'data' => $city->load('states')
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'City created successfully.',
+                'data' => $city
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create city', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create city. Please try again.'
+            ], 500);
+        }
     }
 
     /**
      * Update a city
      */
-    public function updateCity(Request $request, City $city): JsonResponse
+    public function updateCity(UpdateCityRequest $request, City $city): JsonResponse
     {
-        $validated = $request->validate([
-            'city_name' => 'required|unique:cities,city_name,' . $city->id,
-            'abbreviation' => 'required',
-            'state_id' => 'required|exists:states,id',
-        ]);
+        try {
+            $city = $this->service->updateCity($city, $request->validated());
 
-        $city->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'City updated successfully.',
-            'data' => $city->fresh()->load('states')
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'City updated successfully.',
+                'data' => $city
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update city', [
+                'city_id' => $city->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update city. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -368,55 +380,74 @@ class GeographicSettingsController extends Controller
     public function destroyCity(City $city): JsonResponse
     {
         try {
-            $city->delete();
+            $this->service->deleteCity($city);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'City deleted successfully.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete city. It may be in use.'
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete city', [
+                'city_id' => $city->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete city. Please try again.'
+            ], 500);
         }
     }
 
     /**
      * Store a new town
      */
-    public function storeTown(Request $request): JsonResponse
+    public function storeTown(StoreTownRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'town_name' => 'required',
-            'city_id' => 'required|exists:cities,id',
-        ]);
+        try {
+            $town = $this->service->createTown($request->validated());
 
-        $town = Town::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Town created successfully.',
-            'data' => $town->load('cities')
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Town created successfully.',
+                'data' => $town
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create town', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create town. Please try again.'
+            ], 500);
+        }
     }
 
     /**
      * Update a town
      */
-    public function updateTown(Request $request, Town $town): JsonResponse
+    public function updateTown(UpdateTownRequest $request, Town $town): JsonResponse
     {
-        $validated = $request->validate([
-            'town_name' => 'required|unique:towns,town_name,' . $town->id,
-            'city_id' => 'required|exists:cities,id',
-        ]);
+        try {
+            $town = $this->service->updateTown($town, $request->validated());
 
-        $town->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Town updated successfully.',
-            'data' => $town->fresh()->load('cities')
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Town updated successfully.',
+                'data' => $town
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update town', [
+                'town_id' => $town->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update town. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -425,55 +456,74 @@ class GeographicSettingsController extends Controller
     public function destroyTown(Town $town): JsonResponse
     {
         try {
-            $town->delete();
+            $this->service->deleteTown($town);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Town deleted successfully.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete town. It may be in use.'
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete town', [
+                'town_id' => $town->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete town. Please try again.'
+            ], 500);
         }
     }
 
     /**
      * Store a new region
      */
-    public function storeRegion(Request $request): JsonResponse
+    public function storeRegion(StoreRegionRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'region_name' => 'required|unique:regions,region_name',
-            'abbreviation' => 'required',
-        ]);
+        try {
+            $region = $this->service->createRegion($request->validated());
 
-        $region = Region::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Region created successfully.',
-            'data' => $region
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Region created successfully.',
+                'data' => $region
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create region', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create region. Please try again.'
+            ], 500);
+        }
     }
 
     /**
      * Update a region
      */
-    public function updateRegion(Request $request, Region $region): JsonResponse
+    public function updateRegion(UpdateRegionRequest $request, Region $region): JsonResponse
     {
-        $validated = $request->validate([
-            'region_name' => 'required|unique:regions,region_name,' . $region->id,
-            'abbreviation' => 'required',
-        ]);
+        try {
+            $region = $this->service->updateRegion($region, $request->validated());
 
-        $region->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Region updated successfully.',
-            'data' => $region->fresh()
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Region updated successfully.',
+                'data' => $region
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update region', [
+                'region_id' => $region->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update region. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -482,53 +532,74 @@ class GeographicSettingsController extends Controller
     public function destroyRegion(Region $region): JsonResponse
     {
         try {
-            $region->delete();
+            $this->service->deleteRegion($region);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Region deleted successfully.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete region. It may be in use.'
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete region', [
+                'region_id' => $region->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete region. Please try again.'
+            ], 500);
         }
     }
 
     /**
      * Store a new building type
      */
-    public function storeBuildingType(Request $request): JsonResponse
+    public function storeBuildingType(StoreBuildingTypeRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'type_name' => 'required',
-        ]);
+        try {
+            $buildingType = $this->service->createBuildingType($request->validated());
 
-        $buildingType = BuildingType::create($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Building type created successfully.',
-            'data' => $buildingType
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Building type created successfully.',
+                'data' => $buildingType
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create building type', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create building type. Please try again.'
+            ], 500);
+        }
     }
 
     /**
      * Update a building type
      */
-    public function updateBuildingType(Request $request, BuildingType $buildingType): JsonResponse
+    public function updateBuildingType(UpdateBuildingTypeRequest $request, BuildingType $buildingType): JsonResponse
     {
-        $validated = $request->validate([
-            'type_name' => 'required',
-        ]);
+        try {
+            $buildingType = $this->service->updateBuildingType($buildingType, $request->validated());
 
-        $buildingType->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Building type updated successfully.',
-            'data' => $buildingType->fresh()
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Building type updated successfully.',
+                'data' => $buildingType
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to update building type', [
+                'building_type_id' => $buildingType->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update building type. Please try again.'
+            ], 500);
+        }
     }
 
     /**
@@ -537,16 +608,26 @@ class GeographicSettingsController extends Controller
     public function destroyBuildingType(BuildingType $buildingType): JsonResponse
     {
         try {
-            $buildingType->delete();
+            $this->service->deleteBuildingType($buildingType);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Building type deleted successfully.'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot delete building type. It may be in use.'
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete building type', [
+                'building_type_id' => $buildingType->id,
+                'error' => $e->getMessage()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete building type. Please try again.'
+            ], 500);
         }
     }
 
@@ -555,7 +636,9 @@ class GeographicSettingsController extends Controller
      */
     public function getStatesByCountry(Request $request): JsonResponse
     {
-        $states = State::where('country_id', $request->country_id)->get();
+        $request->validate(['country_id' => 'required|exists:countries,id']);
+        
+        $states = $this->service->getStatesByCountry($request->country_id);
         return response()->json($states);
     }
 
@@ -564,7 +647,9 @@ class GeographicSettingsController extends Controller
      */
     public function getCitiesByState(Request $request): JsonResponse
     {
-        $cities = City::where('state_id', $request->state_id)->get();
+        $request->validate(['state_id' => 'required|exists:states,id']);
+        
+        $cities = $this->service->getCitiesByState($request->state_id);
         return response()->json($cities);
     }
 
@@ -616,4 +701,3 @@ class GeographicSettingsController extends Controller
         return response()->json($buildingType);
     }
 }
-

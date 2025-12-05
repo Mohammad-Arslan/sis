@@ -27,7 +27,7 @@ When writing code, **MUST** leverage the latest features of Laravel 12 and PHP 8
 - Leverage enhanced security features for API endpoints
 
 #### Performance Enhancements
-- **Asynchronous Caching**: Use Laravel 12's asynchronous caching for better performance
+- **Caching**: Use Laravel's caching for better performance (`Cache::remember()`, `Cache::put()`, etc.)
 - **Improved Job Queue**: Leverage enhanced job queue handling and processing
 - Use optimized query builders and Eloquent improvements
 
@@ -120,13 +120,16 @@ $validated = $request->validate([
 $request->secureValidate();
 ```
 
-#### Using Asynchronous Caching (Laravel 12)
+#### Using Caching (Laravel)
 ```php
-// ✅ GOOD: Use async caching for better performance
-Cache::async()->remember('key', 3600, fn() => expensiveOperation());
-
-// ❌ BAD: Use synchronous caching when async is available
+// ✅ GOOD: Use caching for better performance
 Cache::remember('key', 3600, fn() => expensiveOperation());
+
+// ✅ GOOD: Use cache tags for related data (Redis/Memcached)
+Cache::tags(['users', 'profiles'])->remember('key', 3600, fn() => expensiveOperation());
+
+// ❌ BAD: Don't cache without expiration
+Cache::forever('key', $data); // Use with caution
 ```
 
 ## Core Principles
@@ -355,7 +358,7 @@ Cache::remember('key', 3600, fn() => expensiveOperation());
 ## Code Review Checklist
 - [ ] Follows DRY principle
 - [ ] Adheres to SOLID principles
-- [ ] **Uses latest Laravel 12 features** (async caching, improved validation, GraphQL, etc.)
+- [ ] **Uses latest Laravel 12 features** (improved validation, GraphQL, etc.)
 - [ ] **Uses latest PHP 8.5 features** (pipe operator, clone with, URI extension, #[\NoDiscard], etc.)
 - [ ] Has proper error handling
 - [ ] Includes validation
