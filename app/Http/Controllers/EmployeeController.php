@@ -47,6 +47,7 @@ use App\Exports\ExportEmployee;
 use App\Jobs\ProcessEmployeeExport;
 use App\Jobs\ProcessEmployeeImport;
 use App\Models\ImportProgress;
+use App\Models\ImportErrorLog;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -1318,10 +1319,10 @@ class EmployeeController extends Controller
             // Generate unique import ID
             $importId = uniqid('emp_import_', true);
             
-            // Store file temporarily
+            // Store file temporarily (use local disk explicitly)
             $file = $request->file('file');
             $fileName = $importId . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('imports/employees', $fileName);
+            $filePath = $file->storeAs('imports/employees', $fileName, 'local');
             
             // Create import progress record
             $importProgress = ImportProgress::create([
@@ -1550,5 +1551,135 @@ class EmployeeController extends Controller
         }
         
         return Storage::disk('local')->download($filePath, $exportProgress->file_name);
+    }
+
+    /**
+     * Get error logs for a specific import
+     */
+    public function getImportErrorLogs(Request $request)
+    {
+        $importId = $request->get('import_id');
+        
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+        
+        // Get import progress to verify ownership
+        $importProgress = ImportProgress::where('import_id', $importId)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$importProgress) {
+            return response()->json(['error' => 'Import not found'], 404);
+        }
+        
+        // Get error logs with pagination
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 50);
+        $errorType = $request->get('error_type');
+        
+        $query = ImportErrorLog::forImport($importId)
+            ->orderBy('occurred_at', 'desc');
+            
+        if ($errorType) {
+            $query->byErrorType($errorType);
+        }
+        
+        $errorLogs = $query->paginate($perPage, ['*'], 'page', $page);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $errorLogs->items(),
+            'pagination' => [
+                'current_page' => $errorLogs->currentPage(),
+                'last_page' => $errorLogs->lastPage(),
+                'per_page' => $errorLogs->perPage(),
+                'total' => $errorLogs->total(),
+                'from' => $errorLogs->firstItem(),
+                'to' => $errorLogs->lastItem(),
+            ],
+            'error_summary' => $this->getErrorSummary($importId)
+        ]);
+    }
+
+    /**
+     * Get error summary for an import
+     */
+    public function getErrorSummary($importId)
+    {
+        $summary = ImportErrorLog::forImport($importId)
+            ->selectRaw('error_type, COUNT(*) as count')
+            ->groupBy('error_type')
+            ->get()
+            ->keyBy('error_type');
+            
+        return [
+            'validation_error' => $summary->get('validation_error')->count ?? 0,
+            'import_error' => $summary->get('import_error')->count ?? 0,
+            'lookup_error' => $summary->get('lookup_error')->count ?? 0,
+            'missing_fields' => $summary->get('missing_fields')->count ?? 0,
+            'database_error' => $summary->get('database_error')->count ?? 0,
+            'total' => $summary->sum('count')
+        ];
+    }
+
+    /**
+     * Clear error logs for a specific import
+     */
+    public function clearImportErrorLogs(Request $request)
+    {
+        $importId = $request->get('import_id');
+        
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+        
+        // Get import progress to verify ownership
+        $importProgress = ImportProgress::where('import_id', $importId)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$importProgress) {
+            return response()->json(['error' => 'Import not found'], 404);
+        }
+        
+        $deletedCount = ImportErrorLog::truncateForImport($importId);
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Cleared {$deletedCount} error log entries",
+            'deleted_count' => $deletedCount
+        ]);
+    }
+
+    /**
+     * Get recent import history for the user
+     */
+    public function getImportHistory(Request $request)
+    {
+        $perPage = $request->get('per_page', 10);
+        
+        $imports = ImportProgress::where('user_id', auth()->id())
+            ->where('import_type', 'employee')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+        
+        // Add error counts to each import
+        $imports->getCollection()->transform(function ($import) {
+            $errorCount = ImportErrorLog::forImport($import->import_id)->count();
+            $import->error_count = $errorCount;
+            return $import;
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $imports->items(),
+            'pagination' => [
+                'current_page' => $imports->currentPage(),
+                'last_page' => $imports->lastPage(),
+                'per_page' => $imports->perPage(),
+                'total' => $imports->total(),
+            ]
+        ]);
     }
 }

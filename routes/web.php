@@ -1132,6 +1132,11 @@ Route::get('/test-websocket', function () {
 // Import Statistics Route
 Route::get('/import-stats', [App\Http\Controllers\EmployeeController::class, 'getImportStats'])->middleware('auth')->name('import.stats');
 
+// Import Error Logs Routes
+Route::get('/import-error-logs', [App\Http\Controllers\EmployeeController::class, 'getImportErrorLogs'])->middleware('auth')->name('import.error-logs');
+Route::delete('/import-error-logs', [App\Http\Controllers\EmployeeController::class, 'clearImportErrorLogs'])->middleware('auth')->name('import.error-logs.clear');
+Route::get('/import-history', [App\Http\Controllers\EmployeeController::class, 'getImportHistory'])->middleware('auth')->name('import.history');
+
 // Export Routes
 Route::post('/employees/export', [App\Http\Controllers\EmployeeController::class, 'exportEmployees'])->middleware('auth')->name('employees.export');
 Route::get('/export-stats', [App\Http\Controllers\EmployeeController::class, 'getExportStats'])->middleware('auth')->name('export.stats');

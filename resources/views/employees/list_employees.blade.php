@@ -26,6 +26,11 @@
                         id="viewImportLogsBtn">
                         <i class="ri-file-list-3-line label-icon align-middle fs-16 me-2"></i> Logs
                     </button>
+                    <button type="button"
+                        class="btn btn-sm btn-info btn-label waves-effect waves-light"
+                        id="viewImportProgressBtn" style="display: none;">
+                        <i class="ri-progress-1-line label-icon align-middle fs-16 me-2"></i> Progress
+                    </button>
                 </div>
             </div>
             <div class="card">
@@ -160,29 +165,146 @@
     <!-- Include the import modal -->
     @include('employees.employee_import_modal')
 
-    <!-- Modal for Import Logs -->
+    <!-- Modal for Import Error Logs -->
     <div class="modal fade" id="importLogsModal" tabindex="-1" aria-labelledby="importLogsModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="importLogsModalLabel">Import Error Logs</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="importLogsModalLabel">
+              <i class="ri-error-warning-line me-2"></i>Import Error Logs
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" id="importLogsContent">
-            <!-- Logs will be loaded here -->
+          <div class="modal-body">
+            <!-- Error Summary -->
+            <div class="row mb-4" id="errorSummaryRow" style="display: none;">
+              <div class="col-12">
+                <h6 class="text-muted mb-3">Error Summary</h6>
+                <div class="row g-2">
+                  <div class="col-md-2">
+                    <div class="card border-danger">
+                      <div class="card-body text-center p-2">
+                        <small class="text-danger fw-bold">Validation</small>
+                        <div class="fs-5 text-danger" id="summaryValidationErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-warning">
+                      <div class="card-body text-center p-2">
+                        <small class="text-warning fw-bold">Import</small>
+                        <div class="fs-5 text-warning" id="summaryImportErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-info">
+                      <div class="card-body text-center p-2">
+                        <small class="text-info fw-bold">Lookup</small>
+                        <div class="fs-5 text-info" id="summaryLookupErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-secondary">
+                      <div class="card-body text-center p-2">
+                        <small class="text-secondary fw-bold">Missing</small>
+                        <div class="fs-5 text-secondary" id="summaryMissingErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-dark">
+                      <div class="card-body text-center p-2">
+                        <small class="text-dark fw-bold">Database</small>
+                        <div class="fs-5 text-dark" id="summaryDatabaseErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-primary">
+                      <div class="card-body text-center p-2">
+                        <small class="text-primary fw-bold">Total</small>
+                        <div class="fs-5 text-primary" id="summaryTotalErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <select class="form-select" id="errorTypeFilter">
+                  <option value="">All Error Types</option>
+                  <option value="validation_error">Validation Errors</option>
+                  <option value="import_error">Import Errors</option>
+                  <option value="lookup_error">Lookup Errors</option>
+                  <option value="missing_fields">Missing Fields</option>
+                  <option value="database_error">Database Errors</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-danger btn-sm" id="clearErrorLogsBtn">
+                  <i class="ri-delete-bin-line me-1"></i>Clear Logs
+                </button>
+              </div>
+              <div class="col-md-4 text-end">
+                <small class="text-muted" id="errorLogsInfo">Loading...</small>
+              </div>
+            </div>
+
+            <!-- Error Logs Table -->
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-sm table-hover">
+                <thead class="table-dark sticky-top">
+                  <tr>
+                    <th width="5%">Row</th>
+                    <th width="15%">Error Type</th>
+                    <th width="20%">Field</th>
+                    <th width="35%">Message</th>
+                    <th width="15%">Value</th>
+                    <th width="10%">Time</th>
+                  </tr>
+                </thead>
+                <tbody id="errorLogsTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="ri-error-warning-line fs-1 d-block mb-2"></i>
+                      No error logs found. Select an import to view its error logs.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Error logs pagination" class="mt-3">
+              <ul class="pagination pagination-sm justify-content-center" id="errorLogsPagination">
+                <!-- Pagination will be loaded here -->
+              </ul>
+            </nav>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-outline-primary" id="refreshErrorLogsBtn">
+              <i class="ri-refresh-line me-1"></i>Refresh
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Import Progress Modal -->
-    <div class="modal fade" id="importProgressModal" tabindex="-1" aria-labelledby="importProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="importProgressModal" tabindex="-1" aria-labelledby="importProgressModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title" id="importProgressModalLabel">
                         <i class="ri-upload-cloud-2-line me-2"></i>Employee Import Progress
                     </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Progress Bar -->
@@ -295,13 +417,14 @@
     </div>
 
     <!-- Export Progress Modal -->
-    <div class="modal fade" id="exportProgressModal" tabindex="-1" aria-labelledby="exportProgressModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="exportProgressModal" tabindex="-1" aria-labelledby="exportProgressModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="exportProgressModalLabel">
                         <i class="ri-download-2-line me-2"></i>Employee Export Progress
                     </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Progress Bar -->
@@ -718,6 +841,12 @@
                         $('#importEmployeesModal').modal('hide');
                         
                         if (result.success && result.import_id) {
+                            // Store import ID globally for modal reopening
+                            importId = result.import_id;
+                            
+                            // Show the progress button
+                            $('#viewImportProgressBtn').show();
+                            
                             // Show import progress modal
                             $('#importProgressModal').modal('show');
                             
@@ -887,10 +1016,24 @@
             $('#employee-table').DataTable().ajax.reload();
         });
 
-        // Handle logs button click
+        // Handle logs button click (updated to use new error logs system)
         $(document).on('click', '#viewImportLogsBtn', function() {
+            if (importId) {
+                // Show error logs modal
+                const logsModal = new bootstrap.Modal(document.getElementById('importLogsModal'));
+                logsModal.show();
+                
+                // Load error logs
+                loadErrorLogs(importId, 1, '');
+            } else {
+                alert('No import ID available. Please start an import first.');
+            }
+        });
+
+        // Legacy logs button handler (keeping for compatibility)
+        $(document).on('click', '#viewImportLogsBtnLegacy', function() {
             $.ajax({
-                url: '{{ route("employees.import-stats") }}',
+                url: '{{ route("import.stats") }}',
                 method: 'GET',
                 success: function(response) {
                     if (response.log_file_exists && response.log_content) {
@@ -1205,41 +1348,58 @@ This report was generated automatically by the SuperNova SIS system.`;
             const errorsTableBody = document.getElementById('importErrorsTableBody');
             const downloadBtn = document.getElementById('importDownloadBtn');
             
-            // Update counts
-            totalRows.textContent = data.total || 0;
-            importedCount.textContent = data.imported || 0;
-            skippedCount.textContent = data.skipped || 0;
-            currentRow.textContent = data.current_row || 0;
+            // Update counts (with null checks)
+            if (totalRows) totalRows.textContent = data.total || 0;
+            if (importedCount) importedCount.textContent = data.imported || 0;
+            if (skippedCount) skippedCount.textContent = data.skipped || 0;
+            if (currentRow) currentRow.textContent = data.current_row || 0;
             
-            // Update status
-            progressStatus.textContent = getImportStatusText(data.status);
-            progressStatus.className = 'badge fs-6 ' + getImportStatusBadgeClass(data.status);
-            progressMessageText.textContent = data.message || 'Processing...';
+            // Update status (with null checks)
+            if (progressStatus) {
+                progressStatus.textContent = getImportStatusText(data.status);
+                progressStatus.className = 'badge fs-6 ' + getImportStatusBadgeClass(data.status);
+            }
+            if (progressMessageText) {
+                progressMessageText.textContent = data.message || 'Processing...';
+            }
             
-            // Update progress bar
+            // Update progress bar (with null checks)
             const percentage = data.percentage || 0;
-            progressBar.style.width = percentage + '%';
-            progressBar.textContent = percentage.toFixed(1) + '%';
-            progressPercentage.textContent = percentage.toFixed(1) + '%';
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+                progressBar.textContent = percentage.toFixed(1) + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = percentage.toFixed(1) + '%';
+            }
             
-            // Update progress text
-            progressText.textContent = `${data.processed || 0} of ${data.total || 0} rows processed`;
+            // Update progress text (with null checks)
+            if (progressText) {
+                progressText.textContent = `${data.processed || 0} of ${data.total || 0} rows processed`;
+            }
             
             // Handle different statuses
             if (data.status === 'completed') {
-                progressMessageContainer.className = 'alert alert-success';
-                progressMessageContainer.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <i class="ri-check-circle-fill text-success fs-4"></i>
+                if (progressMessageContainer) {
+                    progressMessageContainer.className = 'alert alert-success';
+                    progressMessageContainer.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-check-circle-fill text-success fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Import Completed!</strong><br>
+                                ${data.message || 'Import completed successfully!'}
+                            </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <strong>Import Completed!</strong><br>
-                            ${data.message || 'Import completed successfully!'}
-                        </div>
-                    </div>
-                `;
-                downloadBtn.style.display = 'inline-block';
+                    `;
+                }
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'inline-block';
+                }
+                
+                // Hide progress button when completed
+                $('#viewImportProgressBtn').hide();
                 
                 // Stop progress polling
                 if (importProgressInterval) {
@@ -1247,18 +1407,23 @@ This report was generated automatically by the SuperNova SIS system.`;
                     importProgressInterval = null;
                 }
             } else if (data.status === 'failed') {
-                progressMessageContainer.className = 'alert alert-danger';
-                progressMessageContainer.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <i class="ri-error-warning-fill text-danger fs-4"></i>
+                if (progressMessageContainer) {
+                    progressMessageContainer.className = 'alert alert-danger';
+                    progressMessageContainer.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-error-warning-fill text-danger fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Import Failed!</strong><br>
+                                ${data.message || 'Import failed with errors.'}
+                            </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <strong>Import Failed!</strong><br>
-                            ${data.message || 'Import failed with errors.'}
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
+                
+                // Hide progress button when failed
+                $('#viewImportProgressBtn').hide();
                 
                 // Stop progress polling
                 if (importProgressInterval) {
@@ -1266,26 +1431,28 @@ This report was generated automatically by the SuperNova SIS system.`;
                     importProgressInterval = null;
                 }
             } else {
-                progressMessageContainer.className = 'alert alert-info';
-                progressMessageContainer.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="spinner-border spinner-border-sm text-info" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                if (progressMessageContainer) {
+                    progressMessageContainer.className = 'alert alert-info';
+                    progressMessageContainer.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="spinner-border spinner-border-sm text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Status:</strong> <span class="badge fs-6 ${getImportStatusBadgeClass(data.status)}">${getImportStatusText(data.status)}</span><br>
+                                ${data.message || 'Processing...'}
                             </div>
                         </div>
-                        <div class="flex-grow-1 ms-3">
-                            <strong>Status:</strong> <span class="badge fs-6 ${getImportStatusBadgeClass(data.status)}">${getImportStatusText(data.status)}</span><br>
-                            ${data.message || 'Processing...'}
-                        </div>
-                    </div>
-                `;
+                    `;
+                }
             }
             
             // Show errors if any
             if (data.errors && data.errors > 0) {
-                errorsCard.style.display = 'block';
-                errorCount.textContent = data.errors;
+                if (errorsCard) errorsCard.style.display = 'block';
+                if (errorCount) errorCount.textContent = data.errors;
             }
         }
 
@@ -1311,10 +1478,21 @@ This report was generated automatically by the SuperNova SIS system.`;
             }
         }
 
+        // Get import progress bar class
+        function getImportProgressBarClass(status) {
+            switch (status) {
+                case 'starting': return 'bg-info';
+                case 'processing': return 'bg-primary';
+                case 'completed': return 'bg-success';
+                case 'failed': return 'bg-danger';
+                default: return 'bg-info';
+            }
+        }
+
         // Load import progress data
         function loadImportProgress(importId) {
             $.ajax({
-                url: '{{ route("employees.import-stats") }}',
+                url: '{{ route("import.stats") }}',
                 method: 'GET',
                 data: { import_id: importId },
                 success: function(data) {
@@ -1577,6 +1755,299 @@ This report was generated automatically by the SuperNova SIS system.`;
         document.getElementById('exportProgressModal').addEventListener('show.bs.modal', function () {
             if (exportId) {
                 loadExportProgress(exportId);
+            }
+        });
+
+        // ==================== ERROR LOGS FUNCTIONALITY ====================
+        
+        let currentImportId = null;
+        let currentErrorPage = 1;
+        let currentErrorType = '';
+
+        // Handle Progress button click
+        $(document).on('click', '#viewImportProgressBtn', function() {
+            if (importId) {
+                // Show import progress modal
+                const progressModal = new bootstrap.Modal(document.getElementById('importProgressModal'));
+                progressModal.show();
+            } else {
+                alert('No import ID available. Please start an import first.');
+            }
+        });
+
+        // Handle Logs button click
+        $(document).on('click', '#logsBtn', function() {
+            if (importId) {
+                // Show error logs modal
+                const logsModal = new bootstrap.Modal(document.getElementById('importLogsModal'));
+                logsModal.show();
+                
+                // Load error logs
+                loadErrorLogs(importId, 1, '');
+            } else {
+                alert('No import ID available. Please start an import first.');
+            }
+        });
+
+        // Load error logs
+        function loadErrorLogs(importId, page = 1, errorType = '') {
+            currentErrorPage = page;
+            currentErrorType = errorType;
+            
+            const params = new URLSearchParams({
+                import_id: importId,
+                page: page,
+                per_page: 50
+            });
+            
+            if (errorType) {
+                params.append('error_type', errorType);
+            }
+            
+            fetch(`{{ route('import.error-logs') }}?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateErrorLogsUI(data);
+                        updateErrorSummary(data.error_summary);
+                    } else {
+                        console.error('Error loading error logs:', data.error);
+                        showErrorLogsMessage('Error loading logs: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading error logs:', error);
+                    showErrorLogsMessage('Error loading logs: ' + error.message);
+                });
+        }
+
+        // Update error logs UI
+        function updateErrorLogsUI(data) {
+            const tbody = document.getElementById('errorLogsTableBody');
+            const pagination = document.getElementById('errorLogsPagination');
+            const info = document.getElementById('errorLogsInfo');
+            
+            // Update info
+            if (info && data.pagination) {
+                const pag = data.pagination;
+                info.textContent = `Showing ${pag.from || 0} to ${pag.to || 0} of ${pag.total} errors`;
+            }
+            
+            // Update table
+            if (data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map(error => `
+                    <tr>
+                        <td><span class="badge bg-secondary">${error.row_number}</span></td>
+                        <td>
+                            <span class="badge ${getErrorTypeBadgeClass(error.error_type)}">
+                                ${getErrorTypeName(error.error_type)}
+                            </span>
+                        </td>
+                        <td><small>${error.field_name || '-'}</small></td>
+                        <td>
+                            <small title="${error.error_message}">
+                                ${truncateText(error.error_message, 60)}
+                            </small>
+                        </td>
+                        <td>
+                            <small title="${error.problematic_value || ''}">
+                                ${truncateText(error.problematic_value || '-', 30)}
+                            </small>
+                        </td>
+                        <td><small>${formatTime(error.occurred_at)}</small></td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="ri-check-line fs-1 d-block mb-2 text-success"></i>
+                            No error logs found for this import.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            // Update pagination
+            updateErrorLogsPagination(data.pagination);
+        }
+
+        // Update error summary
+        function updateErrorSummary(summary) {
+            if (summary && summary.total > 0) {
+                document.getElementById('errorSummaryRow').style.display = 'block';
+                document.getElementById('summaryValidationErrors').textContent = summary.validation_error || 0;
+                document.getElementById('summaryImportErrors').textContent = summary.import_error || 0;
+                document.getElementById('summaryLookupErrors').textContent = summary.lookup_error || 0;
+                document.getElementById('summaryMissingErrors').textContent = summary.missing_fields || 0;
+                document.getElementById('summaryDatabaseErrors').textContent = summary.database_error || 0;
+                document.getElementById('summaryTotalErrors').textContent = summary.total || 0;
+            } else {
+                document.getElementById('errorSummaryRow').style.display = 'none';
+            }
+        }
+
+        // Update pagination
+        function updateErrorLogsPagination(pagination) {
+            const paginationEl = document.getElementById('errorLogsPagination');
+            if (!pagination || pagination.last_page <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            if (pagination.current_page > 1) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadErrorLogs('${currentImportId}', ${pagination.current_page - 1}, '${currentErrorType}'); return false;">Previous</a></li>`;
+            }
+            
+            // Page numbers
+            const startPage = Math.max(1, pagination.current_page - 2);
+            const endPage = Math.min(pagination.last_page, pagination.current_page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === pagination.current_page ? 'active' : '';
+                html += `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadErrorLogs('${currentImportId}', ${i}, '${currentErrorType}'); return false;">${i}</a></li>`;
+            }
+            
+            // Next button
+            if (pagination.current_page < pagination.last_page) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadErrorLogs('${currentImportId}', ${pagination.current_page + 1}, '${currentErrorType}'); return false;">Next</a></li>`;
+            }
+            
+            paginationEl.innerHTML = html;
+        }
+
+        // Helper functions
+        function getErrorTypeBadgeClass(errorType) {
+            const classes = {
+                'validation_error': 'bg-danger',
+                'import_error': 'bg-warning',
+                'lookup_error': 'bg-info',
+                'missing_fields': 'bg-secondary',
+                'database_error': 'bg-dark'
+            };
+            return classes[errorType] || 'bg-secondary';
+        }
+
+        function getErrorTypeName(errorType) {
+            const names = {
+                'validation_error': 'Validation',
+                'import_error': 'Import',
+                'lookup_error': 'Lookup',
+                'missing_fields': 'Missing',
+                'database_error': 'Database'
+            };
+            return names[errorType] || 'Unknown';
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '-';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '-';
+            const date = new Date(timeString);
+            return date.toLocaleString();
+        }
+
+        function showErrorLogsMessage(message) {
+            const tbody = document.getElementById('errorLogsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-4">
+                        <i class="ri-error-warning-line fs-1 d-block mb-2"></i>
+                        ${message}
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Event listeners
+        $(document).on('change', '#errorTypeFilter', function() {
+            const errorType = $(this).val();
+            if (currentImportId) {
+                loadErrorLogs(currentImportId, 1, errorType);
+            }
+        });
+
+        $(document).on('click', '#clearErrorLogsBtn', function() {
+            if (!currentImportId) {
+                alert('No import selected');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all error logs for this import?')) {
+                fetch(`{{ route('import.error-logs.clear') }}?import_id=${currentImportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Cleared ${data.deleted_count} error log entries`);
+                        loadErrorLogs(currentImportId, 1, currentErrorType);
+                    } else {
+                        alert('Error clearing logs: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing logs:', error);
+                    alert('Error clearing logs: ' + error.message);
+                });
+            }
+        });
+
+        $(document).on('click', '#refreshErrorLogsBtn', function() {
+            if (currentImportId) {
+                loadErrorLogs(currentImportId, currentErrorPage, currentErrorType);
+            }
+        });
+
+        // Add event listener for modal show to reload error logs
+        document.getElementById('importLogsModal').addEventListener('show.bs.modal', function () {
+            if (currentImportId) {
+                loadErrorLogs(currentImportId, 1, '');
+            }
+        });
+
+        // Fix aria-hidden focus issues
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle modal focus properly
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function() {
+                    // Remove any remaining focus from modal elements
+                    const focusedElement = document.activeElement;
+                    if (focusedElement && modal.contains(focusedElement)) {
+                        focusedElement.blur();
+                    }
+                });
+            });
+        });
+
+        // Add event listener for modal show to reload progress
+        document.getElementById('importProgressModal').addEventListener('show.bs.modal', function () {
+            if (importId) {
+                // Load current progress data
+                loadImportProgress(importId);
+                
+                // Reconnect to WebSocket if not already connected
+                if (!importChannel) {
+                    connectToImportChannel(importId);
+                }
+                
+                // Restart progress polling if not already running
+                if (!importProgressInterval) {
+                    importProgressInterval = setInterval(function() {
+                        loadImportProgress(importId);
+                    }, 2000);
+                }
             }
         });
     </script>

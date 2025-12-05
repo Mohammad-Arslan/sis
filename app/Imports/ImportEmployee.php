@@ -18,6 +18,7 @@ use App\Models\DesignationType;
 use App\Models\EmployeeLeaveQuota;
 use App\Models\DesignationLeaveQuota;
 use App\Models\ImportProgress;
+use App\Models\ImportErrorLog;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -54,6 +55,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     // Import tracking
     protected $importId;
     protected $importProgress;
+    protected $userId;
     
     // Cache for lookup tables to avoid repeated database queries
     private $countryCache = [];
@@ -72,9 +74,10 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     // Progress callback
     private $progressCallback = null;
 
-    public function __construct($importId = null)
+    public function __construct($importId = null, $userId = null)
     {
         $this->importId = $importId;
+        $this->userId = $userId;
         
         // Set dynamic PHP configuration for large imports
         $this->setDynamicConfiguration();
@@ -85,6 +88,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         // Initialize import progress tracking
         if ($this->importId) {
             $this->importProgress = ImportProgress::where('import_id', $this->importId)->first();
+            
+            // Clear previous error logs for this import
+            ImportErrorLog::truncateForImport($this->importId);
         }
         
         // Reset row counter
@@ -297,6 +303,24 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     private function addError(array $errorData): void
     {
         $this->errors[] = $errorData;
+        
+        // Store error in ImportErrorLog table
+        if ($this->importId && $this->userId) {
+            ImportErrorLog::create([
+                'import_id' => $this->importId,
+                'import_type' => 'employee',
+                'user_id' => $this->userId,
+                'row_number' => $errorData['row'] ?? $this->currentRowNumber,
+                'error_type' => $errorData['type'] ?? 'import_error',
+                'field_name' => $errorData['field'] ?? null,
+                'error_message' => $errorData['error'] ?? 'Unknown error',
+                'problematic_value' => $errorData['value'] ?? null,
+                'row_data' => $errorData['row_data'] ?? null,
+                'occurred_at' => now(),
+            ]);
+        }
+        
+        // Also update ImportProgress for backward compatibility
         if ($this->importProgress) {
             $this->importProgress->addError($errorData);
         }
@@ -307,7 +331,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
      */
     private function parseDate($value, $format = 'Y-m-d')
     {
-        if (empty($value) || $value === 'NULL' || $value === null) {
+        // Handle '-' as null (from export format)
+        if (empty($value) || $value === 'NULL' || $value === null || $value === '-') {
             return null;
         }
 
@@ -326,12 +351,12 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         if (is_string($value)) {
             $value = trim($value);
             
-            // Try different date formats
+            // Try different date formats - PRIORITIZE d-m-Y format (export format)
             $formats = [
+                'd-m-Y',     // Export format - try this first
                 'Y-m-d',
                 'd/m/Y',
                 'm/d/Y',
-                'd-m-Y',
                 'm-d-Y',
                 'Y/m/d',
                 'd.m.Y',
@@ -357,7 +382,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
      */
     private function isValidDateString($value)
     {
-        if (empty($value) || $value === 'NULL' || $value === null) {
+        // Handle '-' as null (from export format)
+        if (empty($value) || $value === 'NULL' || $value === null || $value === '-') {
             return false;
         }
 
@@ -368,11 +394,12 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         if (is_string($value)) {
             $value = trim($value);
             
+            // PRIORITIZE d-m-Y format (export format)
             $formats = [
+                'd-m-Y',     // Export format - try this first
                 'Y-m-d',
                 'd/m/Y',
                 'm/d/Y',
-                'd-m-Y',
                 'm-d-Y',
                 'Y/m/d',
                 'd.m.Y',
@@ -397,7 +424,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
      */
     private function getLookupId($cache, $value, $type)
     {
-        if (empty($value)) {
+        // Handle '-' as null (from export format)
+        if (empty($value) || $value === '-') {
             return null;
         }
 
@@ -415,24 +443,67 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     }
 
     /**
+     * Clean value from export format (convert '-' to null/empty)
+     */
+    private function cleanValue($value)
+    {
+        if ($value === '-' || $value === 'NULL' || trim($value ?? '') === '') {
+            return null;
+        }
+        return trim($value);
+    }
+
+    /**
      * Create the model instance
      */
     public function model(array $row)
     {
-        // Increment total rows processed (including headers and empty rows)
-        $this->totalRowsProcessed++;
+        // Increment row number for tracking (this happens for every row)
+        $this->currentRowNumber++;
         
         // Trigger progress callback
         $this->triggerProgressCallback();
         
         try {
+            // Skip the 'total_service' field from export (it's a calculated field, not for import)
+            if (isset($row['total_service'])) {
+                unset($row['total_service']);
+            }
+            
+            // Clean all row values (convert '-' to null)
+            foreach ($row as $key => $value) {
+                if ($value === '-') {
+                    $row[$key] = null;
+                }
+            }
+            
+            // Handle full_name field by splitting it into first_name and last_name
+            if (isset($row['full_name']) && !empty($row['full_name']) && (empty($row['first_name']) || empty($row['last_name']))) {
+                $fullName = trim($row['full_name']);
+                $nameParts = explode(' ', $fullName, 2);
+                
+                if (count($nameParts) >= 1) {
+                    $row['first_name'] = $nameParts[0];
+                    if (count($nameParts) >= 2) {
+                        $row['last_name'] = $nameParts[1];
+                    } else {
+                        $row['last_name'] = '';
+                    }
+                }
+            }
+            
             // Skip header row (check if first_name contains header-like text)
-            if (isset($row['first_name']) && in_array(strtolower(trim($row['first_name'])), ['first_name', 'first name', 'name', 'prefix', 'last_name', 'last name'])) {
+            if (isset($row['first_name']) && in_array(strtolower(trim($row['first_name'])), ['first_name', 'first name', 'name', 'prefix', 'last_name', 'last name', 'full_name', 'full name'])) {
                 return null; // Skip header row silently
             }
             
             // Skip if essential fields are missing or if row is completely empty
-            if (empty($row['first_name']) || empty($row['email']) || empty($row['cnic'])) {
+            // Check if we have either first_name or full_name (already handled '-' conversion above)
+            $hasName = !empty($row['first_name']) || !empty($row['full_name']);
+            $hasEmail = !empty($row['email']);
+            $hasCnic = !empty($row['cnic']);
+            
+            if (!$hasName || !$hasEmail || !$hasCnic) {
                 // Check if this is a completely empty row
                 $hasAnyData = false;
                 foreach ($row as $value) {
@@ -452,12 +523,17 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 Log::warning("Skipping row due to missing essential fields", ['row' => $row]);
                 
                 // Add error to database
+                $missingFields = [];
+                if (!$hasName) $missingFields[] = 'first_name or full_name';
+                if (!$hasEmail) $missingFields[] = 'email';
+                if (!$hasCnic) $missingFields[] = 'cnic';
+                
                 $this->addError([
                     'type' => 'missing_fields',
-                    'row' => $this->currentRowNumber + 1,
+                    'row' => $this->currentRowNumber,
                     'field' => null,
-                    'error' => 'Missing essential fields: first_name, email, or cnic',
-                    'value' => 'first_name: ' . ($row['first_name'] ?? 'empty') . ', email: ' . ($row['email'] ?? 'empty') . ', cnic: ' . ($row['cnic'] ?? 'empty'),
+                    'error' => 'Missing essential fields: ' . implode(', ', $missingFields),
+                    'value' => 'first_name: ' . ($row['first_name'] ?? 'empty') . ', full_name: ' . ($row['full_name'] ?? 'empty') . ', email: ' . ($row['email'] ?? 'empty') . ', cnic: ' . ($row['cnic'] ?? 'empty'),
                     'timestamp' => now()->toDateTimeString(),
                 ]);
                 
@@ -468,8 +544,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $email = strtolower(trim($row['email']));
             $cnic = trim($row['cnic']);
 
-            // Only increment row number when we're actually processing a valid data row
-            $this->currentRowNumber++;
+            // Increment total rows processed (only for valid data rows)
+            $this->totalRowsProcessed++;
 
             // Conditional validation for marital status
             $maritalStatus = trim($row['marital_status'] ?? '');
@@ -489,7 +565,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 }
                 
                 // For married people, number of children is required (can be 0)
-                if (!isset($row['no_of_children']) || $row['no_of_children'] === '' || !is_numeric($row['no_of_children'])) {
+                if (!isset($row['no_of_children']) || $row['no_of_children'] === '' || $row['no_of_children'] === null || !is_numeric($row['no_of_children'])) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -503,7 +579,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 }
                 
                 // For married people, children in UCS is required (can be 0)
-                if (!isset($row['children_in_ucs']) || $row['children_in_ucs'] === '' || !is_numeric($row['children_in_ucs'])) {
+                if (!isset($row['children_in_ucs']) || $row['children_in_ucs'] === '' || $row['children_in_ucs'] === null || !is_numeric($row['children_in_ucs'])) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -1039,8 +1115,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     public function rules(): array
     {
         return [
-            'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['nullable', 'string', 'max:100'],
+            'full_name' => ['nullable', 'string', 'max:200'],
             'email' => ['required', 'email', 'max:255'],
             'cnic' => ['required', 'string', 'max:15', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/'],
             'gender' => ['nullable', Rule::in(['Male', 'Female', 'male', 'female'])],
@@ -1098,11 +1174,34 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $fail('Expiry date must be a valid date format.');
                 }
             }],
-            'no_of_children' => ['nullable', 'integer', 'min:0'],
-            'children_in_ucs' => ['nullable', 'integer', 'min:0'],
-            'marital_status' => ['nullable', Rule::in(['Single', 'Married', 'Divorced', 'Widowed', 'single', 'married', 'divorced', 'widowed'])],
-            'job_status' => ['nullable', Rule::in(['Probation', 'Regular', 'Left', 'Adhoc', 'Contractual', 'probation', 'regular', 'left', 'adhoc', 'contractual', ''])],
+            'no_of_children' => ['nullable', function ($attribute, $value, $fail) {
+                // Allow '-' from export format, will be converted to null in model()
+                if ($value === '-' || $value === null || $value === '') {
+                    return;
+                }
+                if (!is_numeric($value) || (int)$value < 0) {
+                    $fail('Number of children must be a whole number (0 or greater).');
+                }
+            }],
+            'children_in_ucs' => ['nullable', function ($attribute, $value, $fail) {
+                // Allow '-' from export format, will be converted to null in model()
+                if ($value === '-' || $value === null || $value === '') {
+                    return;
+                }
+                if (!is_numeric($value) || (int)$value < 0) {
+                    $fail('Children in UCS must be a whole number (0 or greater).');
+                }
+            }],
+            'marital_status' => ['nullable', Rule::in(['Single', 'Married', 'Divorced', 'Widowed', 'single', 'married', 'divorced', 'widowed', '', '-'])],
+            'job_status' => ['nullable', Rule::in(['Probation', 'Regular', 'Left', 'Adhoc', 'Contractual', 'probation', 'regular', 'left', 'adhoc', 'contractual', '', '-'])],
             'probation_extended' => ['nullable', Rule::in(['Yes', 'No', 'yes', 'no'])],
+            // Custom validation: either first_name or full_name must be provided
+            'first_name' => ['nullable', 'string', 'max:100', function ($attribute, $value, $fail) {
+                $fullName = request()->input('full_name');
+                if (empty($value) && empty($fullName)) {
+                    $fail('Either first name or full name must be provided.');
+                }
+            }],
         ];
     }
 

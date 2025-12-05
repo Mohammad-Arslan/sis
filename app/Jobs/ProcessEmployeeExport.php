@@ -42,6 +42,14 @@ class ProcessEmployeeExport implements ShouldQueue
      */
     public function handle(): void
     {
+        // Disable Telescope during export to prevent memory exhaustion
+        if (class_exists(\Laravel\Telescope\Telescope::class)) {
+            \Laravel\Telescope\Telescope::stopRecording();
+        }
+        
+        // Increase memory limit for large exports
+        @ini_set('memory_limit', '1024M');
+        
         try {
             // Log::info("Starting employee export job", [
             //     'export_id' => $this->exportId,

@@ -22,6 +22,7 @@ class EmployeeImportProgress implements ShouldBroadcast
     public $errors;
     public $status;
     public $message;
+    public $currentRow;
 
     /**
      * Create a new event instance.
@@ -34,7 +35,8 @@ class EmployeeImportProgress implements ShouldBroadcast
         int $skipped,
         int $errors,
         string $status = 'processing',
-        string $message = ''
+        string $message = '',
+        int $currentRow = 0
     ) {
         $this->importId = $importId;
         $this->processed = $processed;
@@ -44,6 +46,7 @@ class EmployeeImportProgress implements ShouldBroadcast
         $this->errors = $errors;
         $this->status = $status;
         $this->message = $message;
+        $this->currentRow = $currentRow;
     }
 
     /**
@@ -54,7 +57,7 @@ class EmployeeImportProgress implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('employee-import.' . $this->importId),
+            new Channel('employee-import.' . $this->importId),
         ];
     }
 
@@ -78,7 +81,7 @@ class EmployeeImportProgress implements ShouldBroadcast
             'imported' => $this->imported,
             'skipped' => $this->skipped,
             'errors' => $this->errors,
-            'current_row' => $this->processed, // Use processed as current row
+            'current_row' => $this->currentRow, // Use actual current row tracking
             'percentage' => $this->total > 0 ? round(($this->processed / $this->total) * 100, 2) : 0,
             'status' => $this->status,
             'message' => $this->message,

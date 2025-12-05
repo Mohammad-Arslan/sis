@@ -42,7 +42,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
         ini_set('max_execution_time', 300);
         
         $query = Employee::with([
-            'user:id,name,email',
+            'user:id,name,email,first_name,last_name,CNIC,gender',
             'branch:id,br_name,branch_code,state_id,region_id',
             'branch.region:id,region_name',
             'branch.state:id,state_name',
@@ -116,31 +116,74 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
             
             try {
                 $data[] = [
-                    'employee_id' => $employee->employee_id ?? '-',
-                'full_name' => $employee->preferred_name ?? '-',
-                'email' => $employee->user?->email ?? '-',
-                'mobile_number' => $employee->mobile_number ?? '-',
-                'branch_name' => $employee->branch?->br_name ?? '-',
-                'branch_code' => $employee->branch?->branch_code ?? '-',
-                'region_name' => $employee->branch?->region?->region_name ?? '-',
-                'state_name' => $employee->branch?->state?->state_name ?? '-',
-                'company_name' => $employee->company?->company_name ?? '-',
-                'department_name' => $employee->department?->department_name ?? '-',
-                'designation_name' => $employee->designation?->designation_name ?? '-',
-                'designation_type' => $employee->designation_type?->type_name ?? '-',
-                'job_status' => $employee->job_status ?? '-',
-                'marital_status' => $employee->marital_status ?? '-',
-                'hiring_date' => $employee->hiring_date ? date('d-m-Y', strtotime($employee->hiring_date)) : '-',
-                'total_service' => $this->calculateTotalService($employee),
-                'confirm_date' => $employee->confirm_date ? date('d-m-Y', strtotime($employee->confirm_date)) : '-',
-                'nationality' => $employee->nationality?->nationality_name ?? '-',
-                'religion' => $employee->religion?->religion_name ?? '-',
-                'address' => $employee->address ?? '-',
-                'date_of_birth' => $employee->date_of_birth ? date('d-m-Y', strtotime($employee->date_of_birth)) : '-',
-                'father_name' => $employee->father_name ?? '-',
-                'spouse_name' => $employee->spouse_name ?? '-',
-                'no_of_children' => $employee->no_of_children ?? '-',
-                'children_in_ucs' => $employee->children_in_ucs ?? '-',
+                    // User fields (from users table)
+                    'prefix' => $employee->prefix ?? '-',
+                    'first_name' => $employee->user?->first_name ?? '-',
+                    'last_name' => $employee->user?->last_name ?? '-',
+                    'preferred_name' => $employee->preferred_name ?? '-',
+                    'email' => $employee->user?->email ?? '-',
+                    'cnic' => $employee->user?->CNIC ?? '-',
+                    'cnic_expiry' => $employee->cnic_expiry ? date('d-m-Y', strtotime($employee->cnic_expiry)) : '-',
+                    'gender' => $employee->user?->gender ?? '-',
+                    'date_of_birth' => $employee->date_of_birth ? date('d-m-Y', strtotime($employee->date_of_birth)) : '-',
+                    
+                    // Personal Information
+                    'father_name' => $employee->father_name ?? '-',
+                    'spouse_name' => $employee->spouse_name ?? '-',
+                    'marital_status' => $employee->marital_status ?? '-',
+                    'date_of_marriage' => $employee->date_of_marriage ? date('d-m-Y', strtotime($employee->date_of_marriage)) : '-',
+                    'no_of_children' => $employee->no_of_children !== null ? $employee->no_of_children : '-',
+                    'children_in_ucs' => $employee->children_in_ucs !== null ? $employee->children_in_ucs : '-',
+                    
+                    // Contact Information
+                    'mobile_number' => $employee->mobile_number ?? '-',
+                    'address' => $employee->address ?? '-',
+                    
+                    // Nationality and Religion
+                    'nationality' => $employee->nationality?->nationality_name ?? '-',
+                    'religion' => $employee->religion?->religion_name ?? '-',
+                    
+                    // Location
+                    'country' => $employee->countries?->country_name ?? '-',
+                    'state' => $employee->states?->state_name ?? '-',
+                    'city' => $employee->cities?->city_name ?? '-',
+                    
+                    // Organization Information
+                    'company' => $employee->company?->company_name ?? '-',
+                    'region' => $employee->branch?->region?->region_name ?? '-',
+                    'branch' => $employee->branch?->br_name ?? '-',
+                    'branch_code' => $employee->branch?->branch_code ?? '-',
+                    'department' => $employee->department?->department_name ?? '-',
+                    'designation' => $employee->designation?->designation_name ?? '-',
+                    'designation_type' => $employee->designation_type?->type_name ?? '-',
+                    
+                    // Employment Status
+                    'job_status' => $employee->job_status ?? '-',
+                    'hiring_date' => $employee->hiring_date ? date('d-m-Y', strtotime($employee->hiring_date)) : '-',
+                    'confirm_date' => $employee->confirm_date ? date('d-m-Y', strtotime($employee->confirm_date)) : '-',
+                    'regular_date' => $employee->regular_date ? date('d-m-Y', strtotime($employee->regular_date)) : '-',
+                    'left_date' => $employee->left_date ? date('d-m-Y', strtotime($employee->left_date)) : '-',
+                    'probation_end_date' => $employee->probation_end_date ? date('d-m-Y', strtotime($employee->probation_end_date)) : '-',
+                    'probation_extended' => $employee->probation_extended ?? '-',
+                    
+                    // ID Numbers
+                    'pin_code' => $employee->pin_code ?? '-',
+                    'card_no' => $employee->card_no ?? '-',
+                    'eobi_number' => $employee->eobi_number ?? '-',
+                    'ni_number' => $employee->ni_number ?? '-',
+                    'ss_no' => $employee->ss_no ?? '-',
+                    'previous_id' => $employee->previous_id ?? '-',
+                    
+                    // Passport Information
+                    'passport_number' => $employee->passport_number ?? '-',
+                    'issue_date' => $employee->issue_date ? date('d-m-Y', strtotime($employee->issue_date)) : '-',
+                    'expiry_date' => $employee->expiry_date ? date('d-m-Y', strtotime($employee->expiry_date)) : '-',
+                    
+                    // Other
+                    'crb' => $employee->crb ?? '-',
+                    
+                    // Calculated field (for information only - not imported)
+                    'total_service' => $this->calculateTotalService($employee),
                 ];
                 
                 $this->exportedCount++;
@@ -179,31 +222,74 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
     public function headings(): array
     {
         return [
-            'Employee ID',
-            'Full Name',
+            // User fields (from users table)
+            'Prefix',
+            'First Name',
+            'Last Name',
+            'Preferred Name',
             'Email',
+            'CNIC',
+            'CNIC Expiry',
+            'Gender',
+            'Date of Birth',
+            
+            // Personal Information
+            'Father Name',
+            'Spouse Name',
+            'Marital Status',
+            'Date of Marriage',
+            'No of Children',
+            'Children in UCS',
+            
+            // Contact Information
             'Mobile Number',
-            'Branch Name',
-            'Branch Code',
-            'Region',
-            'Province',
+            'Address',
+            
+            // Nationality and Religion
+            'Nationality',
+            'Religion',
+            
+            // Location
+            'Country',
+            'State',
+            'City',
+            
+            // Organization Information
             'Company',
+            'Region',
+            'Branch',
+            'Branch Code',
             'Department',
             'Designation',
             'Designation Type',
+            
+            // Employment Status
             'Job Status',
-            'Marital Status',
             'Hiring Date',
-            'Total Service',
             'Confirm Date',
-            'Nationality',
-            'Religion',
-            'Address',
-            'Date of Birth',
-            'Father Name',
-            'Spouse Name',
-            'No of Children',
-            'Children in UCS',
+            'Regular Date',
+            'Left Date',
+            'Probation End Date',
+            'Probation Extended',
+            
+            // ID Numbers
+            'Pin Code',
+            'Card No',
+            'EOBI Number',
+            'NI Number',
+            'SS No',
+            'Previous ID',
+            
+            // Passport Information
+            'Passport Number',
+            'Issue Date',
+            'Expiry Date',
+            
+            // Other
+            'CRB',
+            
+            // Calculated field (for information only)
+            'Total Service',
         ];
     }
 

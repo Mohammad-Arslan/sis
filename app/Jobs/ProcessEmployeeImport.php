@@ -42,6 +42,15 @@ class ProcessEmployeeImport implements ShouldQueue
      */
     public function handle(): void
     {
+        // Disable Telescope during import to prevent memory exhaustion
+        if (class_exists(\Laravel\Telescope\Telescope::class)) {
+            \Laravel\Telescope\Telescope::stopRecording();
+        }
+        
+        // Increase memory limit for large imports (will use value from ImportEmployee constructor)
+        // This is a safety measure in case the job runs before ImportEmployee sets it
+        @ini_set('memory_limit', '1024M');
+        
         try {
             Log::info("Starting employee import job", [
                 'import_id' => $this->importId,
@@ -61,7 +70,7 @@ class ProcessEmployeeImport implements ShouldQueue
             $importProgress->markAsStarted();
 
             // Get total rows for progress calculation
-            $totalRows = Excel::toCollection(new ImportEmployee(), Storage::path($this->filePath))->flatten(1)->count();
+            $totalRows = Excel::toCollection(new ImportEmployee(), Storage::disk('local')->path($this->filePath))->flatten(1)->count();
             
             // Update total rows in database
             $importProgress->updateProgress([
@@ -78,11 +87,12 @@ class ProcessEmployeeImport implements ShouldQueue
                 0,
                 0,
                 'starting',
-                'Import process initiated.'
+                'Import process initiated.',
+                0
             ))->toOthers();
 
             // Create import instance with progress callback
-            $import = new ImportEmployee($this->importId);
+            $import = new ImportEmployee($this->importId, $this->userId);
             
             // Set up progress tracking
             $import->setProgressCallback(function($stats) use ($importProgress) {
@@ -90,7 +100,7 @@ class ProcessEmployeeImport implements ShouldQueue
             });
 
             // Process the import
-            Excel::import($import, Storage::path($this->filePath));
+            Excel::import($import, Storage::disk('local')->path($this->filePath));
 
             // Get final statistics
             $stats = $import->getImportStats();
@@ -107,12 +117,13 @@ class ProcessEmployeeImport implements ShouldQueue
                 $stats['skipped'],
                 $stats['errors'],
                 'completed',
-                "Import completed successfully! Imported: {$stats['imported']}, Skipped: {$stats['skipped']}"
+                "Import completed successfully! Imported: {$stats['imported']}, Skipped: {$stats['skipped']}",
+                $stats['total_processed']
             ))->toOthers();
 
             // Clean up temporary file
-            if (Storage::exists($this->filePath)) {
-                Storage::delete($this->filePath);
+            if (Storage::disk('local')->exists($this->filePath)) {
+                Storage::disk('local')->delete($this->filePath);
             }
 
             Log::info("Employee import job completed successfully", [
@@ -142,12 +153,13 @@ class ProcessEmployeeImport implements ShouldQueue
                 0,
                 0,
                 'failed',
-                'Import failed: ' . $e->getMessage()
+                'Import failed: ' . $e->getMessage(),
+                0
             ))->toOthers();
 
             // Clean up temporary file
-            if (Storage::exists($this->filePath)) {
-                Storage::delete($this->filePath);
+            if (Storage::disk('local')->exists($this->filePath)) {
+                Storage::disk('local')->delete($this->filePath);
             }
 
             throw $e;
@@ -180,6 +192,7 @@ class ProcessEmployeeImport implements ShouldQueue
             'imported_count' => $stats['imported'] ?? 0,
             'skipped_count' => $stats['skipped'] ?? 0,
             'error_count' => $stats['errors'] ?? 0,
+            'current_row' => $stats['total_processed'] ?? 0,
             'current_message' => 'Processing employees...',
         ]);
 
@@ -192,7 +205,8 @@ class ProcessEmployeeImport implements ShouldQueue
             $stats['skipped'] ?? 0,
             $stats['errors'] ?? 0,
             'processing',
-            'Processing employees...'
+            'Processing employees...',
+            $stats['total_processed'] ?? 0
         ))->toOthers();
     }
 
@@ -215,7 +229,8 @@ class ProcessEmployeeImport implements ShouldQueue
             0,
             0,
             'failed',
-            'Import failed permanently: ' . $exception->getMessage()
+            'Import failed permanently: ' . $exception->getMessage(),
+            0
         ))->toOthers();
 
         // Clean up
