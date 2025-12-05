@@ -21,19 +21,14 @@ use App\Models\EmployeeAttendance;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaxController;
-use App\Http\Controllers\CityController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\TownController;
 use App\Http\Controllers\SkillController;
-use App\Http\Controllers\StateController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CommonController;
-use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\CountryController;
 use App\Http\Controllers\FeeTierController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\StudentController;
@@ -67,7 +62,6 @@ use App\Http\Controllers\VisitDetailController;
 use \App\Http\Controllers\TeacherTypeController;
 use App\Http\Controllers\AcademicYearController;
 use App\Http\Controllers\BeamsChallanController;
-use App\Http\Controllers\BuildingTypeController;
 use App\Http\Controllers\ClassSubjectController;
 use App\Http\Controllers\FollowUpTypeController;
 use App\Http\Controllers\SchemeOfWorkController;
@@ -581,8 +575,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('branding-marketing/index', [BrandingMarketingController::class, 'index'])->name('branding-marketing.index');
     Route::get('academic-calendar/index', [AcademicCalendarController::class, 'index'])->name('academic-calendar.index');
 
-    Route::resources(['cities' => CityController::class]);
-    Route::resources(['towns' => TownController::class]);
     Route::resources(['booklist' => BooklistController::class]);
     Route::resources(['scheme_of_work' => SchemeOfWorkController::class]);
 
@@ -805,10 +797,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::resources(['classes' => ComClassController::class]);
         Route::resources(['class-groups' => ClassGroupController::class]);
         Route::resources(['companies' => CompanyController::class]);
-        Route::resources(['countries' => CountryController::class]);
-        Route::resources(['regions' => RegionController::class]);
         Route::resources(['sections' => SectionController::class]);
-        Route::resources(['states' => StateController::class]);
         Route::resources(['subject-groups' => SubjectGroupController::class]);
         Route::resources(['subjects' => SubjectController::class]);
         Route::resources(['staff-type' => StaffTypeController::class]);
@@ -817,8 +806,6 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/school-description', [StudentPreviousSchoolController::class, 'getSchoolDescription'])->name('student.school-description');
         Route::post('make-bank-default', [BankAccountController::class, 'make_bank_default'])->name('make-bank-default');
 
-        Route::resources(['building-type' => BuildingTypeController::class]);
-        
         // Unified Geographic Settings Routes
         Route::prefix('geographic-settings')->name('geographic-settings.')->group(function () {
             Route::get('/', [App\Http\Controllers\GeographicSettingsController::class, 'index'])->name('index');
