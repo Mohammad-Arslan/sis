@@ -41,6 +41,7 @@ use App\Http\Controllers\ComClassController;
 use App\Http\Controllers\CrmBoardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\AcademicSettingsController;
 use \App\Http\Controllers\GuardianController;
 use App\Http\Controllers\FeeChargeController;
 use App\Http\Controllers\FeePeriodController;
@@ -803,7 +804,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::resources(['subjects' => SubjectController::class]);
         Route::resources(['staff-type' => StaffTypeController::class]);
 
-        Route::resources(['student-previous-school' => StudentPreviousSchoolController::class]);
+        // Note: student-previous-school routes moved to academic-settings
         Route::get('/school-description', [StudentPreviousSchoolController::class, 'getSchoolDescription'])->name('student.school-description');
         Route::post('make-bank-default', [BankAccountController::class, 'make_bank_default'])->name('make-bank-default');
 
@@ -852,8 +853,36 @@ Route::group(['middleware' => ['auth']], function () {
             Route::delete('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyBuildingType'])->name('destroy-building-type');
         });
         
-        Route::resources(['language' => LanguageController::class]);
-        Route::resources(['academic-year' => AcademicYearController::class]);
+        // Unified Academic Settings Routes
+        Route::prefix('academic-settings')->name('academic-settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\AcademicSettingsController::class, 'index'])->name('index');
+            Route::get('/languages/{language}', [App\Http\Controllers\AcademicSettingsController::class, 'getLanguage'])->name('get-language');
+            Route::get('/academic-years/{academicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'getAcademicYear'])->name('get-academic-year');
+            Route::get('/branch-academic-years/{branchAcademicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'getBranchAcademicYear'])->name('get-branch-academic-year');
+            Route::get('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'getStudentPreviousSchool'])->name('get-student-previous-school');
+            
+            Route::get('/languages-data', [App\Http\Controllers\AcademicSettingsController::class, 'getLanguages'])->name('get-languages');
+            Route::get('/academic-years-data', [App\Http\Controllers\AcademicSettingsController::class, 'getAcademicYears'])->name('get-academic-years');
+            Route::get('/branch-academic-years-data', [App\Http\Controllers\AcademicSettingsController::class, 'getBranchAcademicYears'])->name('get-branch-academic-years');
+            Route::get('/student-previous-schools-data', [App\Http\Controllers\AcademicSettingsController::class, 'getStudentPreviousSchools'])->name('get-student-previous-schools');
+            
+            Route::post('/languages', [App\Http\Controllers\AcademicSettingsController::class, 'storeLanguage'])->name('store-language');
+            Route::put('/languages/{language}', [App\Http\Controllers\AcademicSettingsController::class, 'updateLanguage'])->name('update-language');
+            Route::delete('/languages/{language}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyLanguage'])->name('destroy-language');
+            
+            Route::post('/academic-years', [App\Http\Controllers\AcademicSettingsController::class, 'storeAcademicYear'])->name('store-academic-year');
+            Route::put('/academic-years/{academicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'updateAcademicYear'])->name('update-academic-year');
+            Route::delete('/academic-years/{academicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyAcademicYear'])->name('destroy-academic-year');
+            
+            Route::post('/branch-academic-years', [App\Http\Controllers\AcademicSettingsController::class, 'storeBranchAcademicYear'])->name('store-branch-academic-year');
+            Route::put('/branch-academic-years/{branchAcademicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'updateBranchAcademicYear'])->name('update-branch-academic-year');
+            Route::delete('/branch-academic-years/{branchAcademicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyBranchAcademicYear'])->name('destroy-branch-academic-year');
+            
+            Route::post('/student-previous-schools', [App\Http\Controllers\AcademicSettingsController::class, 'storeStudentPreviousSchool'])->name('store-student-previous-school');
+            Route::put('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'updateStudentPreviousSchool'])->name('update-student-previous-school');
+            Route::delete('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyStudentPreviousSchool'])->name('destroy-student-previous-school');
+        });
+        
         Route::resources(['system-modules' => SystemModuleController::class]);
         Route::resources(['withdrawal-reason' => WithdrawalReasonController::class]);
         Route::resources(['withdrawal-cancellation-reason' => WithdrawalCancellationReasonController::class]);

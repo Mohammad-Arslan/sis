@@ -14,14 +14,6 @@ class StudentPreviousSchool extends Model
         'school_name',
         'description'
     ];
-    protected $dates = [
-        'updated_at',
-        'created_at',
-    ];
-
-    protected $casts = [
-        'created_at' => 'date:d-m-Y',
-    ];
 
     public function student_previous_schools()
     {

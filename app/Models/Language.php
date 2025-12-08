@@ -14,11 +14,6 @@ class Language extends Model
         'language_name'
      ];
 
-     protected $dates = [
-         'created_at',
-         'updated_at',
-     ];
-
     public function students()
     {
         return $this->hasMany(Student::class);

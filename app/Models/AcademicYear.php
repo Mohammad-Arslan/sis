@@ -15,11 +15,6 @@ class AcademicYear extends Model
         'active'
      ];
 
-     protected $dates = [
-         'created_at',
-         'updated_at',
-     ];
-
     public function student_fee_package()
     {
         return $this->hasMany(StudentFeePackage::class);

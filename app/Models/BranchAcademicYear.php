@@ -18,9 +18,9 @@ class BranchAcademicYear extends Model
         'academic_year_id'
     ];
 
-    protected $dates = [
-        'start_date',
-        'end_date',
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function academic_year()
