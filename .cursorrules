@@ -109,15 +109,19 @@ $newUser->email = $newEmail;
 $newUser->updated_at = now();
 ```
 
-#### Using validate() (Laravel)
+#### Using secureValidate() (Laravel)
 ```php
-// ✅ GOOD: Use validate() for request validation
-$validated = $request->validate([
+// ✅ GOOD: Use secureValidate() for request validation
+$validated = $request->secureValidate([
     'field' => 'required|string|max:255',
 ]);
 
-// ❌ BAD: secureValidate() does not exist in Laravel
-$request->secureValidate();
+// ❌ BAD: validate() does not provide enhanced security features
+$request->validate([
+    'field' => 'required|string|max:255',
+]);
+```
+
 ```
 
 #### Using Caching (Laravel)

@@ -21,6 +21,7 @@ use App\Models\EmployeeAttendance;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaxController;
+use App\Http\Controllers\TaxSettingsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\UsersController;
@@ -856,8 +857,23 @@ Route::group(['middleware' => ['auth']], function () {
         Route::resources(['system-modules' => SystemModuleController::class]);
         Route::resources(['withdrawal-reason' => WithdrawalReasonController::class]);
         Route::resources(['withdrawal-cancellation-reason' => WithdrawalCancellationReasonController::class]);
-        Route::resources(['tax' => TaxController::class]);
-        Route::resources(['tax-type' => TaxTypeController::class]);
+        // Unified Tax Settings Routes
+        Route::prefix('tax-settings')->name('tax-settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\TaxSettingsController::class, 'index'])->name('index');
+            Route::get('/tax-types/{taxType}', [App\Http\Controllers\TaxSettingsController::class, 'getTaxType'])->name('get-tax-type');
+            Route::get('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'getTax'])->name('get-tax');
+            
+            Route::get('/tax-types-data', [App\Http\Controllers\TaxSettingsController::class, 'getTaxTypes'])->name('get-tax-types');
+            Route::get('/taxes-data', [App\Http\Controllers\TaxSettingsController::class, 'getTaxes'])->name('get-taxes');
+            
+            Route::post('/tax-types', [App\Http\Controllers\TaxSettingsController::class, 'storeTaxType'])->name('store-tax-type');
+            Route::put('/tax-types/{taxType}', [App\Http\Controllers\TaxSettingsController::class, 'updateTaxType'])->name('update-tax-type');
+            Route::delete('/tax-types/{taxType}', [App\Http\Controllers\TaxSettingsController::class, 'destroyTaxType'])->name('destroy-tax-type');
+            
+            Route::post('/taxes', [App\Http\Controllers\TaxSettingsController::class, 'storeTax'])->name('store-tax');
+            Route::put('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'updateTax'])->name('update-tax');
+            Route::delete('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'destroyTax'])->name('destroy-tax');
+        });
 
         Route::get('/class-groups-classes', [ClassGroupController::class, 'showClasses'])->name('groups-classes');
         Route::post('/add-class-groups-classes', [ClassGroupController::class, 'addGroupClasses'])->name('add-groups-classes');

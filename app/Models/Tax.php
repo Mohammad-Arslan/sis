@@ -20,9 +20,9 @@ class Tax extends Model
         'active_till',
     ];
 
-    protected $dates = [
-        'active_from',
-        'active_till',
+    protected $casts = [
+        'active_from' => 'date',
+        'active_till' => 'date',
     ];
 
     public function tax_type()

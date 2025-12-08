@@ -1329,13 +1329,13 @@
 
 
             <li class="nav-item">
-                <a class="nav-link menu-link {{ Request::is('building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? '' : 'collapsed' }}"
+                <a class="nav-link menu-link {{ Request::is('building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax-settings*', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? '' : 'collapsed' }}"
                     href="#sidebarMultilevel" data-bs-toggle="collapse" role="button"
-                    aria-expanded="{{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'true' : 'false' }}"
+                    aria-expanded="{{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax-settings*', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'true' : 'false' }}"
                     aria-controls="sidebarMultilevel">
                     <i class="ri-settings-2-line"></i> <span data-key="t-multi-level">Setting</span>
                 </a>
-                <div class="collapse menu-dropdown {{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax', 'tax-type', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'show' : '' }}"
+                <div class="collapse menu-dropdown {{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'language', 'academic-year', 'branch-academic-year', 'student-previous-school', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax-settings*', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'show' : '' }}"
                     id="sidebarMultilevel">
                     <ul class="nav nav-sm flex-column">
                         <li class="nav-item">
@@ -1594,13 +1594,8 @@
                             </li>
                         @endpermission
                         <li class="nav-item">
-                            <a href="{{ route('tax.index') }}"
-                                class="nav-link {{ Request::is('tax') ? 'active' : '' }}" data-key="t-projects">Tax</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('tax-type.index') }}"
-                                class="nav-link {{ Request::is('tax-type') ? 'active' : '' }}" data-key="t-projects">Tax
-                                Type</a>
+                            <a href="{{ route('tax-settings.index') }}"
+                                class="nav-link {{ Request::is('tax-settings*') ? 'active' : '' }}" data-key="t-projects">Tax Settings</a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('paper-types.index') }}"
