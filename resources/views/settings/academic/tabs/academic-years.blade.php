@@ -206,24 +206,13 @@ $('#academic-year-form').on('submit', function(e) {
 });
 
 function deleteAcademicYear(id) {
-    if (!confirm('Are you sure you want to delete this academic year? This action cannot be undone.')) {
-        return;
-    }
-    
-    $.ajax({
-        url: `{{ url('academic-settings/academic-years') }}/${id}`,
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            showToast(response.message, 'success');
-            academicYearsTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `{{ url('academic-settings/academic-years') }}/:id`,
+        'Are you sure you want to delete this academic year? This action cannot be undone.',
+        academicYearsTable,
+        'Are you sure?'
+    );
 }
 </script>
 

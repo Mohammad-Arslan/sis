@@ -68,58 +68,6 @@
 @endsection
 
 @push('footer_scripts')
-<script>
-    // Global toast notification function
-    function showToast(message, type = 'success') {
-        // Use SweetAlert2 if available, otherwise use Bootstrap alert
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: type === 'success' ? 'success' : 'error',
-                title: type === 'success' ? 'Success!' : 'Error!',
-                text: message,
-                showConfirmButton: false,
-                timer: 3000,
-                toast: true,
-                position: 'top-end'
-            });
-        } else {
-            const toast = document.createElement('div');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-            toast.className = `alert ${alertClass} alert-dismissible fade show`;
-            toast.innerHTML = `
-                <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            `;
-            
-            const container = document.getElementById('toast-container');
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-    }
-
-    // Global function to handle AJAX errors
-    function handleAjaxError(xhr) {
-        let message = 'An error occurred. Please try again.';
-        
-        if (xhr.responseJSON && xhr.responseJSON.message) {
-            message = xhr.responseJSON.message;
-        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-            const errors = Object.values(xhr.responseJSON.errors).flat();
-            message = errors.join(', ');
-        }
-        
-        showToast(message, 'error');
-    }
-
-    // Adjust DataTables when tabs are switched
-    $(document).ready(function() {
-        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
-            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
-        });
-    });
-</script>
+{{-- Global functions are now in crud-operations.js --}}
 @endpush
 

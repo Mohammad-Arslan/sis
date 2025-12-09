@@ -191,24 +191,13 @@ $('#language-form').on('submit', function(e) {
 });
 
 function deleteLanguage(id) {
-    if (!confirm('Are you sure you want to delete this language? This action cannot be undone.')) {
-        return;
-    }
-    
-    $.ajax({
-        url: `{{ url('academic-settings/languages') }}/${id}`,
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            showToast(response.message, 'success');
-            languagesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `{{ url('academic-settings/languages') }}/:id`,
+        'Are you sure you want to delete this language? This action cannot be undone.',
+        languagesTable,
+        'Are you sure?'
+    );
 }
 </script>
 

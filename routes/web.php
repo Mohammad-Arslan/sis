@@ -20,7 +20,7 @@ use App\Models\EmployeeDependent;
 use App\Models\EmployeeAttendance;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TaxController;
+// use App\Http\Controllers\TaxController; // Moved to TaxSettingsController
 use App\Http\Controllers\TaxSettingsController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SkillController;
@@ -34,13 +34,13 @@ use App\Http\Controllers\FeeTierController;
 use App\Http\Controllers\SectionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
-use App\Http\Controllers\TaxTypeController;
+// use App\Http\Controllers\TaxTypeController; // Moved to TaxSettingsController
 use App\Http\Controllers\BooklistController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ComClassController;
 use App\Http\Controllers\CrmBoardController;
 use App\Http\Controllers\EmployeeController;
-use App\Http\Controllers\LanguageController;
+// use App\Http\Controllers\LanguageController; // Moved to AcademicSettingsController
 use App\Http\Controllers\AcademicSettingsController;
 use \App\Http\Controllers\GuardianController;
 use App\Http\Controllers\FeeChargeController;
@@ -62,7 +62,7 @@ use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ParentQueryController;
 use App\Http\Controllers\VisitDetailController;
 use \App\Http\Controllers\TeacherTypeController;
-use App\Http\Controllers\AcademicYearController;
+// use App\Http\Controllers\AcademicYearController; // Moved to AcademicSettingsController
 use App\Http\Controllers\BeamsChallanController;
 use App\Http\Controllers\ClassSubjectController;
 use App\Http\Controllers\FollowUpTypeController;
@@ -112,7 +112,7 @@ use App\Http\Controllers\StudentFeePackageController;
 use App\Http\Controllers\StudentWithdrawalController;
 use App\Http\Controllers\SubjectMarksSetupController;
 use \App\Http\Controllers\BrandingMarketingController;
-use App\Http\Controllers\BranchAcademicYearController;
+// use App\Http\Controllers\BranchAcademicYearController; // Moved to AcademicSettingsController
 use App\Http\Controllers\BranchWorkingShiftController;
 use App\Http\Controllers\ContactInformationController;
 use App\Http\Controllers\EmployeeAttendanceController;
@@ -131,7 +131,7 @@ use App\Http\Controllers\FranchiseApplicationController;
 use App\Http\Controllers\DesignationLeaveQuotaController;
 use App\Http\Controllers\FeePackagesFeeChargesController;
 use App\Http\Controllers\StudentBehaviourSkillController;
-use App\Http\Controllers\StudentPreviousSchoolController;
+// use App\Http\Controllers\StudentPreviousSchoolController; // Moved to AcademicSettingsController
 use App\Http\Controllers\StudentTransferReasonController;
 use App\Http\Controllers\FranchiseApplicationQaController;
 use App\Http\Controllers\NetworkAssociateBranchController;
@@ -717,7 +717,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resources(['branches' => BranchController::class]);
     Route::resources(['bank-accounts' => BankAccountController::class]);
     Route::resources(['branch-working-shift' => BranchWorkingShiftController::class]);
-    Route::resources(['branch-academic-year' => BranchAcademicYearController::class]);
+    // Route moved to academic-settings
+    // Route::resources(['branch-academic-year' => BranchAcademicYearController::class]);
     Route::resources(['assessment-entry' => AssessmentEntryController::class]);
     Route::resources(['subject-remarks' => SubjectRemarkController::class]);
     Route::resources(['system-notifications' => SystemNotificationController::class]);
@@ -805,7 +806,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::resources(['staff-type' => StaffTypeController::class]);
 
         // Note: student-previous-school routes moved to academic-settings
-        Route::get('/school-description', [StudentPreviousSchoolController::class, 'getSchoolDescription'])->name('student.school-description');
+        Route::get('/school-description', [AcademicSettingsController::class, 'getSchoolDescription'])->name('student.school-description');
         Route::post('make-bank-default', [BankAccountController::class, 'make_bank_default'])->name('make-bank-default');
 
         // Unified Geographic Settings Routes

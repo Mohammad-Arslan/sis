@@ -228,7 +228,14 @@ class GeographicSettingsController extends Controller
     public function destroyCountry(Country $country): JsonResponse
     {
         try {
-            $this->service->deleteCountry($country);
+            $deleted = $this->service->deleteCountry($country);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete country.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -304,7 +311,14 @@ class GeographicSettingsController extends Controller
     public function destroyState(State $state): JsonResponse
     {
         try {
-            $this->service->deleteState($state);
+            $deleted = $this->service->deleteState($state);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete state.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -380,7 +394,14 @@ class GeographicSettingsController extends Controller
     public function destroyCity(City $city): JsonResponse
     {
         try {
-            $this->service->deleteCity($city);
+            $deleted = $this->service->deleteCity($city);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete city.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -456,7 +477,14 @@ class GeographicSettingsController extends Controller
     public function destroyTown(Town $town): JsonResponse
     {
         try {
-            $this->service->deleteTown($town);
+            $deleted = $this->service->deleteTown($town);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete town.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -532,7 +560,14 @@ class GeographicSettingsController extends Controller
     public function destroyRegion(Region $region): JsonResponse
     {
         try {
-            $this->service->deleteRegion($region);
+            $deleted = $this->service->deleteRegion($region);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete region.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -608,7 +643,14 @@ class GeographicSettingsController extends Controller
     public function destroyBuildingType(BuildingType $buildingType): JsonResponse
     {
         try {
-            $this->service->deleteBuildingType($buildingType);
+            $deleted = $this->service->deleteBuildingType($buildingType);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete building type.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,

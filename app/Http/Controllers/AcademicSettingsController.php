@@ -204,7 +204,14 @@ class AcademicSettingsController extends Controller
     public function destroyLanguage(Language $language): JsonResponse
     {
         try {
-            $this->service->deleteLanguage($language);
+            $deleted = $this->service->deleteLanguage($language);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete language.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -280,7 +287,14 @@ class AcademicSettingsController extends Controller
     public function destroyAcademicYear(AcademicYear $academicYear): JsonResponse
     {
         try {
-            $this->service->deleteAcademicYear($academicYear);
+            $deleted = $this->service->deleteAcademicYear($academicYear);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete academic year.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -356,7 +370,14 @@ class AcademicSettingsController extends Controller
     public function destroyBranchAcademicYear(BranchAcademicYear $branchAcademicYear): JsonResponse
     {
         try {
-            $this->service->deleteBranchAcademicYear($branchAcademicYear);
+            $deleted = $this->service->deleteBranchAcademicYear($branchAcademicYear);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete branch academic year.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -432,7 +453,14 @@ class AcademicSettingsController extends Controller
     public function destroyStudentPreviousSchool(StudentPreviousSchool $studentPreviousSchool): JsonResponse
     {
         try {
-            $this->service->deleteStudentPreviousSchool($studentPreviousSchool);
+            $deleted = $this->service->deleteStudentPreviousSchool($studentPreviousSchool);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete student previous school.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -509,6 +537,17 @@ class AcademicSettingsController extends Controller
     public function getStudentPreviousSchool(StudentPreviousSchool $studentPreviousSchool): JsonResponse
     {
         return response()->json($studentPreviousSchool);
+    }
+
+    /**
+     * Get school description for AJAX requests
+     */
+    public function getSchoolDescription(Request $request)
+    {
+        if ($request->ajax()) {
+            $school = StudentPreviousSchool::find($request->previous_school_id);
+            return $school ? $school->description : '';
+        }
     }
 }
 

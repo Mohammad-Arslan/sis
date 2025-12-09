@@ -197,24 +197,13 @@ $('#tax-type-form').on('submit', function(e) {
 });
 
 function deleteTaxType(id) {
-    if (!confirm('Are you sure you want to delete this tax type? This action cannot be undone.')) {
-        return;
-    }
-    
-    $.ajax({
-        url: `{{ url('tax-settings/tax-types') }}/${id}`,
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            showToast(response.message, 'success');
-            taxTypesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `{{ url('tax-settings/tax-types') }}/:id`,
+        'Are you sure you want to delete this tax type? This action cannot be undone.',
+        taxTypesTable,
+        'Are you sure?'
+    );
 }
 </script>
 

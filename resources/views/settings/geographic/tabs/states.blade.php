@@ -203,19 +203,12 @@ $('#state-form').on('submit', function(e) {
 });
 
 function deleteState(id) {
-    if (!confirm('Are you sure you want to delete this state?')) return;
-    
-    $.ajax({
-        url: `/geographic-settings/states/${id}`,
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            showToast(response.message, 'success');
-            statesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `/geographic-settings/states/:id`,
+        'Are you sure you want to delete this state?',
+        statesTable,
+        'Are you sure?'
+    );
 }
 </script>

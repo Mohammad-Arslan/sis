@@ -178,19 +178,12 @@ $('#building-type-form').on('submit', function(e) {
 });
 
 function deleteBuildingType(id) {
-    if (!confirm('Are you sure you want to delete this building type?')) return;
-    
-    $.ajax({
-        url: `/geographic-settings/building-types/${id}`,
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            showToast(response.message, 'success');
-            buildingTypesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `/geographic-settings/building-types/:id`,
+        'Are you sure you want to delete this building type?',
+        buildingTypesTable,
+        'Are you sure?'
+    );
 }
 </script>

@@ -204,24 +204,13 @@ $('#country-form').on('submit', function(e) {
 });
 
 function deleteCountry(id) {
-    if (!confirm('Are you sure you want to delete this country?')) {
-        return;
-    }
-    
-    $.ajax({
-        url: `/geographic-settings/countries/${id}`,
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            showToast(response.message, 'success');
-            countriesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `/geographic-settings/countries/:id`,
+        'Are you sure you want to delete this country?',
+        countriesTable,
+        'Are you sure?'
+    );
 }
 </script>
 

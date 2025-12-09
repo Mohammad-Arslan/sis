@@ -212,19 +212,12 @@ $('#town-form').on('submit', function(e) {
 });
 
 function deleteTown(id) {
-    if (!confirm('Are you sure you want to delete this town?')) return;
-    
-    $.ajax({
-        url: `/geographic-settings/towns/${id}`,
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            showToast(response.message, 'success');
-            townsTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `/geographic-settings/towns/:id`,
+        'Are you sure you want to delete this town?',
+        townsTable,
+        'Are you sure?'
+    );
 }
 </script>

@@ -257,19 +257,12 @@ $('#city-form').on('submit', function(e) {
 });
 
 function deleteCity(id) {
-    if (!confirm('Are you sure you want to delete this city?')) return;
-    
-    $.ajax({
-        url: `/geographic-settings/cities/${id}`,
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            showToast(response.message, 'success');
-            citiesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `/geographic-settings/cities/:id`,
+        'Are you sure you want to delete this city?',
+        citiesTable,
+        'Are you sure?'
+    );
 }
 </script>

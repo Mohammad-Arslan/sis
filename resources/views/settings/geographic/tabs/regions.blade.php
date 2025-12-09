@@ -190,19 +190,12 @@ $('#region-form').on('submit', function(e) {
 });
 
 function deleteRegion(id) {
-    if (!confirm('Are you sure you want to delete this region?')) return;
-    
-    $.ajax({
-        url: `/geographic-settings/regions/${id}`,
-        method: 'DELETE',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            showToast(response.message, 'success');
-            regionsTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `/geographic-settings/regions/:id`,
+        'Are you sure you want to delete this region?',
+        regionsTable,
+        'Are you sure?'
+    );
 }
 </script>

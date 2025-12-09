@@ -313,24 +313,13 @@ $('#tax-form').on('submit', function(e) {
 });
 
 function deleteTax(id) {
-    if (!confirm('Are you sure you want to delete this tax? This action cannot be undone.')) {
-        return;
-    }
-    
-    $.ajax({
-        url: `{{ url('tax-settings/taxes') }}/${id}`,
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            showToast(response.message, 'success');
-            taxesTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `{{ url('tax-settings/taxes') }}/:id`,
+        'Are you sure you want to delete this tax? This action cannot be undone.',
+        taxesTable,
+        'Are you sure?'
+    );
 }
 </script>
 

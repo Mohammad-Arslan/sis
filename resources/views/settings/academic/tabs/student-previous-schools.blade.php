@@ -202,24 +202,13 @@ $('#student-previous-school-form').on('submit', function(e) {
 });
 
 function deleteStudentPreviousSchool(id) {
-    if (!confirm('Are you sure you want to delete this student previous school? This action cannot be undone.')) {
-        return;
-    }
-    
-    $.ajax({
-        url: `{{ url('academic-settings/student-previous-schools') }}/${id}`,
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            showToast(response.message, 'success');
-            studentPreviousSchoolsTable.ajax.reload();
-        },
-        error: function(xhr) {
-            handleAjaxError(xhr);
-        }
-    });
+    deleteSettingsRecord(
+        id,
+        `{{ url('academic-settings/student-previous-schools') }}/:id`,
+        'Are you sure you want to delete this student previous school? This action cannot be undone.',
+        studentPreviousSchoolsTable,
+        'Are you sure?'
+    );
 }
 </script>
 

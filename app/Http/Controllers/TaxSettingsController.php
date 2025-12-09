@@ -169,7 +169,14 @@ class TaxSettingsController extends Controller
     public function destroyTaxType(TaxType $taxType): JsonResponse
     {
         try {
-            $this->service->deleteTaxType($taxType);
+            $deleted = $this->service->deleteTaxType($taxType);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete tax type.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
@@ -248,7 +255,14 @@ class TaxSettingsController extends Controller
     public function destroyTax(Tax $tax): JsonResponse
     {
         try {
-            $this->service->deleteTax($tax);
+            $deleted = $this->service->deleteTax($tax);
+            
+            if (!$deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete tax.'
+                ], 422);
+            }
             
             return response()->json([
                 'success' => true,
