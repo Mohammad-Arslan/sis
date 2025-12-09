@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Traits\CreatingObserverTrait;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\SerializeDateTrait;
 
 class Tax extends Model
 {
-    use HasFactory, CreatingObserverTrait, SerializeDateTrait;
+    use HasFactory, CreatingObserverTrait, SerializeDateTrait, LogsActivity;
 
     protected $fillable = [
         'tax_type_id',

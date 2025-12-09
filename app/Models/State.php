@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use App\Traits\SerializeDateTrait;
 
 class State extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory, SoftDeletes, SerializeDateTrait, LogsActivity;
 
     protected $fillable = [
         'state_name',

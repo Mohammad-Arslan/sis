@@ -17,3 +17,8 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('example:log', function () {
+    app(\App\Services\ActivityLoggerService::class)->logCommand('example:log');
+    $this->info('Command logged successfully!');
+})->purpose('Example command logging');

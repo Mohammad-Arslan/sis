@@ -904,6 +904,13 @@ Route::group(['middleware' => ['auth']], function () {
             Route::put('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'updateTax'])->name('update-tax');
             Route::delete('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'destroyTax'])->name('destroy-tax');
         });
+        
+        // Activity Logs Routes
+        Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
+            Route::get('/', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('index');
+            Route::get('/data', [App\Http\Controllers\ActivityLogController::class, 'indexData'])->name('data');
+            Route::get('/json-data/{id}/{type}', [App\Http\Controllers\ActivityLogController::class, 'getJsonData'])->name('json-data');
+        });
 
         Route::get('/class-groups-classes', [ClassGroupController::class, 'showClasses'])->name('groups-classes');
         Route::post('/add-class-groups-classes', [ClassGroupController::class, 'addGroupClasses'])->name('add-groups-classes');

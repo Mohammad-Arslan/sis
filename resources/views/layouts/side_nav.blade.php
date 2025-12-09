@@ -1234,6 +1234,13 @@
         @endrole
         @role('super_admin')
             <li class="nav-item">
+                <a class="nav-link menu-link {{ Request::is('activity-logs*') ? '' : 'collapsed' }}"
+                    href="{{ route('activity-logs.index') }}">
+                    <i class="ri-file-list-3-line"></i>
+                    <span data-key="t-dashboards">Activity Logs</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link menu-link {{ Request::is('unpaid-students-list', 'paid-students-list', 'students-relation-list', 'reports-attendance', 'reports/comprehensive-attendance', 'reports/daily-operational', 'sibling-report', 'student-concession-report', 'branches-report', 'invoice-status-report', 'transfer-in-out', 'student-promotion-report') ? '' : 'collapsed' }}"
                     href="#sidebarReports" data-bs-toggle="collapse" role="button"
                     aria-expanded="{{ Request::is('unpaid-students-list', 'paid-students-list', 'students-relation-list', 'reports-attendance', 'reports/comprehensive-attendance', 'reports/daily-operational', 'sibling-report', 'student-concession-report', 'branches-report', 'invoice-status-report', 'transfer-in-out', 'student-promotion-report') ? 'true' : 'false' }}"
