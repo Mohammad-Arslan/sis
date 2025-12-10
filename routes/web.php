@@ -912,6 +912,14 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('/json-data/{id}/{type}', [App\Http\Controllers\ActivityLogController::class, 'getJsonData'])->name('json-data');
         });
 
+        // Recycle Bin Routes
+        Route::prefix('recycle-bin')->name('recycle-bin.')->group(function () {
+            Route::get('/', [App\Http\Controllers\RecycleBinController::class, 'index'])->name('index');
+            Route::get('/data', [App\Http\Controllers\RecycleBinController::class, 'indexData'])->name('data');
+            Route::post('/restore/{model_type}/{id}', [App\Http\Controllers\RecycleBinController::class, 'restore'])->name('restore');
+            Route::delete('/force-delete/{model_type}/{id}', [App\Http\Controllers\RecycleBinController::class, 'forceDelete'])->name('force-delete');
+        });
+
         Route::get('/class-groups-classes', [ClassGroupController::class, 'showClasses'])->name('groups-classes');
         Route::post('/add-class-groups-classes', [ClassGroupController::class, 'addGroupClasses'])->name('add-groups-classes');
 

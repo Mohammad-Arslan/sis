@@ -1241,6 +1241,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link menu-link {{ Request::is('recycle-bin*') ? 'active' : '' }}"
+                    href="{{ route('recycle-bin.index') }}">
+                    <i class="ri-delete-bin-7-line"></i>
+                    <span data-key="t-recycle-bin">Recycle Bin</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link menu-link {{ Request::is('unpaid-students-list', 'paid-students-list', 'students-relation-list', 'reports-attendance', 'reports/comprehensive-attendance', 'reports/daily-operational', 'sibling-report', 'student-concession-report', 'branches-report', 'invoice-status-report', 'transfer-in-out', 'student-promotion-report') ? '' : 'collapsed' }}"
                     href="#sidebarReports" data-bs-toggle="collapse" role="button"
                     aria-expanded="{{ Request::is('unpaid-students-list', 'paid-students-list', 'students-relation-list', 'reports-attendance', 'reports/comprehensive-attendance', 'reports/daily-operational', 'sibling-report', 'student-concession-report', 'branches-report', 'invoice-status-report', 'transfer-in-out', 'student-promotion-report') ? 'true' : 'false' }}"

@@ -308,6 +308,212 @@ function performDelete(id, deleteUrl, dataTable) {
     });
 }
 
+/**
+ * Restore soft-deleted record via AJAX with SweetAlert2 confirmation
+ * This handler works with elements having class 'restore-record'
+ * Required data attributes:
+ *   - data-id: ID of record to restore
+ *   - data-url: URL for restore action
+ *   - data-table: DataTable ID to reload after success (optional)
+ */
+$(document).on('click', '.restore-record', function(e) {
+    e.preventDefault();
+    
+    const button = $(this);
+    const id = button.data('id');
+    const url = button.data('url');
+    const tableId = button.data('table');
+    
+    // Use SweetAlert2 if available, otherwise fall back to confirm
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            html: '<div class="mt-3">' +
+                '<lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f7b84b,secondary:#0ab39c" style="width:100px;height:100px"></lord-icon>' +
+                '<div class="pt-2 mx-5 mt-4 fs-15">' +
+                '<h4>Restore Record?</h4>' +
+                '<p class="mx-4 mb-0 text-muted">Do you want to restore this record? It will be available again in the system.</p>' +
+                '</div>' +
+                '</div>',
+            showCancelButton: true,
+            confirmButtonClass: 'btn btn-primary w-xs me-2 mb-1',
+            confirmButtonText: 'Yes, Restore It!',
+            cancelButtonClass: 'btn btn-danger w-xs mb-1',
+            cancelButtonText: 'Cancel',
+            buttonsStyling: false,
+            showCloseButton: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                performRestore(id, url, tableId, button);
+            }
+        });
+    } else {
+        // Fallback to native confirm if Swal is not available
+        if (!confirm('Do you want to restore this record? It will be available again in the system.')) {
+            return;
+        }
+        performRestore(id, url, tableId, button);
+    }
+});
+
+/**
+ * Perform the actual restore operation
+ * @param {number} id - ID of record to restore
+ * @param {string} url - URL for restore action
+ * @param {string} tableId - DataTable ID to reload after success (optional)
+ * @param {jQuery} button - Button element to disable during request
+ */
+function performRestore(id, url, tableId, button) {
+    // Disable button during request
+    button.prop('disabled', true);
+    
+    $.ajax({
+        url: url,
+        type: 'POST',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                // Reload DataTable if specified
+                if (tableId && $('#' + tableId).length) {
+                    $('#' + tableId).DataTable().ajax.reload(null, false);
+                }
+                
+                // Show success message with SweetAlert2 if available
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        html: '<div class="mt-3">' +
+                            '<lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>' +
+                            '<div class="mt-4 pt-2 fs-15">' +
+                            '<h4>Restored!</h4>' +
+                            '<p class="text-muted mx-4 mb-0">' + (response.message || 'Record has been successfully restored.') + '</p>' +
+                            '</div></div>',
+                        showCancelButton: !0,
+                        showConfirmButton: !1,
+                        cancelButtonClass: "btn btn-primary w-xs mb-1",
+                        cancelButtonText: "Okay",
+                        buttonsStyling: !1,
+                        showCloseButton: !0
+                    });
+                } else {
+                    showToast(response.message || 'Record has been successfully restored.', 'success');
+                }
+            } else {
+                showToast(response.message || 'Failed to restore record.', 'error');
+                button.prop('disabled', false);
+            }
+        },
+        error: function(xhr) {
+            handleAjaxError(xhr);
+            button.prop('disabled', false);
+        }
+    });
+}
+
+/**
+ * Force delete (permanently delete) soft-deleted record via AJAX with SweetAlert2 confirmation
+ * This handler works with elements having class 'force-delete-record'
+ * Required data attributes:
+ *   - data-id: ID of record to delete
+ *   - data-url: URL for force delete action
+ *   - data-table: DataTable ID to reload after success (optional)
+ *   - data-model-type: Model type for display purposes (optional)
+ */
+$(document).on('click', '.force-delete-record', function(e) {
+    e.preventDefault();
+    
+    const button = $(this);
+    const id = button.data('id');
+    const url = button.data('url');
+    const tableId = button.data('table');
+    const modelType = button.data('model-type') || 'record';
+    
+    // Use SweetAlert2 if available, otherwise fall back to confirm
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            html: '<div class="mt-3">' +
+                '<lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop" colors="primary:#f06548,secondary:#f7b84b" style="width:100px;height:100px"></lord-icon>' +
+                '<div class="pt-2 mx-5 mt-4 fs-15">' +
+                '<h4>Permanently Delete?</h4>' +
+                '<p class="mx-4 mb-0 text-muted">This action cannot be undone! The record will be permanently deleted from the system.</p>' +
+                '</div>' +
+                '</div>',
+            showCancelButton: true,
+            confirmButtonClass: 'btn btn-danger w-xs me-2 mb-1',
+            confirmButtonText: 'Yes, Delete Permanently!',
+            cancelButtonClass: 'btn btn-secondary w-xs mb-1',
+            cancelButtonText: 'Cancel',
+            buttonsStyling: false,
+            showCloseButton: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                performForceDelete(id, url, tableId, button);
+            }
+        });
+    } else {
+        // Fallback to native confirm if Swal is not available
+        if (!confirm('This action cannot be undone! Do you want to permanently delete this record?')) {
+            return;
+        }
+        performForceDelete(id, url, tableId, button);
+    }
+});
+
+/**
+ * Perform the actual force delete operation
+ * @param {number} id - ID of record to delete
+ * @param {string} url - URL for force delete action
+ * @param {string} tableId - DataTable ID to reload after success (optional)
+ * @param {jQuery} button - Button element to disable during request
+ */
+function performForceDelete(id, url, tableId, button) {
+    // Disable button during request
+    button.prop('disabled', true);
+    
+    $.ajax({
+        url: url,
+        type: 'DELETE',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                // Reload DataTable if specified
+                if (tableId && $('#' + tableId).length) {
+                    $('#' + tableId).DataTable().ajax.reload(null, false);
+                }
+                
+                // Show success message with SweetAlert2 if available
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        html: '<div class="mt-3">' +
+                            '<lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop" colors="primary:#0ab39c,secondary:#405189" style="width:120px;height:120px"></lord-icon>' +
+                            '<div class="mt-4 pt-2 fs-15">' +
+                            '<h4>Deleted!</h4>' +
+                            '<p class="text-muted mx-4 mb-0">' + (response.message || 'Record has been permanently deleted.') + '</p>' +
+                            '</div></div>',
+                        showCancelButton: !0,
+                        showConfirmButton: !1,
+                        cancelButtonClass: "btn btn-primary w-xs mb-1",
+                        cancelButtonText: "Okay",
+                        buttonsStyling: !1,
+                        showCloseButton: !0
+                    });
+                } else {
+                    showToast(response.message || 'Record has been permanently deleted.', 'success');
+                }
+            } else {
+                showToast(response.message || 'Failed to delete record.', 'error');
+                button.prop('disabled', false);
+            }
+        },
+        error: function(xhr) {
+            handleAjaxError(xhr);
+            button.prop('disabled', false);
+        }
+    });
+}
+
 // Adjust DataTables when tabs are switched
 $(document).ready(function() {
     $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
