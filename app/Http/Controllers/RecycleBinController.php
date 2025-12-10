@@ -37,32 +37,74 @@ class RecycleBinController extends Controller
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
-        $records = $this->service->buildDeletedRecordsQuery($request);
+        try {
+            $records = $this->service->buildDeletedRecordsQuery($request);
+            
+            Log::info('RecycleBin Controller: Records received', [
+                'count' => $records->count(),
+                'first_record' => $records->first() ? [
+                    'id' => $records->first()->id ?? null,
+                    'model_type' => $records->first()->model_type ?? null,
+                    'deleted_at' => $records->first()->deleted_at ?? null,
+                ] : null
+            ]);
 
-        // Convert to array for DataTables
-        $data = $records->map(fn($record) => $this->service->formatRecordForDataTable($record))->values();
+            // Convert to array for DataTables (client-side processing)
+            $data = $records->map(function ($record) {
+                try {
+                    $formatted = $this->service->formatRecordForDataTable($record);
+                    
+                    // Generate action buttons
+                    $restoreUrl = route('recycle-bin.restore', [
+                        'model_type' => base64_encode($formatted['model_type']),
+                        'id' => $formatted['id']
+                    ]);
+                    $deleteUrl = route('recycle-bin.force-delete', [
+                        'model_type' => base64_encode($formatted['model_type']),
+                        'id' => $formatted['id']
+                    ]);
 
-        return DataTables::of($data)
-            ->addIndexColumn()
-            ->addColumn('action', function ($row) {
-                $restoreUrl = route('recycle-bin.restore', [
-                    'model_type' => base64_encode($row['model_type']),
-                    'id' => $row['id']
-                ]);
-                $deleteUrl = route('recycle-bin.force-delete', [
-                    'model_type' => base64_encode($row['model_type']),
-                    'id' => $row['id']
-                ]);
+                    $formatted['action'] = view('recycle-bin.actions', [
+                        'restoreUrl' => $restoreUrl,
+                        'deleteUrl' => $deleteUrl,
+                        'id' => $formatted['id'],
+                        'modelType' => $formatted['model_type'],
+                    ])->render();
+                    
+                    return $formatted;
+                } catch (\Throwable $e) {
+                    Log::error('RecycleBin: Error formatting record', [
+                        'record_id' => $record->id ?? 'unknown',
+                        'error' => $e->getMessage()
+                    ]);
+                    return null;
+                }
+            })->filter()->values()->toArray();
 
-                return view('recycle-bin.actions', [
-                    'restoreUrl' => $restoreUrl,
-                    'deleteUrl' => $deleteUrl,
-                    'id' => $row['id'],
-                    'modelType' => $row['model_type'],
-                ])->render();
-            })
-            ->rawColumns(['action'])
-            ->make(true);
+            Log::info('RecycleBin: Returning data', [
+                'count' => count($data),
+                'filters' => [
+                    'model_type' => $request->input('model_type'),
+                    'date_from' => $request->input('date_from'),
+                    'date_to' => $request->input('date_to'),
+                    'search' => $request->input('search.value'),
+                ]
+            ]);
+
+            return response()->json([
+                'data' => $data
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('RecycleBin: Error fetching data', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'data' => [],
+                'error' => 'An error occurred while fetching data. Please try again.'
+            ], 500);
+        }
     }
 
     /**

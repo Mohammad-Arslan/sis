@@ -46,6 +46,15 @@
                         <label for="filter-search" class="form-label">Search</label>
                         <input type="text" class="form-control" id="filter-search" name="search" placeholder="Search records...">
                     </div>
+                    <div class="col-md-12">
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="query-all-models" name="query_all_models">
+                            <label class="form-check-label" for="query-all-models">
+                                <strong>Query All Models</strong> (May take longer and use more memory)
+                                <small class="text-muted d-block">By default, only first 20 models are queried. Check this to query all {{ count($models) }} models.</small>
+                            </label>
+                        </div>
+                    </div>
                     <div class="col-md-12 d-flex align-items-end gap-2">
                         <button type="button" class="btn btn-primary" onclick="applyFilters()">
                             <i class="ri-search-line me-1"></i> Apply Filters
@@ -66,6 +75,10 @@
                 </h5>
             </div>
             <div class="card-body">
+                <div id="query-info" class="alert alert-info d-none mb-3">
+                    <i class="ri-information-line me-2"></i>
+                    <span id="query-info-text"></span>
+                </div>
                 <div class="table-responsive">
                     <table id="recycle-bin-table" class="table table-bordered table-striped table-hover dt-responsive nowrap w-100">
                         <thead>
@@ -139,7 +152,8 @@
 
     function applyFilters() {
         if (recycleBinTable) {
-            recycleBinTable.draw();
+            // Reload the DataTable with new filter parameters
+            recycleBinTable.ajax.reload(null, false);
         }
     }
 
@@ -148,6 +162,7 @@
         $('#filter-date-from').val('');
         $('#filter-date-to').val('');
         $('#filter-search').val('');
+        $('#query-all-models').prop('checked', false);
         
         if (typeof flatpickr !== 'undefined') {
             const dateFromPicker = document.getElementById('filter-date-from');
@@ -166,7 +181,7 @@
     function initializeRecycleBinTable() {
         recycleBinTable = $('#recycle-bin-table').DataTable({
             processing: true,
-            serverSide: false, // Using client-side processing for now
+            serverSide: false, // Using client-side processing
             responsive: true,
             pageLength: 25,
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
@@ -177,9 +192,39 @@
                     d.model_type = $('#filter-model-type').val();
                     d.date_from = $('#filter-date-from').val();
                     d.date_to = $('#filter-date-to').val();
+                    d.query_all_models = $('#query-all-models').is(':checked') ? 1 : 0;
                     d.search = {
                         value: $('#filter-search').val()
                     };
+                },
+                dataSrc: function(json) {
+                    // Return the data array directly
+                    if (json && json.data) {
+                        // Update query info
+                        const queryAll = $('#query-all-models').is(':checked');
+                        const modelType = $('#filter-model-type').val();
+                        let infoText = '';
+                        
+                        if (modelType) {
+                            infoText = `Showing deleted records from: <strong>${modelType.split('\\').pop()}</strong>`;
+                        } else if (queryAll) {
+                            infoText = `Showing deleted records from <strong>ALL {{ count($models) }} models</strong> (${json.data.length} records found)`;
+                        } else {
+                            infoText = `Showing deleted records from <strong>first 20 models</strong> (${json.data.length} records found). Check "Query All Models" to see all models.`;
+                        }
+                        
+                        $('#query-info-text').html(infoText);
+                        $('#query-info').removeClass('d-none');
+                        
+                        return json.data;
+                    }
+                    return [];
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('DataTable AJAX error:', error, thrown);
+                    console.error('Response:', xhr.responseText);
+                    $('#query-info').removeClass('alert-info').addClass('alert-danger');
+                    $('#query-info-text').html('An error occurred while loading data. Please try again.');
                 }
             },
             columns: [
