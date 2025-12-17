@@ -22,4 +22,4 @@ jobs:
         with:
           args: >
             -Dsonar.organization=mohammad-arslan
-            -Dsonar.projectKey=mohammad-arslan_sis
+            -Dsonar.projectKey=Mohammad-Arslan_sis
