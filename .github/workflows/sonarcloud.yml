@@ -2,7 +2,7 @@ name: SonarCloud Analysis
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [Main, main, master, enhancement-ui ]
   pull_request:
 
 jobs:
