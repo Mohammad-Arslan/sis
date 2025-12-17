@@ -43,8 +43,14 @@ use App\Models\EmployeeOfficialLeaveDay;
 use Illuminate\Support\Facades\Validator;
 use App\Imports\ImportEmployee;
 use App\Exports\EmployeeTemplateExport;
+use App\Exports\ExportEmployee;
+use App\Jobs\ProcessEmployeeExport;
+use App\Jobs\ProcessEmployeeImport;
+use App\Models\ImportProgress;
+use App\Models\ImportErrorLog;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
@@ -1310,47 +1316,60 @@ class EmployeeController extends Controller
         ]);
 
         try {
-            // Set execution time for large imports
-            set_time_limit(1800); // 30 minutes
+            // Generate unique import ID
+            $importId = uniqid('emp_import_', true);
             
-            $import = new ImportEmployee();
+            // Store file temporarily (use local disk explicitly)
+            $file = $request->file('file');
+            $fileName = $importId . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('imports/employees', $fileName, 'local');
+            
+            // Create import progress record
+            $importProgress = ImportProgress::create([
+                'import_id' => $importId,
+                'import_type' => 'employee',
+                'user_id' => auth()->id(),
+                'file_name' => $file->getClientOriginalName(),
+                'status' => 'pending',
+                'current_message' => 'Import queued for processing...',
+            ]);
+            
+            // Dispatch job to queue
+            ProcessEmployeeImport::dispatch(
+                $filePath,
+                $importId,
+                auth()->id()
+            );
+            
+            Log::info('Employee import job dispatched', [
+                'import_id' => $importId,
+                'file_path' => $filePath,
+                'user_id' => Auth::id(),
+            ]);
 
-            Excel::import($import, $request->file('file'));
-
-            $stats = $import->getImportStats();
-
-            // Return JSON response for AJAX requests
+            // Return JSON response with import ID for WebSocket subscription
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => "Import completed successfully!",
-                    'imported_count' => $stats['imported'],
-                    'skipped_count' => $stats['skipped'],
-                    'total_processed' => $stats['total_processed'],
-                    'total_rows' => $stats['total_rows'],
-                    'errors' => $stats['errors']
+                    'success' => true,
+                    'message' => 'Import started successfully! Processing in background...',
+                    'import_id' => $importId
                 ]);
             }
 
-            // Return redirect response for regular form submissions
-            $message = "Import completed successfully!\n";
-            $message .= "Imported: {$stats['imported']} employees\n";
-            $message .= "Skipped: {$stats['skipped']} rows\n";
-            $message .= "Errors: {$stats['errors']} rows";
-
-            if ($stats['errors'] > 0) {
-                $message .= "\n\nPlease check the logs for detailed error information.";
-            }
-
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with([
+                'success' => 'Import started successfully! Processing in background...',
+                'import_id' => $importId
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Employee import failed: ' . $e->getMessage(), [
+            Log::error('Employee import dispatch failed: ' . $e->getMessage(), [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             if ($request->ajax()) {
                 return response()->json([
+                    'success' => false,
                     'message' => 'Import failed: ' . $e->getMessage()
                 ], 500);
             }
@@ -1362,18 +1381,305 @@ class EmployeeController extends Controller
     /**
      * Get import statistics
      */
-    public function getImportStats()
+    public function getImportStats(Request $request)
     {
-        $logPath = storage_path('logs/employee_import.log');
-        $logContent = '';
+        $importId = $request->get('import_id');
         
-        if (File::exists($logPath)) {
-            $logContent = File::get($logPath);
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+        
+        $importProgress = ImportProgress::where('import_id', $importId)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$importProgress) {
+            return response()->json(['error' => 'Import not found'], 404);
         }
         
         return response()->json([
-            'log_content' => $logContent,
-            'log_file_exists' => File::exists($logPath)
+            'import_id' => $importProgress->import_id,
+            'status' => $importProgress->status,
+            'total_rows' => $importProgress->total_rows,
+            'processed_rows' => $importProgress->processed_rows,
+            'imported_count' => $importProgress->imported_count,
+            'skipped_count' => $importProgress->skipped_count,
+            'error_count' => $importProgress->error_count,
+            'current_row' => $importProgress->current_row,
+            'current_message' => $importProgress->current_message,
+            'errors' => $importProgress->errors,
+            'progress_percentage' => $importProgress->progress_percentage,
+            'started_at' => $importProgress->started_at,
+            'completed_at' => $importProgress->completed_at,
+        ]);
+    }
+
+    /**
+     * Export all employees with real-time progress
+     */
+    public function exportEmployees(Request $request)
+    {
+        // No validation needed since we're exporting all data without filters
+
+        try {
+            // Generate unique export ID
+            $exportId = uniqid('emp_export_', true);
+            
+            // Create export progress record
+            $exportProgress = ImportProgress::create([
+                'import_id' => $exportId,
+                'import_type' => 'employee_export',
+                'user_id' => auth()->id(),
+                'file_name' => 'employee_export_' . date('Y-m-d_H-i-s') . '.xlsx',
+                'status' => 'pending',
+                'current_message' => 'Export queued for processing...',
+            ]);
+            
+            // No filters - export all employees
+            $filters = [];
+            
+            // Dispatch job to queue
+            ProcessEmployeeExport::dispatch(
+                $exportId,
+                auth()->id(),
+                $filters
+            );
+            
+            Log::info('Employee export job dispatched', [
+                'export_id' => $exportId,
+                'filters' => $filters,
+                'user_id' => Auth::id(),
+            ]);
+
+            // Return JSON response with export ID for WebSocket subscription
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Export started successfully! Processing in background...',
+                    'export_id' => $exportId
+                ]);
+            }
+
+            return redirect()->back()->with([
+                'success' => 'Export started successfully! Processing in background...',
+                'export_id' => $exportId
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Employee export dispatch failed: ' . $e->getMessage(), [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Export failed: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get export statistics
+     */
+    public function getExportStats(Request $request)
+    {
+        $exportId = $request->get('export_id');
+        
+        if (!$exportId) {
+            return response()->json(['error' => 'Export ID required'], 400);
+        }
+        
+        $exportProgress = ImportProgress::where('import_id', $exportId)
+            ->where('import_type', 'employee_export')
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$exportProgress) {
+            return response()->json(['error' => 'Export not found'], 404);
+        }
+        
+        return response()->json([
+            'export_id' => $exportProgress->import_id,
+            'status' => $exportProgress->status,
+            'total_rows' => $exportProgress->total_rows,
+            'processed_rows' => $exportProgress->processed_rows,
+            'imported_count' => $exportProgress->imported_count,
+            'skipped_count' => $exportProgress->skipped_count,
+            'error_count' => $exportProgress->error_count,
+            'current_row' => $exportProgress->current_row,
+            'current_message' => $exportProgress->current_message,
+            'errors' => $exportProgress->errors,
+            'progress_percentage' => $exportProgress->progress_percentage,
+            'started_at' => $exportProgress->started_at,
+            'completed_at' => $exportProgress->completed_at,
+        ]);
+    }
+
+    /**
+     * Download completed export file
+     */
+    public function downloadExport(Request $request)
+    {
+        $exportId = $request->get('export_id');
+        
+        if (!$exportId) {
+            return response()->json(['error' => 'Export ID required'], 400);
+        }
+        
+        $exportProgress = ImportProgress::where('import_id', $exportId)
+            ->where('import_type', 'employee_export')
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$exportProgress) {
+            return response()->json(['error' => 'Export not found'], 404);
+        }
+        
+        if ($exportProgress->status !== 'completed') {
+            return response()->json(['error' => 'Export not completed yet'], 400);
+        }
+        
+        // File path (local disk uses storage/app as root)
+        $filePath = 'exports/employees/employee_export_' . $exportId . '.xlsx';
+        
+        if (!Storage::disk('local')->exists($filePath)) {
+            return response()->json(['error' => 'Export file not found. Please try exporting again.'], 404);
+        }
+        
+        return Storage::disk('local')->download($filePath, $exportProgress->file_name);
+    }
+
+    /**
+     * Get error logs for a specific import
+     */
+    public function getImportErrorLogs(Request $request)
+    {
+        $importId = $request->get('import_id');
+        
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+        
+        // Get import progress to verify ownership
+        $importProgress = ImportProgress::where('import_id', $importId)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$importProgress) {
+            return response()->json(['error' => 'Import not found'], 404);
+        }
+        
+        // Get error logs with pagination
+        $page = $request->get('page', 1);
+        $perPage = $request->get('per_page', 50);
+        $errorType = $request->get('error_type');
+        
+        $query = ImportErrorLog::forImport($importId)
+            ->orderBy('occurred_at', 'desc');
+            
+        if ($errorType) {
+            $query->byErrorType($errorType);
+        }
+        
+        $errorLogs = $query->paginate($perPage, ['*'], 'page', $page);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $errorLogs->items(),
+            'pagination' => [
+                'current_page' => $errorLogs->currentPage(),
+                'last_page' => $errorLogs->lastPage(),
+                'per_page' => $errorLogs->perPage(),
+                'total' => $errorLogs->total(),
+                'from' => $errorLogs->firstItem(),
+                'to' => $errorLogs->lastItem(),
+            ],
+            'error_summary' => $this->getErrorSummary($importId)
+        ]);
+    }
+
+    /**
+     * Get error summary for an import
+     */
+    public function getErrorSummary($importId)
+    {
+        $summary = ImportErrorLog::forImport($importId)
+            ->selectRaw('error_type, COUNT(*) as count')
+            ->groupBy('error_type')
+            ->get()
+            ->keyBy('error_type');
+            
+        return [
+            'validation_error' => $summary->get('validation_error')->count ?? 0,
+            'import_error' => $summary->get('import_error')->count ?? 0,
+            'lookup_error' => $summary->get('lookup_error')->count ?? 0,
+            'missing_fields' => $summary->get('missing_fields')->count ?? 0,
+            'database_error' => $summary->get('database_error')->count ?? 0,
+            'total' => $summary->sum('count')
+        ];
+    }
+
+    /**
+     * Clear error logs for a specific import
+     */
+    public function clearImportErrorLogs(Request $request)
+    {
+        $importId = $request->get('import_id');
+        
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+        
+        // Get import progress to verify ownership
+        $importProgress = ImportProgress::where('import_id', $importId)
+            ->where('user_id', auth()->id())
+            ->first();
+        
+        if (!$importProgress) {
+            return response()->json(['error' => 'Import not found'], 404);
+        }
+        
+        $deletedCount = ImportErrorLog::truncateForImport($importId);
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Cleared {$deletedCount} error log entries",
+            'deleted_count' => $deletedCount
+        ]);
+    }
+
+    /**
+     * Get recent import history for the user
+     */
+    public function getImportHistory(Request $request)
+    {
+        $perPage = $request->get('per_page', 10);
+        
+        $imports = ImportProgress::where('user_id', auth()->id())
+            ->where('import_type', 'employee')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+        
+        // Add error counts to each import
+        $imports->getCollection()->transform(function ($import) {
+            $errorCount = ImportErrorLog::forImport($import->import_id)->count();
+            $import->error_count = $errorCount;
+            return $import;
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $imports->items(),
+            'pagination' => [
+                'current_page' => $imports->currentPage(),
+                'last_page' => $imports->lastPage(),
+                'per_page' => $imports->perPage(),
+                'total' => $imports->total(),
+            ]
         ]);
     }
 }

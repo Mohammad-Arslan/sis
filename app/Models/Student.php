@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use App\Traits\SerializeDateTrait;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Student extends Model
 {
-    use HasFactory, SerializeDateTrait, SoftDeletes;
+    use HasFactory, SerializeDateTrait, SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'first_name',

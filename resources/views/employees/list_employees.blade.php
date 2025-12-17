@@ -12,9 +12,12 @@
                     <button type="button"
                         class="btn btn-sm btn-primary btn-label waves-effect waves-light import-employees-btn"
                         href=""><i class="ri-upload-2-line label-icon align-middle fs-16 me-2"></i> Import</button>
-                    <a href="{{ route('employees.download-template') }}" class="btn btn-sm btn-success-new btn-label waves-effect waves-light">
-                        <i class="ri-download-2-line label-icon align-middle fs-16 me-2"></i> Export Template
-                    </a>
+                    <button type="button" class="btn btn-sm btn-success-new btn-label waves-effect waves-light" id="exportEmployeesBtn">
+                        <i class="ri-download-2-line label-icon align-middle fs-16 me-2"></i> Export Employees
+                    </button>
+                    <button type="button" class="btn btn-sm btn-info btn-label waves-effect waves-light" id="viewExportProgressBtn" style="display: none;">
+                        <i class="ri-eye-line label-icon align-middle fs-16 me-2"></i> View Export Progress
+                    </button>
                     <a href="{{ route('employees.create') }}?tab=basic_info" class="btn btn-success-new btn-label btn-sm">
                         <i class="ri-user-line label-icon align-middle fs-16 me-2"></i> Add New Employee
                     </a>
@@ -22,6 +25,11 @@
                         class="btn btn-sm btn-warning btn-label waves-effect waves-light"
                         id="viewImportLogsBtn">
                         <i class="ri-file-list-3-line label-icon align-middle fs-16 me-2"></i> Logs
+                    </button>
+                    <button type="button"
+                        class="btn btn-sm btn-info btn-label waves-effect waves-light"
+                        id="viewImportProgressBtn" style="display: none;">
+                        <i class="ri-progress-1-line label-icon align-middle fs-16 me-2"></i> Progress
                     </button>
                 </div>
             </div>
@@ -153,6 +161,379 @@
             </div>
         </div>
     </div>
+
+    <!-- Include the import modal -->
+    @include('employees.employee_import_modal')
+
+    <!-- Modal for Import Error Logs -->
+    <div class="modal fade" id="importLogsModal" tabindex="-1" aria-labelledby="importLogsModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="importLogsModalLabel">
+              <i class="ri-error-warning-line me-2"></i>Import Error Logs
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Error Summary -->
+            <div class="row mb-4" id="errorSummaryRow" style="display: none;">
+              <div class="col-12">
+                <h6 class="text-muted mb-3">Error Summary</h6>
+                <div class="row g-2">
+                  <div class="col-md-2">
+                    <div class="card border-danger">
+                      <div class="card-body text-center p-2">
+                        <small class="text-danger fw-bold">Validation</small>
+                        <div class="fs-5 text-danger" id="summaryValidationErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-warning">
+                      <div class="card-body text-center p-2">
+                        <small class="text-warning fw-bold">Import</small>
+                        <div class="fs-5 text-warning" id="summaryImportErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-info">
+                      <div class="card-body text-center p-2">
+                        <small class="text-info fw-bold">Lookup</small>
+                        <div class="fs-5 text-info" id="summaryLookupErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-secondary">
+                      <div class="card-body text-center p-2">
+                        <small class="text-secondary fw-bold">Missing</small>
+                        <div class="fs-5 text-secondary" id="summaryMissingErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-dark">
+                      <div class="card-body text-center p-2">
+                        <small class="text-dark fw-bold">Database</small>
+                        <div class="fs-5 text-dark" id="summaryDatabaseErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2">
+                    <div class="card border-primary">
+                      <div class="card-body text-center p-2">
+                        <small class="text-primary fw-bold">Total</small>
+                        <div class="fs-5 text-primary" id="summaryTotalErrors">0</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <select class="form-select" id="errorTypeFilter">
+                  <option value="">All Error Types</option>
+                  <option value="validation_error">Validation Errors</option>
+                  <option value="import_error">Import Errors</option>
+                  <option value="lookup_error">Lookup Errors</option>
+                  <option value="missing_fields">Missing Fields</option>
+                  <option value="database_error">Database Errors</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-danger btn-sm" id="clearErrorLogsBtn">
+                  <i class="ri-delete-bin-line me-1"></i>Clear Logs
+                </button>
+              </div>
+              <div class="col-md-4 text-end">
+                <small class="text-muted" id="errorLogsInfo">Loading...</small>
+              </div>
+            </div>
+
+            <!-- Error Logs Table -->
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-sm table-hover">
+                <thead class="table-dark sticky-top">
+                  <tr>
+                    <th width="5%">Row</th>
+                    <th width="15%">Error Type</th>
+                    <th width="20%">Field</th>
+                    <th width="35%">Message</th>
+                    <th width="15%">Value</th>
+                    <th width="10%">Time</th>
+                  </tr>
+                </thead>
+                <tbody id="errorLogsTableBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="ri-error-warning-line fs-1 d-block mb-2"></i>
+                      No error logs found. Select an import to view its error logs.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Error logs pagination" class="mt-3">
+              <ul class="pagination pagination-sm justify-content-center" id="errorLogsPagination">
+                <!-- Pagination will be loaded here -->
+              </ul>
+            </nav>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-outline-primary" id="refreshErrorLogsBtn">
+              <i class="ri-refresh-line me-1"></i>Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Progress Modal -->
+    <div class="modal fade" id="importProgressModal" tabindex="-1" aria-labelledby="importProgressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="importProgressModalLabel">
+                        <i class="ri-upload-cloud-2-line me-2"></i>Employee Import Progress
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                                 role="progressbar" 
+                                 style="width: 0%" 
+                                 id="importProgressBar">0%</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span id="importProgressText">Starting import...</span>
+                            <span id="importProgressPercentage">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Statistics -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-primary h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-primary fs-1 mb-2"></i>
+                                    <h6 class="text-primary mb-1">Total Rows</h6>
+                                    <h3 class="mb-0 text-primary" id="importTotalRows">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-check-line text-success fs-1 mb-2"></i>
+                                    <h6 class="text-success mb-1">Imported</h6>
+                                    <h3 class="mb-0 text-success" id="importedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-skip-forward-line text-warning fs-1 mb-2"></i>
+                                    <h6 class="text-warning mb-1">Skipped</h6>
+                                    <h3 class="mb-0 text-warning" id="importSkippedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-info fs-1 mb-2"></i>
+                                    <h6 class="text-info mb-1">Current Row</h6>
+                                    <h3 class="mb-0 text-info" id="importCurrentRow">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Status -->
+                    <div class="alert alert-info" id="importProgressMessage">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="spinner-border spinner-border-sm text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Status:</strong> <span id="importProgressStatus">Preparing...</span>
+                                <br>
+                                <span id="importProgressMessageText">Initializing import process...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Details (hidden by default) -->
+                    <div class="card border-danger" id="importErrorsCard" style="display: none;">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">
+                                <i class="ri-error-warning-line me-2"></i>
+                                Import Errors (<span id="importErrorCount">0</span>)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Field</th>
+                                            <th>Error</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="importErrorsTableBody">
+                                        <!-- Error rows will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="importCloseBtn" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="importDownloadBtn" style="display: none;">
+                        <i class="ri-download-line me-1"></i>Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Progress Modal -->
+    <div class="modal fade" id="exportProgressModal" tabindex="-1" aria-labelledby="exportProgressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="exportProgressModalLabel">
+                        <i class="ri-download-2-line me-2"></i>Employee Export Progress
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                 role="progressbar" 
+                                 style="width: 0%" 
+                                 id="exportProgressBar">0%</div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span id="exportProgressText">Starting export...</span>
+                            <span id="exportProgressPercentage">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Statistics -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card border-primary h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-primary fs-1 mb-2"></i>
+                                    <h6 class="text-primary mb-1">Total Rows</h6>
+                                    <h3 class="mb-0 text-primary" id="exportTotalRows">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-success h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-check-line text-success fs-1 mb-2"></i>
+                                    <h6 class="text-success mb-1">Exported</h6>
+                                    <h3 class="mb-0 text-success" id="exportedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-skip-forward-line text-warning fs-1 mb-2"></i>
+                                    <h6 class="text-warning mb-1">Skipped</h6>
+                                    <h3 class="mb-0 text-warning" id="exportSkippedCount">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-info h-100">
+                                <div class="card-body text-center">
+                                    <i class="ri-file-list-3-line text-info fs-1 mb-2"></i>
+                                    <h6 class="text-info mb-1">Current Row</h6>
+                                    <h3 class="mb-0 text-info" id="exportCurrentRow">0</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Status -->
+                    <div class="alert alert-info" id="exportProgressMessage">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="spinner-border spinner-border-sm text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Status:</strong> <span id="exportProgressStatus">Preparing...</span>
+                                <br>
+                                <span id="exportProgressMessageText">Initializing export process...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Details (hidden by default) -->
+                    <div class="card border-danger" id="exportErrorsCard" style="display: none;">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0">
+                                <i class="ri-error-warning-line me-2"></i>
+                                Export Errors (<span id="exportErrorCount">0</span>)
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Row</th>
+                                            <th>Employee ID</th>
+                                            <th>Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="exportErrorsTableBody">
+                                        <!-- Error rows will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="exportCloseModalBtn">
+                        <i class="ri-close-line me-1"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-success-new" id="exportDownloadBtn" style="display: none;">
+                        <i class="ri-download-2-line me-1"></i>Download File
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 
@@ -160,6 +541,7 @@
 @endpush
 
 @push('footer_scripts')
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <script type="text/javascript">
         // Global variable for DataTable
         var employeeTable;
@@ -455,26 +837,47 @@
                     success: function(result) {
                         clearInterval(progressInterval);
                         $('#progressBar').css('width', '100%').text('100%');
-                        $('#progressText').text('Import completed successfully!');
+                        $('#progressText').text('Import started successfully!');
                         $('#importEmployeesModal').modal('hide');
                         
-                        if (result.success) {
+                        if (result.success && result.import_id) {
+                            // Store import ID globally for modal reopening
+                            importId = result.import_id;
+                            
+                            // Show the progress button
+                            $('#viewImportProgressBtn').show();
+                            
+                            // Show import progress modal
+                            $('#importProgressModal').modal('show');
+                            
+                            // Load initial progress data
+                            loadImportProgress(result.import_id);
+                            
+                            // Connect to WebSocket
+                            connectToImportChannel(result.import_id);
+                            
+                            // Start progress polling as backup
+                            importProgressInterval = setInterval(function() {
+                                loadImportProgress(result.import_id);
+                            }, 2000);
+                        } else if (result.success) {
+                            // Fallback for immediate completion
                             $('#successMessage').text(result.success);
-                        }
-                        
-                        const importedCount = result.imported_count || 0;
-                        const skippedCount = result.skipped_count || 0;
-                        const totalProcessed = result.total_processed || (importedCount + skippedCount);
-                        
-                        $('#totalProcessed').text(totalProcessed);
-                        $('#importedCount').text(importedCount);
-                        $('#skippedCount').text(skippedCount);
-                        $('#importedCountText').text(importedCount);
-                        $('#skippedCountText').text(skippedCount);
-                        
-                        // Only show stats modal if there were actual imports or skips
-                        if (totalProcessed > 0) {
-                            $('#importStatsModal').modal('show');
+                            
+                            const importedCount = result.imported_count || 0;
+                            const skippedCount = result.skipped_count || 0;
+                            const totalProcessed = result.total_processed || (importedCount + skippedCount);
+                            
+                            $('#totalProcessed').text(totalProcessed);
+                            $('#importedCount').text(importedCount);
+                            $('#skippedCount').text(skippedCount);
+                            $('#importedCountText').text(importedCount);
+                            $('#skippedCountText').text(skippedCount);
+                            
+                            // Only show stats modal if there were actual imports or skips
+                            if (totalProcessed > 0) {
+                                $('#importStatsModal').modal('show');
+                            }
                         }
                         
                         form[0].reset();
@@ -555,8 +958,23 @@
             // Reset submit button
             $('#uploadBtn').prop('disabled', false).html('Upload');
             
-            // Show the modal
-            $('#importEmployeesModal').modal('show');
+            // Show the modal using Bootstrap 5 API
+            const importModal = document.getElementById('importEmployeesModal');
+            if (importModal) {
+                // Remove any existing aria-hidden attribute that might be causing issues
+                importModal.removeAttribute('aria-hidden');
+                
+                const modalInstance = new bootstrap.Modal(importModal, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                modalInstance.show();
+                
+                console.log('Import modal should be showing now');
+            } else {
+                console.error('Import modal element not found');
+            }
         });
         
         // Handle modal close events to ensure proper cleanup
@@ -569,10 +987,53 @@
             $('#uploadBtn').prop('disabled', false).html('Upload');
         });
 
-        // Handle logs button click
+        // Handle import progress modal close events
+        $('#importProgressModal').on('hidden.bs.modal', function() {
+            // Disconnect from WebSocket
+            if (importChannel) {
+                importChannel.unsubscribe();
+                importChannel = null;
+            }
+            
+            // Clear progress polling
+            if (importProgressInterval) {
+                clearInterval(importProgressInterval);
+                importProgressInterval = null;
+            }
+            
+            // Reset progress UI
+            $('#importProgressBar').css('width', '0%').text('0%');
+            $('#importProgressPercentage').text('0%');
+            $('#importProgressText').text('Starting import...');
+            $('#importTotalRows').text('0');
+            $('#importedCount').text('0');
+            $('#importSkippedCount').text('0');
+            $('#importCurrentRow').text('0');
+            $('#importErrorsCard').hide();
+            $('#importDownloadBtn').hide();
+            
+            // Refresh the employee table
+            $('#employee-table').DataTable().ajax.reload();
+        });
+
+        // Handle logs button click (updated to use new error logs system)
         $(document).on('click', '#viewImportLogsBtn', function() {
+            if (importId) {
+                // Show error logs modal
+                const logsModal = new bootstrap.Modal(document.getElementById('importLogsModal'));
+                logsModal.show();
+                
+                // Load error logs
+                loadErrorLogs(importId, 1, '');
+            } else {
+                alert('No import ID available. Please start an import first.');
+            }
+        });
+
+        // Legacy logs button handler (keeping for compatibility)
+        $(document).on('click', '#viewImportLogsBtnLegacy', function() {
             $.ajax({
-                url: '{{ route("employees.import-stats") }}',
+                url: '{{ route("import.stats") }}',
                 method: 'GET',
                 success: function(response) {
                     if (response.log_file_exists && response.log_content) {
@@ -767,23 +1228,827 @@ This report was generated automatically by the SuperNova SIS system.`;
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
         }
+
+        // Export functionality
+        let exportId = null;
+        let exportChannel = null;
+        let isExportInProgress = false;
+
+        // Handle direct export button click
+        $(document).on('click', '#exportEmployeesBtn', function() {
+            const exportBtn = $(this);
+            
+            // Disable button and show loading
+            exportBtn.prop('disabled', true);
+            exportBtn.html('<i class="ri-loader-4-line ri-spin me-1"></i> Starting Export...');
+            
+            // Create form data with no filters (export all data)
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            
+            // Submit via AJAX
+            fetch('{{ route("employees.export") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    exportId = data.export_id;
+                    isExportInProgress = true;
+                    
+                    // Show progress modal
+                    const progressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
+                    progressModal.show();
+                    
+                    // Show view progress button
+                    $('#viewExportProgressBtn').show();
+                    
+                    // Load initial progress data
+                    loadExportProgress(data.export_id);
+                    
+                    // Connect to WebSocket
+                    connectToExportChannel(exportId);
+                    
+                    // Reset export button
+                    exportBtn.prop('disabled', false);
+                    exportBtn.html('<i class="ri-download-2-line me-1"></i> Export Employees');
+                } else {
+                    throw new Error(data.message || 'Export failed');
+                }
+            })
+            .catch(error => {
+                console.error('Export error:', error);
+                alert('Export failed: ' + error.message);
+                
+                // Re-enable button
+                exportBtn.prop('disabled', false);
+                exportBtn.html('<i class="ri-download-2-line me-1"></i> Export Employees');
+            });
+        });
+
+        // Import Progress Tracking Variables
+        let importChannel = null;
+        let importProgressInterval = null;
+
+        // Connect to Import WebSocket channel for real-time updates
+        function connectToImportChannel(importId) {
+            // Initialize Pusher/Reverb
+            const pusher = new Pusher('{{ config("broadcasting.connections.reverb.key") }}', {
+                wsHost: '{{ config("broadcasting.connections.reverb.options.host") }}',
+                wsPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                wssPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                forceTLS: {{ config('broadcasting.connections.reverb.options.scheme') === 'https' ? 'true' : 'false' }},
+                enabledTransports: ['ws', 'wss'],
+                cluster: 'mt1',
+                disableStats: true
+            });
+
+            // Subscribe to public channel
+            importChannel = pusher.subscribe('employee-import.' + importId);
+            
+            // Listen for progress updates
+            importChannel.bind('import.progress', function(data) {
+                console.log('Import progress update:', data);
+                updateImportProgress(data);
+            });
+
+            // Handle connection errors
+            pusher.connection.bind('error', function(err) {
+                console.error('Import WebSocket connection error:', err);
+            });
+
+            // Handle successful connection
+            pusher.connection.bind('connected', function() {
+                console.log('Connected to Import WebSocket');
+            });
+        }
+
+        // Update import progress UI
+        function updateImportProgress(data) {
+            const progressBar = document.getElementById('importProgressBar');
+            const progressText = document.getElementById('importProgressText');
+            const progressPercentage = document.getElementById('importProgressPercentage');
+            const progressStatus = document.getElementById('importProgressStatus');
+            const progressMessageText = document.getElementById('importProgressMessageText');
+            const progressMessageContainer = document.getElementById('importProgressMessage');
+            
+            // Update counts
+            const totalRows = document.getElementById('importTotalRows');
+            const importedCount = document.getElementById('importedCount');
+            const skippedCount = document.getElementById('importSkippedCount');
+            const currentRow = document.getElementById('importCurrentRow');
+            const errorsCard = document.getElementById('importErrorsCard');
+            const errorCount = document.getElementById('importErrorCount');
+            const errorsTableBody = document.getElementById('importErrorsTableBody');
+            const downloadBtn = document.getElementById('importDownloadBtn');
+            
+            // Update counts (with null checks)
+            if (totalRows) totalRows.textContent = data.total || 0;
+            if (importedCount) importedCount.textContent = data.imported || 0;
+            if (skippedCount) skippedCount.textContent = data.skipped || 0;
+            if (currentRow) currentRow.textContent = data.current_row || 0;
+            
+            // Update status (with null checks)
+            if (progressStatus) {
+                progressStatus.textContent = getImportStatusText(data.status);
+                progressStatus.className = 'badge fs-6 ' + getImportStatusBadgeClass(data.status);
+            }
+            if (progressMessageText) {
+                progressMessageText.textContent = data.message || 'Processing...';
+            }
+            
+            // Update progress bar (with null checks)
+            const percentage = data.percentage || 0;
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+                progressBar.textContent = percentage.toFixed(1) + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = percentage.toFixed(1) + '%';
+            }
+            
+            // Update progress text (with null checks)
+            if (progressText) {
+                progressText.textContent = `${data.processed || 0} of ${data.total || 0} rows processed`;
+            }
+            
+            // Handle different statuses
+            if (data.status === 'completed') {
+                if (progressMessageContainer) {
+                    progressMessageContainer.className = 'alert alert-success';
+                    progressMessageContainer.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-check-circle-fill text-success fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Import Completed!</strong><br>
+                                ${data.message || 'Import completed successfully!'}
+                            </div>
+                        </div>
+                    `;
+                }
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'inline-block';
+                }
+                
+                // Hide progress button when completed
+                $('#viewImportProgressBtn').hide();
+                
+                // Stop progress polling
+                if (importProgressInterval) {
+                    clearInterval(importProgressInterval);
+                    importProgressInterval = null;
+                }
+            } else if (data.status === 'failed') {
+                if (progressMessageContainer) {
+                    progressMessageContainer.className = 'alert alert-danger';
+                    progressMessageContainer.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-error-warning-fill text-danger fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Import Failed!</strong><br>
+                                ${data.message || 'Import failed with errors.'}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Hide progress button when failed
+                $('#viewImportProgressBtn').hide();
+                
+                // Stop progress polling
+                if (importProgressInterval) {
+                    clearInterval(importProgressInterval);
+                    importProgressInterval = null;
+                }
+            } else {
+                if (progressMessageContainer) {
+                    progressMessageContainer.className = 'alert alert-info';
+                    progressMessageContainer.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <div class="spinner-border spinner-border-sm text-info" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <strong>Status:</strong> <span class="badge fs-6 ${getImportStatusBadgeClass(data.status)}">${getImportStatusText(data.status)}</span><br>
+                                ${data.message || 'Processing...'}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Show errors if any
+            if (data.errors && data.errors > 0) {
+                if (errorsCard) errorsCard.style.display = 'block';
+                if (errorCount) errorCount.textContent = data.errors;
+            }
+        }
+
+        // Get import status text
+        function getImportStatusText(status) {
+            switch (status) {
+                case 'starting': return 'Starting';
+                case 'processing': return 'Processing';
+                case 'completed': return 'Completed';
+                case 'failed': return 'Failed';
+                default: return 'Unknown';
+            }
+        }
+
+        // Get import status badge class
+        function getImportStatusBadgeClass(status) {
+            switch (status) {
+                case 'starting': return 'bg-info';
+                case 'processing': return 'bg-primary';
+                case 'completed': return 'bg-success';
+                case 'failed': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Get import progress bar class
+        function getImportProgressBarClass(status) {
+            switch (status) {
+                case 'starting': return 'bg-info';
+                case 'processing': return 'bg-primary';
+                case 'completed': return 'bg-success';
+                case 'failed': return 'bg-danger';
+                default: return 'bg-info';
+            }
+        }
+
+        // Load import progress data
+        function loadImportProgress(importId) {
+            $.ajax({
+                url: '{{ route("import.stats") }}',
+                method: 'GET',
+                data: { import_id: importId },
+                success: function(data) {
+                    updateImportProgress({
+                        processed: data.processed_rows,
+                        total: data.total_rows,
+                        imported: data.imported_count,
+                        skipped: data.skipped_count,
+                        errors: data.error_count,
+                        current_row: data.current_row,
+                        percentage: data.progress_percentage,
+                        status: data.status,
+                        message: data.current_message
+                    });
+                }
+            });
+        }
+
+        // Connect to WebSocket channel for real-time updates
+        function connectToExportChannel(exportId) {
+            // Initialize Pusher/Reverb
+            const pusher = new Pusher('{{ config("broadcasting.connections.reverb.key") }}', {
+                wsHost: '{{ config("broadcasting.connections.reverb.options.host") }}',
+                wsPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                wssPort: {{ config('broadcasting.connections.reverb.options.port') }},
+                forceTLS: {{ config('broadcasting.connections.reverb.options.scheme') === 'https' ? 'true' : 'false' }},
+                enabledTransports: ['ws', 'wss'],
+                cluster: 'mt1',
+                disableStats: true
+            });
+
+            // Subscribe to public channel
+            exportChannel = pusher.subscribe('employee-export.' + exportId);
+            
+            // Listen for progress updates
+            exportChannel.bind('export.progress', function(data) {
+                console.log('Export progress update:', data);
+                updateExportProgress(data);
+            });
+
+            // Handle connection errors
+            pusher.connection.bind('error', function(err) {
+                console.error('Export WebSocket connection error:', err);
+            });
+
+            // Handle successful connection
+            pusher.connection.bind('connected', function() {
+                console.log('Connected to Export WebSocket');
+            });
+        }
+
+        // Update export progress UI
+        function updateExportProgress(data) {
+            console.log('updateExportProgress called with data:', data);
+            
+            const progressBar = document.getElementById('exportProgressBar');
+            const progressText = document.getElementById('exportProgressText');
+            const progressPercentage = document.getElementById('exportProgressPercentage');
+            const progressStatus = document.getElementById('exportProgressStatus');
+            const progressMessage = document.getElementById('exportProgressMessage');
+            const progressMessageText = document.getElementById('exportProgressMessageText');
+            
+            const totalRows = document.getElementById('exportTotalRows');
+            const exportedCount = document.getElementById('exportedCount');
+            const skippedCount = document.getElementById('exportSkippedCount');
+            const currentRow = document.getElementById('exportCurrentRow');
+            const errorsCard = document.getElementById('exportErrorsCard');
+            const errorCount = document.getElementById('exportErrorCount');
+            const errorsTableBody = document.getElementById('exportErrorsTableBody');
+            const downloadBtn = document.getElementById('exportDownloadBtn');
+            
+            // Debug: Check which elements are missing
+            const missingElements = [];
+            if (!progressBar) missingElements.push('exportProgressBar');
+            if (!progressText) missingElements.push('exportProgressText');
+            if (!progressPercentage) missingElements.push('exportProgressPercentage');
+            if (!progressStatus) missingElements.push('exportProgressStatus');
+            if (!progressMessage) missingElements.push('exportProgressMessage');
+            if (!progressMessageText) missingElements.push('exportProgressMessageText');
+            if (!totalRows) missingElements.push('exportTotalRows');
+            if (!exportedCount) missingElements.push('exportedCount');
+            if (!skippedCount) missingElements.push('exportSkippedCount');
+            if (!currentRow) missingElements.push('exportCurrentRow');
+            
+            if (missingElements.length > 0) {
+                console.warn('Missing export progress elements:', missingElements);
+            }
+            
+            // Update progress bar with null checks
+            const percentage = data.percentage || 0;
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+                progressBar.setAttribute('aria-valuenow', percentage);
+            }
+            if (progressText) {
+                progressText.textContent = percentage.toFixed(1) + '%';
+            }
+            if (progressPercentage) {
+                progressPercentage.textContent = percentage.toFixed(1) + '%';
+            }
+            
+            // Update counts with null checks
+            if (totalRows) totalRows.textContent = data.total || 0;
+            if (exportedCount) exportedCount.textContent = data.exported || 0;
+            if (skippedCount) skippedCount.textContent = data.skipped || 0;
+            if (currentRow) currentRow.textContent = data.current_row || 0;
+            
+            // Update status with null checks
+            if (progressStatus) {
+                progressStatus.textContent = getExportStatusText(data.status);
+                progressStatus.className = 'badge fs-6 ' + getExportStatusBadgeClass(data.status);
+            }
+            if (progressMessageText) {
+                progressMessageText.textContent = data.message || 'Processing...';
+            }
+            
+            // Update message alert class based on status
+            if (progressMessage) {
+                progressMessage.className = 'alert ' + getExportAlertClass(data.status);
+            }
+            
+            // Handle errors display
+            if (data.errors && data.errors > 0) {
+                if (errorsCard) {
+                    errorsCard.style.display = 'block';
+                }
+                if (errorCount) {
+                    errorCount.textContent = data.errors;
+                }
+            }
+            
+            // Handle completion
+            if (data.status === 'completed') {
+                if (progressBar) {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-success');
+                }
+                if (progressStatus) {
+                    progressStatus.classList.remove('bg-info');
+                    progressStatus.classList.add('bg-success');
+                }
+                
+                // Hide view progress button and reset export state
+                $('#viewExportProgressBtn').hide();
+                isExportInProgress = false;
+                
+                // Show download button with null check
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'inline-block';
+                    downloadBtn.onclick = function() {
+                        window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
+                    };
+                }
+                
+                // Auto-download the file
+                setTimeout(() => {
+                    window.location.href = '{{ route("export.download") }}?export_id=' + exportId;
+                }, 2000); // 2 second delay to show completion message
+                
+                // Auto-scroll to errors if any
+                if (data.errors > 0) {
+                    const errorsCollapse = document.getElementById('exportErrorsCollapse');
+                    if (errorsCollapse) {
+                        const bsCollapse = new bootstrap.Collapse(errorsCollapse, {show: true});
+                    }
+                }
+                
+            } else if (data.status === 'failed') {
+                if (progressBar) {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-danger');
+                }
+                if (progressStatus) {
+                    progressStatus.classList.remove('bg-info');
+                    progressStatus.classList.add('bg-danger');
+                }
+                
+                // Hide view progress button on failure
+                $('#viewExportProgressBtn').hide();
+                isExportInProgress = false;
+            }
+        }
+
+        // Get export status text
+        function getExportStatusText(status) {
+            const statusMap = {
+                'starting': 'Starting export...',
+                'processing': 'Processing employees...',
+                'completed': 'Export completed!',
+                'failed': 'Export failed!'
+            };
+            return statusMap[status] || 'Processing...';
+        }
+
+        // Get export status badge class
+        function getExportStatusBadgeClass(status) {
+            const statusMap = {
+                'starting': 'bg-warning',
+                'processing': 'bg-info',
+                'completed': 'bg-success',
+                'failed': 'bg-danger'
+            };
+            return statusMap[status] || 'bg-info';
+        }
+
+        // Get export alert class
+        function getExportAlertClass(status) {
+            const statusMap = {
+                'starting': 'alert-info',
+                'processing': 'alert-info',
+                'completed': 'alert-success',
+                'failed': 'alert-danger'
+            };
+            return statusMap[status] || 'alert-info';
+        }
+
+        // Handle view export progress button click
+        $(document).on('click', '#viewExportProgressBtn', function() {
+            if (exportId) {
+                // Show progress modal
+                const progressModal = new bootstrap.Modal(document.getElementById('exportProgressModal'));
+                progressModal.show();
+                
+                // Load current progress data
+                loadExportProgress(exportId);
+                
+                // Reconnect to WebSocket if not already connected
+                if (!exportChannel) {
+                    connectToExportChannel(exportId);
+                }
+            }
+        });
+
+        // Load export progress data
+        function loadExportProgress(exportId) {
+            fetch(`{{ route('export.stats') }}?export_id=${exportId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.export_id) {
+                        // Update UI with current progress
+                        updateExportProgress({
+                            processed: data.processed_rows,
+                            total: data.total_rows,
+                            exported: data.imported_count,
+                            skipped: data.skipped_count,
+                            errors: data.error_count,
+                            current_row: data.current_row,
+                            percentage: data.progress_percentage,
+                            status: data.status,
+                            message: data.current_message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading export progress:', error);
+                });
+        }
+
+        // Add event listener for modal show to reload progress
+        document.getElementById('exportProgressModal').addEventListener('show.bs.modal', function () {
+            if (exportId) {
+                loadExportProgress(exportId);
+            }
+        });
+
+        // ==================== ERROR LOGS FUNCTIONALITY ====================
+        
+        let currentImportId = null;
+        let currentErrorPage = 1;
+        let currentErrorType = '';
+
+        // Handle Progress button click
+        $(document).on('click', '#viewImportProgressBtn', function() {
+            if (importId) {
+                // Show import progress modal
+                const progressModal = new bootstrap.Modal(document.getElementById('importProgressModal'));
+                progressModal.show();
+            } else {
+                alert('No import ID available. Please start an import first.');
+            }
+        });
+
+        // Handle Logs button click
+        $(document).on('click', '#logsBtn', function() {
+            if (importId) {
+                // Show error logs modal
+                const logsModal = new bootstrap.Modal(document.getElementById('importLogsModal'));
+                logsModal.show();
+                
+                // Load error logs
+                loadErrorLogs(importId, 1, '');
+            } else {
+                alert('No import ID available. Please start an import first.');
+            }
+        });
+
+        // Load error logs
+        function loadErrorLogs(importId, page = 1, errorType = '') {
+            currentErrorPage = page;
+            currentErrorType = errorType;
+            
+            const params = new URLSearchParams({
+                import_id: importId,
+                page: page,
+                per_page: 50
+            });
+            
+            if (errorType) {
+                params.append('error_type', errorType);
+            }
+            
+            fetch(`{{ route('import.error-logs') }}?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateErrorLogsUI(data);
+                        updateErrorSummary(data.error_summary);
+                    } else {
+                        console.error('Error loading error logs:', data.error);
+                        showErrorLogsMessage('Error loading logs: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading error logs:', error);
+                    showErrorLogsMessage('Error loading logs: ' + error.message);
+                });
+        }
+
+        // Update error logs UI
+        function updateErrorLogsUI(data) {
+            const tbody = document.getElementById('errorLogsTableBody');
+            const pagination = document.getElementById('errorLogsPagination');
+            const info = document.getElementById('errorLogsInfo');
+            
+            // Update info
+            if (info && data.pagination) {
+                const pag = data.pagination;
+                info.textContent = `Showing ${pag.from || 0} to ${pag.to || 0} of ${pag.total} errors`;
+            }
+            
+            // Update table
+            if (data.data && data.data.length > 0) {
+                tbody.innerHTML = data.data.map(error => `
+                    <tr>
+                        <td><span class="badge bg-secondary">${error.row_number}</span></td>
+                        <td>
+                            <span class="badge ${getErrorTypeBadgeClass(error.error_type)}">
+                                ${getErrorTypeName(error.error_type)}
+                            </span>
+                        </td>
+                        <td><small>${error.field_name || '-'}</small></td>
+                        <td>
+                            <small title="${error.error_message}">
+                                ${truncateText(error.error_message, 60)}
+                            </small>
+                        </td>
+                        <td>
+                            <small title="${error.problematic_value || ''}">
+                                ${truncateText(error.problematic_value || '-', 30)}
+                            </small>
+                        </td>
+                        <td><small>${formatTime(error.occurred_at)}</small></td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="ri-check-line fs-1 d-block mb-2 text-success"></i>
+                            No error logs found for this import.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            // Update pagination
+            updateErrorLogsPagination(data.pagination);
+        }
+
+        // Update error summary
+        function updateErrorSummary(summary) {
+            if (summary && summary.total > 0) {
+                document.getElementById('errorSummaryRow').style.display = 'block';
+                document.getElementById('summaryValidationErrors').textContent = summary.validation_error || 0;
+                document.getElementById('summaryImportErrors').textContent = summary.import_error || 0;
+                document.getElementById('summaryLookupErrors').textContent = summary.lookup_error || 0;
+                document.getElementById('summaryMissingErrors').textContent = summary.missing_fields || 0;
+                document.getElementById('summaryDatabaseErrors').textContent = summary.database_error || 0;
+                document.getElementById('summaryTotalErrors').textContent = summary.total || 0;
+            } else {
+                document.getElementById('errorSummaryRow').style.display = 'none';
+            }
+        }
+
+        // Update pagination
+        function updateErrorLogsPagination(pagination) {
+            const paginationEl = document.getElementById('errorLogsPagination');
+            if (!pagination || pagination.last_page <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            if (pagination.current_page > 1) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadErrorLogs('${currentImportId}', ${pagination.current_page - 1}, '${currentErrorType}'); return false;">Previous</a></li>`;
+            }
+            
+            // Page numbers
+            const startPage = Math.max(1, pagination.current_page - 2);
+            const endPage = Math.min(pagination.last_page, pagination.current_page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === pagination.current_page ? 'active' : '';
+                html += `<li class="page-item ${active}"><a class="page-link" href="#" onclick="loadErrorLogs('${currentImportId}', ${i}, '${currentErrorType}'); return false;">${i}</a></li>`;
+            }
+            
+            // Next button
+            if (pagination.current_page < pagination.last_page) {
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="loadErrorLogs('${currentImportId}', ${pagination.current_page + 1}, '${currentErrorType}'); return false;">Next</a></li>`;
+            }
+            
+            paginationEl.innerHTML = html;
+        }
+
+        // Helper functions
+        function getErrorTypeBadgeClass(errorType) {
+            const classes = {
+                'validation_error': 'bg-danger',
+                'import_error': 'bg-warning',
+                'lookup_error': 'bg-info',
+                'missing_fields': 'bg-secondary',
+                'database_error': 'bg-dark'
+            };
+            return classes[errorType] || 'bg-secondary';
+        }
+
+        function getErrorTypeName(errorType) {
+            const names = {
+                'validation_error': 'Validation',
+                'import_error': 'Import',
+                'lookup_error': 'Lookup',
+                'missing_fields': 'Missing',
+                'database_error': 'Database'
+            };
+            return names[errorType] || 'Unknown';
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '-';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        function formatTime(timeString) {
+            if (!timeString) return '-';
+            const date = new Date(timeString);
+            return date.toLocaleString();
+        }
+
+        function showErrorLogsMessage(message) {
+            const tbody = document.getElementById('errorLogsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-4">
+                        <i class="ri-error-warning-line fs-1 d-block mb-2"></i>
+                        ${message}
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Event listeners
+        $(document).on('change', '#errorTypeFilter', function() {
+            const errorType = $(this).val();
+            if (currentImportId) {
+                loadErrorLogs(currentImportId, 1, errorType);
+            }
+        });
+
+        $(document).on('click', '#clearErrorLogsBtn', function() {
+            if (!currentImportId) {
+                alert('No import selected');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all error logs for this import?')) {
+                fetch(`{{ route('import.error-logs.clear') }}?import_id=${currentImportId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Cleared ${data.deleted_count} error log entries`);
+                        loadErrorLogs(currentImportId, 1, currentErrorType);
+                    } else {
+                        alert('Error clearing logs: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing logs:', error);
+                    alert('Error clearing logs: ' + error.message);
+                });
+            }
+        });
+
+        $(document).on('click', '#refreshErrorLogsBtn', function() {
+            if (currentImportId) {
+                loadErrorLogs(currentImportId, currentErrorPage, currentErrorType);
+            }
+        });
+
+        // Add event listener for modal show to reload error logs
+        document.getElementById('importLogsModal').addEventListener('show.bs.modal', function () {
+            if (currentImportId) {
+                loadErrorLogs(currentImportId, 1, '');
+            }
+        });
+
+        // Fix aria-hidden focus issues
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle modal focus properly
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function() {
+                    // Remove any remaining focus from modal elements
+                    const focusedElement = document.activeElement;
+                    if (focusedElement && modal.contains(focusedElement)) {
+                        focusedElement.blur();
+                    }
+                });
+            });
+        });
+
+        // Add event listener for modal show to reload progress
+        document.getElementById('importProgressModal').addEventListener('show.bs.modal', function () {
+            if (importId) {
+                // Load current progress data
+                loadImportProgress(importId);
+                
+                // Reconnect to WebSocket if not already connected
+                if (!importChannel) {
+                    connectToImportChannel(importId);
+                }
+                
+                // Restart progress polling if not already running
+                if (!importProgressInterval) {
+                    importProgressInterval = setInterval(function() {
+                        loadImportProgress(importId);
+                    }, 2000);
+                }
+            }
+        });
     </script>
 @endpush
-
-<!-- Include the import modal -->
-@include('employees.employee_import_modal')
-
-<!-- Modal for Import Logs -->
-<div class="modal fade" id="importLogsModal" tabindex="-1" aria-labelledby="importLogsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="importLogsModalLabel">Import Error Logs</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" id="importLogsContent">
-        <!-- Logs will be loaded here -->
-      </div>
-    </div>
-  </div>
-</div>

@@ -1,8 +1,11 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import "tailwindcss";
 
-
-:root {
-    --ucs-sea-green: ;
+@layer base {
+    :root {
+        --ucs-sea-green: #38B593;
+    }
+    
+    body {
+        font-family: 'Montserrat', sans-serif;
+    }
 }

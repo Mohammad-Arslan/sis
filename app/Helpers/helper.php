@@ -2284,3 +2284,8 @@ function sendOTPCode($message, $mobile = NULL)
     // dd($data);
     return $api_response;
 }
+
+function log_activity(string $event, ?\Illuminate\Database\Eloquent\Model $model = null, ?array $old = null, ?array $new = null): \App\Models\ActivityLog
+{
+    return app(\App\Services\ActivityLoggerService::class)->log($event, $model, $old, $new);
+}

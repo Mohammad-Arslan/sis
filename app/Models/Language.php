@@ -2,21 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\SerializeDateTrait;
 
 class Language extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory, SerializeDateTrait, LogsActivity;
 
     protected $fillable = [
         'language_name'
-     ];
-
-     protected $dates = [
-         'created_at',
-         'updated_at',
      ];
 
     public function students()

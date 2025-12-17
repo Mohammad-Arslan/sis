@@ -28,6 +28,9 @@
 <!-- App js -->
 <script src="{{ asset('theme/dist/default/assets/js/app.js') }}"></script>
 
+<!-- Global CRUD Operations -->
+<script src="{{ asset('js/crud-operations.js') }}"></script>
+
 <!-- form masks init -->
 <script src="{{ asset('theme/dist/default/assets/libs/cleave.js/cleave.min.js') }}"></script>
 <script src="{{ asset('theme/dist/default/assets/js/blockui.js') }}"></script>
