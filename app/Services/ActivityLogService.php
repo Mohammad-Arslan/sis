@@ -91,7 +91,7 @@ class ActivityLogService
 
     public function getModelDisplay(?string $modelType): string
     {
-        if (!$modelType) {
+        if (! $modelType) {
             return '-';
         }
 
@@ -101,7 +101,7 @@ class ActivityLogService
 
     public function getOldValuesButton(ActivityLog $row): string
     {
-        if (!$row->old_values) {
+        if (! $row->old_values) {
             return '<span class="text-muted">-</span>';
         }
 
@@ -115,7 +115,7 @@ class ActivityLogService
 
     public function getNewValuesButton(ActivityLog $row): string
     {
-        if (!$row->new_values) {
+        if (! $row->new_values) {
             return '<span class="text-muted">-</span>';
         }
 
@@ -141,4 +141,3 @@ class ActivityLogService
         ];
     }
 }
-

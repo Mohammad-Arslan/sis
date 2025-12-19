@@ -25,4 +25,3 @@ class ExampleCommand extends Command
         return Command::SUCCESS;
     }
 }
-

@@ -17,14 +17,15 @@ class SchemeOfWorkController extends Controller
     public function index(Request $request)
     {
 
-        if ($request->ajax()){
-
+        if ($request->ajax()) {
             $scheme_of_works = GeneralDocument::whereHas(
-                'attachment_type' , function($q){
-                $q->where('slug','scheme_of_work');
-            })->where('status','active');
+                'attachment_type',
+                function ($q) {
+                    $q->where('slug', 'scheme_of_work');
+                }
+            )->where('status', 'active');
 
-            $scheme_of_works = GeneralDocument::filteration($request,$scheme_of_works);
+            $scheme_of_works = GeneralDocument::filteration($request, $scheme_of_works);
 
             $scheme_of_works = $scheme_of_works->get();
 
@@ -60,7 +61,7 @@ class SchemeOfWorkController extends Controller
 
         $data = GeneralDocument::filterationDropdownData();
 
-        return view('scheme_of_work.index',$data);
+        return view('scheme_of_work.index', $data);
     }
 
     /**

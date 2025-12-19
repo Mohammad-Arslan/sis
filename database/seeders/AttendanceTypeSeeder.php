@@ -28,15 +28,15 @@ class AttendanceTypeSeeder extends Seeder
         ];
 
         $dataToInsert = array();
-        foreach ($attendance_types as $types)
-        {
+        foreach ($attendance_types as $types) {
             $checkStatus = AttendanceType::where('abbreviation', $types['abbreviation'])->first();
-            if(empty($checkStatus))
+            if (empty($checkStatus)) {
                 $dataToInsert[] = $types;
+            }
         }
 
-        if (sizeof($dataToInsert))
+        if (sizeof($dataToInsert)) {
             AttendanceType::insert($dataToInsert);
+        }
     }
-
 }

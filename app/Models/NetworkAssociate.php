@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class NetworkAssociate extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'user_id',
@@ -40,11 +42,11 @@ class NetworkAssociate extends Model
 
     public function default_bank_account()
     {
-        return $this->morphOne(BankAccount::class, 'bank_accountable')->where('is_default',1);
+        return $this->morphOne(BankAccount::class, 'bank_accountable')->where('is_default', 1);
     }
 
     public function branches()
     {
-        return $this->belongsToMany(Branch::class,'network_associate_branches','nwa_id','branch_id')->wherePivot('deleted_at',null);
+        return $this->belongsToMany(Branch::class, 'network_associate_branches', 'nwa_id', 'branch_id')->wherePivot('deleted_at', null);
     }
 }

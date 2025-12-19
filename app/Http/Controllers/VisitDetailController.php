@@ -21,18 +21,12 @@ class VisitDetailController extends Controller
      */
     public function index(Request $request)
     {
-        if($request->ajax())
-        {
-            if($request->req == 'my')
-            {
-                $data = VisitDetail::where('user_id',auth()->user()->id)->with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
-            }
-            elseif($request->req == 'me')
-            {
-                $data = VisitDetail::where('approved_by',auth()->user()->id)->with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
-            }
-            else
-            {
+        if ($request->ajax()) {
+            if ($request->req == 'my') {
+                $data = VisitDetail::where('user_id', auth()->user()->id)->with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
+            } elseif ($request->req == 'me') {
+                $data = VisitDetail::where('approved_by', auth()->user()->id)->with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
+            } else {
                 $data = VisitDetail::with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
             }
 
@@ -54,7 +48,7 @@ class VisitDetailController extends Controller
             if ($request->user_id && $request->user_id > 0) {
                 $data = $data->where('user_id', $request->user_id);
             }
-            if ($request->approval_status && $request->approval_status !='') {
+            if ($request->approval_status && $request->approval_status != '') {
                 $data = $data->where('approval_status', $request->approval_status);
             }
 
@@ -66,7 +60,7 @@ class VisitDetailController extends Controller
                     return $fullName;
                 })
                 ->addColumn('department', function ($row) {
-                    $Department = Employee::where('user_id',$row->user->id)->with('department')->first();
+                    $Department = Employee::where('user_id', $row->user->id)->with('department')->first();
                     return $Department->department->department_name;
                 })
                 ->addColumn('campus_office', function ($row) {
@@ -100,12 +94,12 @@ class VisitDetailController extends Controller
         $branches = Branch::all();
         $cities = City::all();
         $campus_types = CampusOfficeType::all();
-        if(isSuperAdmin()) {
+        if (isSuperAdmin()) {
             $employees = Employee::where('branch_id', 2)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
-        }else{
+        } else {
             $employees = Employee::where('branch_id', 2)->where('reporting_to', auth()->user()->id)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
         }
-        return view('Visitors.index',compact(['branches','cities', 'campus_types','employees']));
+        return view('Visitors.index', compact(['branches','cities', 'campus_types','employees']));
     }
 
     /**
@@ -139,27 +133,24 @@ class VisitDetailController extends Controller
             'travel_mode' => 'required',
             'purpose' => 'required',
         ]);
-        $visit = VisitDetail::where('user_id',$request->user_id)->where('campus_office_id',$request->campus_office_id)->where('branch_id',$request->branch_id)->where('from_city_id',$request->from_city_id)->where('to_city_id',$request->to_city_id)->where('approval_status','pending')->get();
-        if(isset($visit[0]))
-        {
+        $visit = VisitDetail::where('user_id', $request->user_id)->where('campus_office_id', $request->campus_office_id)->where('branch_id', $request->branch_id)->where('from_city_id', $request->from_city_id)->where('to_city_id', $request->to_city_id)->where('approval_status', 'pending')->get();
+        if (isset($visit[0])) {
             return redirect()->route('visitDetail.index')
             ->with('error', 'Duplicate entries not allowed.');
         }
         $input = $request->all();
-        $approval = Employee::where('user_id',$request->user_id)->first('reporting_to');
+        $approval = Employee::where('user_id', $request->user_id)->first('reporting_to');
         $input['approved_by'] = $approval->reporting_to;
 
         //dd($input);
 
         visitDetail::create($input);
 
-        if(isSuperAdmin()) {
+        if (isSuperAdmin()) {
             return redirect()->route('visitDetail.index')
                 ->with('success', 'Visit has been created successfully.');
-        }
-        else
-        {
-            return redirect()->route('visitDetail.index',['req' => $request->req])
+        } else {
+            return redirect()->route('visitDetail.index', ['req' => $request->req])
             ->with('success', 'Visit has been created successfully.');
         }
     }
@@ -186,23 +177,21 @@ class VisitDetailController extends Controller
         $branches = Branch::all();
         $cities = City::all();
         $campus_types = CampusOfficeType::all();
-        $employees = Employee::where('branch_id',2)->whereNull('left_date')->with('user','department')->orderBy('preferred_name')->get();
-        if(isSuperAdmin()) {
-        return view('Visitors.index',compact(['branches','cities', 'campus_types','employees','visitDetail']));
-        }
-        else
-        {
+        $employees = Employee::where('branch_id', 2)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
+        if (isSuperAdmin()) {
+            return view('Visitors.index', compact(['branches','cities', 'campus_types','employees','visitDetail']));
+        } else {
             //$req = 'my';
-            return view('Visitors.index',[
+            return view('Visitors.index', [
                 'req' => 'my',
-                'branches' =>$branches,
+                'branches' => $branches,
                 'cities' => $cities,
                 'campus_types' => $campus_types,
                 'employees' => $employees,
                 'visitDetail' => $visitDetail
             ]);
         }
-        }
+    }
 
     /**
      * Update the specified resource in storage.
@@ -226,24 +215,24 @@ class VisitDetailController extends Controller
             'purpose' => 'required',
         ]);
         $input = $request->all();
-        $approval = Employee::where('user_id',$request->user_id)->first('reporting_to');
+        $approval = Employee::where('user_id', $request->user_id)->first('reporting_to');
         $input['approved_by'] = $approval->reporting_to;
 
         //dd($input);
 
         $visitDetail->update($input);
 
-        if(isSuperAdmin())
+        if (isSuperAdmin()) {
             return redirect()->route('visitDetail.index')->with('success', 'Visit has been updated successfully.');
+        }
 
 
-        return redirect()->route('visitDetail.index',['req' => 'my'])->with('success', 'Visit has been updated successfully.');
-
+        return redirect()->route('visitDetail.index', ['req' => 'my'])->with('success', 'Visit has been updated successfully.');
     }
 
     public function edit_visit_status($rec_id)
     {
-        if($rec_id != null){
+        if ($rec_id != null) {
             $id = $rec_id;
         }
         return view('Visitors.visit_status_modal', compact('id'));
@@ -260,17 +249,14 @@ class VisitDetailController extends Controller
         $obj_visit = VisitDetail::find($request->id);
         $obj_visit->approval_status = $request_data['approval_status'];
         $obj_visit->save();
-        if(isSuperAdmin())
-        {
+        if (isSuperAdmin()) {
             return redirect()->route('visitDetail.index')
             ->with('success', 'Visit status has been updated successfully.');
-        }else{
+        } else {
             return redirect()->route('visitDetail.index', ['req' => 'me'])
                 ->with('success', 'Visit status has been updated successfully.');
         }
             //return response()->json(['success' => "User password have been successfully updated!"], 200);
-
-
     }
 
     /**

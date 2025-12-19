@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\SerializeDateTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class FrachiseApplicationRemark extends Model
 {
-    use HasFactory,SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $guarded = [];
 

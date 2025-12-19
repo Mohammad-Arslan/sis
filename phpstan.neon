@@ -1,0 +1,42 @@
+includes:
+    - vendor/nunomaduro/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+        - routes/
+        - database/
+        - config/
+
+    # Exclude paths
+    excludePaths:
+        - ./*/*/FileToIgnore.php
+
+    # PHPStan level (0-9, higher is stricter)
+    # Start with level 5, gradually increase to 8 or 9
+    level: 5
+
+    # Laravel specific
+    checkMissingCallableSignature: false
+
+    # PHP 8.5 features
+    phpVersion: 80500
+
+    # Report unused private methods and properties
+    reportUnmatchedIgnoredErrors: false
+
+    # Ignore specific errors (add custom ignores here)
+    ignoreErrors:
+        # Laravel magic methods - Larastan handles most of these, but add specific ones if needed
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder::.*#'
+        - '#Call to an undefined method Illuminate\\Database\\Query\\Builder::.*#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Builder::\$.*#'
+        - '#Access to an undefined property Illuminate\\Database\\Query\\Builder::\$.*#'
+        - '#Call to an undefined method Illuminate\\Support\\Collection::.*#'
+        - '#Access to an undefined property Illuminate\\Support\\Collection::\$.*#'
+        - '#Call to an undefined method Illuminate\\Http\\Request::.*#'
+        - '#Access to an undefined property Illuminate\\Http\\Request::\$.*#'
+
+    # Memory limit
+    tmpDir: .phpstan

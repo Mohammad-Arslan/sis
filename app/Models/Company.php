@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class Company extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'company_name',
@@ -53,6 +54,6 @@ class Company extends Model
 
     public function branch()
     {
-        return $this->hasOne(Branch::class,'company_id','id');
+        return $this->hasOne(Branch::class, 'company_id', 'id');
     }
 }

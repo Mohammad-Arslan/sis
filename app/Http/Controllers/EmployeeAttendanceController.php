@@ -43,8 +43,7 @@ class EmployeeAttendanceController extends Controller
      */
     public function store(Request $request)
     {
-        if($request->ajax())
-        {
+        if ($request->ajax()) {
             EmployeeAttendance::create($request->all());
         }
     }
@@ -71,12 +70,9 @@ class EmployeeAttendanceController extends Controller
         $Attendance = EmployeeAttendance::find($request->id);
         $employeeAttendance['id'] = $Attendance['id'];
         $employeeAttendance['employee_id'] = $Attendance['employee_id'];
-        if($request->type == 'in')
-        {
+        if ($request->type == 'in') {
             $employeeAttendance['time_in'] = $Attendance['time_in'];
-        }
-        else
-        {
+        } else {
             $employeeAttendance['time_out'] = $Attendance['time_out'];
         }
         $employeeAttendance['academic_year_id'] = $Attendance['academic_year_id'];
@@ -84,32 +80,31 @@ class EmployeeAttendanceController extends Controller
         $employeeAttendance['attendance_type'] = $Attendance['attendance_type'];
         $employeeAttendance['created_at'] = $Attendance['created_at'];
         $employeeAttendance['rec_type'] = $request->type;
-        $employees = Employee::where('branch_id','=',getBranch(Auth::user()->id))->whereNull('left_date')->with('user','department','designation')->get();
+        $employees = Employee::where('branch_id', '=', getBranch(Auth::user()->id))->whereNull('left_date')->with('user', 'department', 'designation')->get();
 
-        if($request->month && $request->year)
-        {
-            $month = $request->year.'-'.$request->month;
+        if ($request->month && $request->year) {
+            $month = $request->year . '-' . $request->month;
             $start = Carbon::parse($month)->startOfMonth()->format('d-m-Y');
             $end = Carbon::parse($month)->endOfMonth()->format('d-m-Y');
             $attendance_month = Carbon::create()->day(1)->month($request->month);
             $attendance_month = Carbon::parse($attendance_month)->format('M');
-            $calendar_date = $attendance_month .' / '. $request->year;
+            $calendar_date = $attendance_month . ' / ' . $request->year;
             //dd($attendance_month);
-        }else{
+        } else {
             $month = $employeeAttendance['created_at'];
             $start = Carbon::parse($month)->startOfMonth()->format('d-m-Y');
             $end = Carbon::parse($month)->endOfMonth()->format('d-m-Y');
             //$attendance_month = date('m');
             $attendance_year = Carbon::parse($start)->format('Y');
             $attendance_month = Carbon::parse($start)->format('M');
-            $calendar_date = $attendance_month .' / '. $attendance_year;
+            $calendar_date = $attendance_month . ' / ' . $attendance_year;
         }
 
         $total_number_of_days = $this->getDatesFromRange($start, $end);
         $academic_years = AcademicYear::all();
 
         //dd($total_number_of_days);
-        return view('employees.attendance.index',compact('employees','academic_years','total_number_of_days','calendar_date','employeeAttendance'));
+        return view('employees.attendance.index', compact('employees', 'academic_years', 'total_number_of_days', 'calendar_date', 'employeeAttendance'));
     }
 
     /**
@@ -121,15 +116,15 @@ class EmployeeAttendanceController extends Controller
      */
     public function update(Request $request, EmployeeAttendance $employeeAttendance)
     {
-        if($request->ajax())
-        {
+        if ($request->ajax()) {
             $attendance = EmployeeAttendance::find($request->id);
             $attendance->time_out = $request->time_out;
             $attendance->update();
         }
     }
 
-    function getDatesFromRange($start, $end, $format = 'Y-m-d') {
+    function getDatesFromRange($start, $end, $format = 'Y-m-d')
+    {
 
         // Declare an empty array
         $array = array();
@@ -145,7 +140,7 @@ class EmployeeAttendanceController extends Controller
 
         // Use loop to store date into array
         $i = 0;
-        foreach($period as $date) {
+        foreach ($period as $date) {
             $array[$i]['day'] = Carbon::createFromFormat('Y-m-d', $date->format($format))->format('d-D');
             $array[$i]['dated'] = Carbon::createFromFormat('Y-m-d', $date->format($format));
             $i++;
@@ -157,18 +152,17 @@ class EmployeeAttendanceController extends Controller
 
     public function attendance_sheet(Request $request)
     {
-        $employees = Employee::where('branch_id','=',getBranch(Auth::user()->id))->whereNull('left_date')->with('user','department','designation')->get();
+        $employees = Employee::where('branch_id', '=', getBranch(Auth::user()->id))->whereNull('left_date')->with('user', 'department', 'designation')->get();
         $month = null;
-        if($request->month && $request->year)
-        {
-            $month = $request->year.'-'.$request->month;
+        if ($request->month && $request->year) {
+            $month = $request->year . '-' . $request->month;
             $start = Carbon::parse($month)->startOfMonth()->format('d-m-Y');
             $end = Carbon::parse($month)->endOfMonth()->format('d-m-Y');
             $attendance_month = Carbon::create()->day(1)->month($request->month);
             $attendance_month = Carbon::parse($attendance_month)->format('M');
-            $calendar_date = $attendance_month .' / '. $request->year;
+            $calendar_date = $attendance_month . ' / ' . $request->year;
             //dd($attendance_month);
-        }else{
+        } else {
             $start = new Carbon('first day of this month');
             $start = Carbon::parse($start)->format('d-m-Y');
             $end   = new Carbon('last day of this month');
@@ -176,13 +170,13 @@ class EmployeeAttendanceController extends Controller
             $attendance_month = Carbon::create()->day(1)->month($start);
             $attendance_year = Carbon::parse($start)->format('Y');
             $attendance_month = Carbon::parse($start)->format('M');
-            $calendar_date = $attendance_month .' / '. $attendance_year;
+            $calendar_date = $attendance_month . ' / ' . $attendance_year;
         }
         $total_number_of_days = $this->getDatesFromRange($start, $end);
         $academic_years = AcademicYear::all();
 
         //dd($total_number_of_days);
-        return view('employees.attendance.index',compact('employees','academic_years','calendar_date','total_number_of_days'));
+        return view('employees.attendance.index', compact('employees', 'academic_years', 'calendar_date', 'total_number_of_days'));
     }
 
     public function attendance_mark(Request $request)
@@ -198,16 +192,12 @@ class EmployeeAttendanceController extends Controller
         //$now = Carbon::now();
         $now = Carbon::parse($request->date_time)->format('Y-m-d');
 
-        if($request->type == 'in')
-        {
+        if ($request->type == 'in') {
             $employee = EmployeeAttendance::where('employee_id', $request->employee_id)->where('academic_year_id', $request->academic_year_id)->where('attendance_type', 1)->whereNotNull('time_in')->whereDate('created_at', $now)->get();
-            if(isset($employee[0]))
-            {
+            if (isset($employee[0])) {
                 return redirect()->route('attendance-sheet')->with('error', 'Attendance time in already marked. Duplicate marking not allowed!');
-            }
-            else
-            {
-                $date_time = explode(" ",$request->date_time);
+            } else {
+                $date_time = explode(" ", $request->date_time);
                 $input['academic_year_id'] = $request->academic_year_id;
                 $input['employee_id'] = $request->employee_id;
                 $input['time_in'] = $date_time[1];
@@ -215,20 +205,15 @@ class EmployeeAttendanceController extends Controller
                 $input['attendance_type'] = 1;
                 EmployeeAttendance::create($input);
             }
-        }
-        else
-        {
+        } else {
             $employee = EmployeeAttendance::where('employee_id', $request->employee_id)->where('academic_year_id', $request->academic_year_id)->where('attendance_type', 1)->whereNotNull('time_out')->whereDate('created_at', $now)->get();
-            if(isset($employee[0]))
-            {
+            if (isset($employee[0])) {
                 return redirect()->route('attendance-sheet')->with('error', 'Attendance time out is already marked. Duplicate marking not allowed!');
-            }
-            else
-            {
+            } else {
                 //$now = Carbon::now();
                 //$now = Carbon::parse($request->date_time)->format('Y-m-d');
-                $date_time = explode(" ",$request->date_time);
-                EmployeeAttendance::where('employee_id', $request->employee_id)->where('academic_year_id', $request->academic_year_id)->where('attendance_type', 1)->whereDate('created_at',$now)->update(['time_out' => $date_time[1]]);
+                $date_time = explode(" ", $request->date_time);
+                EmployeeAttendance::where('employee_id', $request->employee_id)->where('academic_year_id', $request->academic_year_id)->where('attendance_type', 1)->whereDate('created_at', $now)->update(['time_out' => $date_time[1]]);
             }
         }
         return redirect()->route('attendance-sheet')->with('success', 'Attendance has been marked.');
@@ -246,29 +231,24 @@ class EmployeeAttendanceController extends Controller
         $employee = null;
         $now = Carbon::parse($request->date_time)->format('Y-m-d');
 
-        if($request->type == 'in')
-        {
-            $date_time = explode(" ",$request->date_time);
+        if ($request->type == 'in') {
+            $date_time = explode(" ", $request->date_time);
             $input['academic_year_id'] = $request->academic_year_id;
             $input['employee_id'] = $request->employee_id;
             $input['time_in'] = $date_time[1];
             $input['created_at'] = $request->date_time;
             $input['attendance_type'] = 1;
             EmployeeAttendance::where('employee_id', $request->employee_id)->where('id', $request->id)->update($input);
-
-        }
-        else
-        {
-            $date_time = explode(" ",$request->date_time);
+        } else {
+            $date_time = explode(" ", $request->date_time);
             $input['academic_year_id'] = $request->academic_year_id;
             $input['employee_id'] = $request->employee_id;
             $input['time_out'] = $date_time[1];
             EmployeeAttendance::where('employee_id', $request->employee_id)->where('id', $request->id)->update($input);
-
         }
         $month = Carbon::parse($request->date_time)->startOfMonth()->format('m');
         $year = Carbon::parse($request->date_time)->endOfMonth()->format('Y');
-        return redirect()->route('attendance-sheet',['month'=>$month,'year'=>$year])->with('success', 'Attendance has been marked.');
+        return redirect()->route('attendance-sheet', ['month' => $month,'year' => $year])->with('success', 'Attendance has been marked.');
     }
 
     /**

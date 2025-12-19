@@ -27,7 +27,7 @@ use App\Models\StudentLedgerInvoice;
 use App\Models\AcademicYearWorkingDays;
 use App\Models\HomeWorkDiaryAttachment;
 use Illuminate\Support\Facades\Storage;
-use \Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Session;
 use App\Models\FrachiseApplicationRemark;
 use App\Models\FranchiseApplicationsAttachment;
 
@@ -64,7 +64,6 @@ function get_set_NWABranchId($branch_id = 0)
 
     //check whether user is NWA or not
     if ($user && $user->hasRole('network_associate') && $user['networkAssociates'] && $user['networkAssociates']['branches']->isNotEmpty()) {
-
         $nwa_branch_ids = $user['networkAssociates']['branches']->pluck('id')->toArray();
         //check whether selected branch is available in NWA's branches or not, if not then don't set
         if ($branch_id && in_array($branch_id, $nwa_branch_ids)) {
@@ -105,10 +104,10 @@ function get_active_acad_year_by_branch_id($branchId, $s_academic_year_id)
 
 function get_file_from_s3($path, $file_name = 'dummy.png')
 {
-    if (!$file_name) {
+    if (! $file_name) {
         return default_image();
     }
-    
+
     try {
         // Check if S3 is configured and accessible
         if (config('filesystems.disks.s3.key') && Storage::disk('s3')->exists($path)) {
@@ -117,12 +116,12 @@ function get_file_from_s3($path, $file_name = 'dummy.png')
     } catch (\Exception $e) {
         // S3 not available, fall back to local storage
     }
-    
+
     // Fall back to local storage or default image
     if (Storage::disk('public')->exists($path)) {
         return Storage::disk('public')->url($path);
     }
-    
+
     // If file doesn't exist in local storage, return default image
     return default_image();
 }
@@ -164,7 +163,7 @@ function get_branch_royalty($branch_id)
     $today = \Carbon\Carbon::today()->format('Y-m-d');
     $branch_royalty = \App\Models\BranchRoyalty::where([['branch_id', $branch_id], ['with_effect_from', '<=', $today], ['closing_date', '>=', $today]])->first();
 
-    return !empty($branch_royalty) ? $branch_royalty->royalty_rate : 0;
+    return ! empty($branch_royalty) ? $branch_royalty->royalty_rate : 0;
 }
 
 function get_lesson_plan_hierarchy($branch_id = 0, $academic_year_id = 0, $class_id = 0, $subject_id = 0, $type = '')
@@ -187,18 +186,22 @@ function get_lesson_plan_hierarchy($branch_id = 0, $academic_year_id = 0, $class
         'week'
     ])->where([['branch_id', $branch_id], ['academic_year_id', $academic_year_id]]);
 
-    if ($class_id)
+    if ($class_id) {
         $lesson_plans = $lesson_plans->where('com_class_id', $class_id);
+    }
 
-    if ($subject_id)
+    if ($subject_id) {
         $lesson_plans = $lesson_plans->where('subject_id', $subject_id);
+    }
 
     $lesson_plans = $lesson_plans->get();
 
-    if ($type == 'class')
+    if ($type == 'class') {
         $lesson_plans = $lesson_plans->unique('com_class_id');
-    if ($type == 'subject')
+    }
+    if ($type == 'subject') {
         $lesson_plans = $lesson_plans->unique('subject_id');
+    }
 
     return $lesson_plans;
 }
@@ -206,17 +209,19 @@ function get_lesson_plan_hierarchy($branch_id = 0, $academic_year_id = 0, $class
 function get_teacher_classes($user_id = 0)
 {
 
-    if (auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('network_associate'))
+    if (auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('network_associate')) {
         return ComClass::whereIn('id', array())->get();
+    }
 
-    if ($user_id)
+    if ($user_id) {
         $user = \App\Models\User::find($user_id);
-    else
+    } else {
         $user = auth()->user();
+    }
 
     $class_teachers = $user['employee']['class_teachers'];
     $teachers_class_ids = array();
-    if (!empty($class_teachers)) {
+    if (! empty($class_teachers)) {
         foreach ($class_teachers as $class_teacher) {
             array_push($teachers_class_ids, $class_teacher['branch_class_section']['class_id']);
         }
@@ -227,13 +232,15 @@ function get_teacher_classes($user_id = 0)
 function get_teacher_subjects($user_id = 0)
 {
 
-    if (auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('network_associate'))
+    if (auth()->user()->hasRole('super_admin') || auth()->user()->hasRole('network_associate')) {
         return Subject::whereIn('id', array())->get();
+    }
 
-    if ($user_id)
+    if ($user_id) {
         $user = \App\Models\User::find($user_id);
-    else
+    } else {
         $user = auth()->user();
+    }
 
     $class_teachers = $user['employee']['class_teachers'];
     return Subject::whereIn('id', $class_teachers->pluck('subject_id')->toArray())->get();
@@ -271,15 +278,17 @@ function listClassSubjects($class_id)
 
     $user = auth()->user();
 
-    if ($user->hasRole('network_associate'))
+    if ($user->hasRole('network_associate')) {
         $branch_class_section_ids = BranchClassSection::where([['class_id', $class_id], ['branch_id', get_set_NWABranchId()]])->pluck('id')->toArray();
-    else
+    } else {
         $branch_class_section_ids = BranchClassSection::where('class_id', $class_id)->pluck('id')->toArray();
+    }
 
-    if ($user['employee'] && $user['employee']['class_teachers']->isNotEmpty())
+    if ($user['employee'] && $user['employee']['class_teachers']->isNotEmpty()) {
         $subject_ids = ClassTeacher::whereIn('branch_class_section_id', $branch_class_section_ids)->where('employee_id', $user['employee']['id'])->pluck('subject_id')->toArray();
-    else
+    } else {
         $subject_ids = ClassTeacher::whereIn('branch_class_section_id', $branch_class_section_ids)->pluck('subject_id')->toArray();
+    }
 
     return Subject::whereIn('id', $subject_ids)->get();
 }
@@ -793,8 +802,9 @@ function get_user_role($id)
 function get_active_student_count($branch_id = 0)
 {
     $count = \App\Models\Student::where(function ($q) use ($branch_id) {
-        if ($branch_id)
+        if ($branch_id) {
             $q->where('branch_id', $branch_id);
+        }
     })->where('status', 'on_roll')->count();
 
     return $count;
@@ -805,21 +815,22 @@ function show_documents($franchise_application_id)
     //dd($franchise_application_id);
     $details = FranchiseApplicationsAttachment::with(['user', 'attachment_type'])->where(['franchise_application_id' => $franchise_application_id]);
     //dd($details->get()->toArray());
-    if (!auth()->user())
+    if (! auth()->user()) {
         $details = $details->whereNull('uploaded_by');
+    }
 
     $documents = $details->get();
 
     return $documents;
-
 }
 
 function get_new_register_student_count($branch_id = 0)
 {
     $academic_year_id = AcademicYear::where('active', '1')->pluck('id');
     $count = \App\Models\Student::where(function ($q) use ($branch_id) {
-        if ($branch_id)
+        if ($branch_id) {
             $q->where('branch_id', $branch_id);
+        }
     })->where('status', 'registered')->where('admission_year_id', $academic_year_id)->count();
 
     return $count;
@@ -827,8 +838,9 @@ function get_new_register_student_count($branch_id = 0)
 function get_register_student_count($academic_year_id, $branch_id = 0)
 {
     $count = \App\Models\Student::where(function ($q) use ($branch_id) {
-        if ($branch_id)
+        if ($branch_id) {
             $q->where('branch_id', $branch_id);
+        }
     })->where('admission_year_id', $academic_year_id)->count();
     return $count;
 }
@@ -840,26 +852,29 @@ function get_branch_id_from_code($branch_code)
 
 function get_branch_id_for_employee()
 {
-    if (auth()->user()->hasRole('network_assciate'))
+    if (auth()->user()->hasRole('network_assciate')) {
         return 0;
+    }
     return auth()->user()->employee ? auth()->user()->employee->branch_id : 0;
 }
 
 function get_branch_code_for_employee()
 {
-    if (auth()->user()->hasRole('network_assciate'))
+    if (auth()->user()->hasRole('network_assciate')) {
         return 0;
+    }
     return isset(auth()->user()->employee->branch) ? auth()->user()->employee->branch->branch_code : 0;
 }
 
 function get_branch_id()
 {
-    if ($nwa_branch_id = get_set_NWABranchId())
+    if ($nwa_branch_id = get_set_NWABranchId()) {
         return $nwa_branch_id;
-    elseif ($emp_branch_id = get_branch_id_for_employee())
+    } elseif ($emp_branch_id = get_branch_id_for_employee()) {
         return $emp_branch_id;
-    else
+    } else {
         return 0;
+    }
 }
 function get_region_id()
 {
@@ -870,12 +885,13 @@ function get_region_id()
 
 function get_branch_code()
 {
-    if ($nwa_branch_code = get_NWABranchCode())
+    if ($nwa_branch_code = get_NWABranchCode()) {
         return $nwa_branch_code;
-    elseif ($emp_branch_code = get_branch_code_for_employee())
+    } elseif ($emp_branch_code = get_branch_code_for_employee()) {
         return $emp_branch_code;
-    else
+    } else {
         return 0;
+    }
 }
 
 function get_state_id()
@@ -1030,7 +1046,7 @@ function calculate_total_price_by_invoice_royalty($studentInvoice, $type = null)
                 $invoices_charges[$student_invoice_item['fee_charges']['fee_charges_type']['abbreviation']] = $student_item_amount;
                 $totalPrice = $totalPrice + $student_item_amount;
             }
-            $non_refundable_charges = !$student_invoice_item['fee_charges']['is_refundable'] ? $non_refundable_charges + $student_item_amount : $non_refundable_charges + 0;
+            $non_refundable_charges = ! $student_invoice_item['fee_charges']['is_refundable'] ? $non_refundable_charges + $student_item_amount : $non_refundable_charges + 0;
             $discountable_charges = $student_invoice_item['fee_charges']['is_discountable'] ? $discountable_charges + $student_item_amount : $discountable_charges + 0;
         }
     }
@@ -1045,12 +1061,13 @@ function calculate_total_price_by_invoice_royalty($studentInvoice, $type = null)
         'invoices_charges' => $invoices_charges
     ];
 
-    if ($type != 'for_arrears')
+    if ($type != 'for_arrears') {
         $data['charges_concessions'] = 0;
+    }
 
 
     // Fee Concession Calculation
-    if (isset($studentInvoice['student_fee_package']['fee_concession']) && !empty($studentInvoice['student_fee_package']['fee_concession'])) {
+    if (isset($studentInvoice['student_fee_package']['fee_concession']) && ! empty($studentInvoice['student_fee_package']['fee_concession'])) {
         $fee_concession = $studentInvoice['student_fee_package']['fee_concession'];
         $concessionDiscount = ($discountable_charges / 100) * $fee_concession['concession_percentage'];
 
@@ -1065,7 +1082,7 @@ function calculate_total_price_by_invoice_royalty($studentInvoice, $type = null)
     }
 
     // Promo Discount Calculation
-    if (isset($studentInvoice->promo) && !empty($studentInvoice->promo)) {
+    if (isset($studentInvoice->promo) && ! empty($studentInvoice->promo)) {
         $promoClasses = PromoClass::where('promo_id', $studentInvoice->promo->id)->get();
         // dd($promoClasses->toArray());
 
@@ -1113,7 +1130,7 @@ function calculate_total_price_by_invoice_royalty($studentInvoice, $type = null)
     $data['total_after_royalty'] = $totalPrice - ($concessionDiscount + $promoDiscount) - $data['royalty_amount'];
 
     $diff_month = 1;
-    if (isset($studentInvoice['fee_period']) && !empty($studentInvoice['fee_period']['to_date']) && !empty($studentInvoice['fee_period']['from_date'])) {
+    if (isset($studentInvoice['fee_period']) && ! empty($studentInvoice['fee_period']['to_date']) && ! empty($studentInvoice['fee_period']['from_date'])) {
         $to_date = Carbon::parse($studentInvoice['fee_period']['to_date'])->addDays(2);
         $diff_month = Carbon::parse($studentInvoice['fee_period']['from_date'])->diffInMonths($to_date);
     }
@@ -1183,7 +1200,7 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
     $invoiceItems = [];
     if (is_object($studentInvoice) && method_exists($studentInvoice, 'items')) {
         // New normalized structure - load relationships if needed
-        if (!$studentInvoice->relationLoaded('items')) {
+        if (! $studentInvoice->relationLoaded('items')) {
             $studentInvoice->load(['items.fee_charges.fee_charges_type', 'payments', 'arrears_carried_from']);
         }
         $invoiceItems = $studentInvoice->items;
@@ -1201,7 +1218,7 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
         $discount = $concession;
         $invoiceFrequency = is_object($studentInvoice) ? $studentInvoice->invoice_frequency : ($studentInvoice['invoice_frequency'] ?? '');
         $studentData = is_object($studentInvoice) ? $studentInvoice->student : ($studentInvoice['student'] ?? []);
-        
+
         if (
             $invoiceFrequency === 'Admission' &&
             $abbr === 'AF' &&
@@ -1224,7 +1241,7 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
         $isRefundable = is_object($item) ? ($item->fee_charges->is_refundable ?? true) : ($item['fee_charges']['is_refundable'] ?? true);
         $isDiscountable = is_object($item) ? ($item->fee_charges->is_discountable ?? false) : ($item['fee_charges']['is_discountable'] ?? false);
 
-        if (!$isRefundable) {
+        if (! $isRefundable) {
             $nonRefundableCharges += $studentItemAmount;
         }
         if ($isDiscountable) {
@@ -1239,18 +1256,18 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
     } else {
         $feeConcession = $studentInvoice['student_fee_package']['fee_concession'] ?? [];
     }
-    
+
     $concessionPercentage = is_object($feeConcession) ? ($feeConcession->concession_percentage ?? 0) : ($feeConcession['concession_percentage'] ?? 0);
     $concessionDiscount = ($concessionPercentage * $discountableCharges) / 100;
 
     $promoDiscount = 0;
     $promo = is_object($studentInvoice) ? $studentInvoice->promo : ($studentInvoice['promo'] ?? null);
-    if (!empty($promo)) {
+    if (! empty($promo)) {
         $promoId = is_object($promo) ? $promo->id : $promo['id'];
-        $classId = is_object($studentInvoice) ? 
-            ($studentInvoice->student_fee_package->com_class->id ?? null) : 
+        $classId = is_object($studentInvoice) ?
+            ($studentInvoice->student_fee_package->com_class->id ?? null) :
             ($studentInvoice['student_fee_package']['com_class']['id'] ?? null);
-            
+
         $promoClassExists = PromoClass::where('promo_id', $promoId)
             ->where('class_id', $classId)
             ->exists();
@@ -1264,7 +1281,7 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
     }
 
     $netTotal = $totalPrice - $concessionDiscount - $promoDiscount;
-    $branchId = is_object($studentInvoice) ? 
+    $branchId = is_object($studentInvoice) ?
         ($studentInvoice->student->branch_id ?? optional(Student::find($studentInvoice->student_id))->branch_id) :
         ($studentInvoice['student']['branch_id'] ?? optional(Student::find($studentInvoice['student_id']))->branch_id);
     $royaltyPercentage = get_branch_royalty($branchId);
@@ -1272,7 +1289,7 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
 
     $diffMonth = 1;
     $feePeriod = is_object($studentInvoice) ? $studentInvoice->fee_period : ($studentInvoice['fee_period'] ?? []);
-    if (!empty($feePeriod)) {
+    if (! empty($feePeriod)) {
         $fromDate = is_object($feePeriod) ? $feePeriod->from_date : ($feePeriod['from_date'] ?? null);
         $toDate = is_object($feePeriod) ? $feePeriod->to_date : ($feePeriod['to_date'] ?? null);
         if ($fromDate && $toDate) {
@@ -1294,23 +1311,23 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
 
     // Get arrears from new normalized structure if available, otherwise fall back to old method
     $arrearData = ['arrears' => 0, 'royalty_amount' => 0, 'total_after_royalty' => 0, 'arrear_months' => []];
-    
+
     $bankPaymentStatus = is_object($studentInvoice) ? $studentInvoice->bank_payment_status : ($studentInvoice['bank_payment_status'] ?? null);
     if ($type !== 'for_arrears' && $bankPaymentStatus !== 'cancelled') {
         // Check if this is a model instance with relationships (new structure)
         if (is_object($studentInvoice) && method_exists($studentInvoice, 'arrears_carried_from')) {
             $arrearsAmount = $studentInvoice->arrears_carried_from->sum('amount');
             $arrearMonths = $studentInvoice->arrears_carried_from->pluck('from_invoice_id')
-                ->map(function($invoiceId) {
+                ->map(function ($invoiceId) {
                     $invoice = StudentInvoice::find($invoiceId);
-                    return $invoice && $invoice->fee_period ? 
+                    return $invoice && $invoice->fee_period ?
                         Carbon::parse($invoice->fee_period->from_date)->format('F') : null;
                 })
                 ->filter()
                 ->unique()
                 ->values()
                 ->toArray();
-            
+
             $arrearData = [
                 'arrears' => $arrearsAmount,
                 'royalty_amount' => $arrearsAmount * ($royaltyPercentage / 100),
@@ -1326,7 +1343,7 @@ function calculate_total_price_by_invoice($studentInvoice, $type = null)
     $total += $arrearData['arrears'];
     $royalty_amount += $arrearData['royalty_amount'];
 
-    $feePackageType = is_object($studentInvoice) ? 
+    $feePackageType = is_object($studentInvoice) ?
         ($studentInvoice->student_fee_package->fee_package->fee_package_type->name ?? '') :
         ($studentInvoice['student_fee_package']['fee_package']['fee_package_type']['name'] ?? '');
     $isMonthly = $feePackageType === 'Monthly';
@@ -1372,7 +1389,7 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
     $invoiceItems = [];
     if (is_object($studentInvoice) && method_exists($studentInvoice, 'items')) {
         // New normalized structure - load relationships if needed
-        if (!$studentInvoice->relationLoaded('items')) {
+        if (! $studentInvoice->relationLoaded('items')) {
             $studentInvoice->load(['items.fee_charges.fee_charges_type', 'payments', 'arrears_carried_from']);
         }
         $invoiceItems = $studentInvoice->items;
@@ -1392,7 +1409,7 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
         $studentAmount = $amount;
         $invoiceFrequency = is_object($studentInvoice) ? $studentInvoice->invoice_frequency : ($studentInvoice['invoice_frequency'] ?? '');
         $studentData = is_object($studentInvoice) ? $studentInvoice->student : ($studentInvoice['student'] ?? []);
-        
+
         if ($invoiceFrequency === 'Admission' && $chargeType === 'AF' && $type !== 'for_arrears') {
             $siblings = $studentData['sibling_info']['family']['children'] ?? [];
             $onRollSiblings = collect($siblings)->filter(fn($c) => optional($c['student'])['status'] === 'on_roll')->count();
@@ -1417,10 +1434,12 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
         $invoiceCharges[$chargeType] += $studentAmount;
         $totalPrice += $studentAmount;
 
-        if (!$isRefundable)
+        if (! $isRefundable) {
             $nonRefundableCharges += $studentAmount;
-        if ($isDiscountable)
+        }
+        if ($isDiscountable) {
             $discountableCharges += $studentAmount;
+        }
     }
 
     // Handle fee concession data
@@ -1430,19 +1449,19 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
     } else {
         $feeConcession = $studentInvoice['student_fee_package']['fee_concession'] ?? [];
     }
-    
+
     $concessionPercentage = (float) (is_object($feeConcession) ? ($feeConcession->concession_percentage ?? 0) : ($feeConcession['concession_percentage'] ?? 0));
     $concessionDiscount = ($discountableCharges * $concessionPercentage) / 100;
 
     $promoDiscount = 0;
     $promo = is_object($studentInvoice) ? $studentInvoice->promo : ($studentInvoice['promo'] ?? null);
-    if (!empty($promo)) {
+    if (! empty($promo)) {
         $promoId = is_object($promo) ? $promo->id : $promo['id'];
-        $classId = is_object($studentInvoice) ? 
-            ($studentInvoice->student_fee_package->com_class->id ?? null) : 
+        $classId = is_object($studentInvoice) ?
+            ($studentInvoice->student_fee_package->com_class->id ?? null) :
             ($studentInvoice['student_fee_package']['com_class']['id'] ?? null);
 
-        if (!isset($promoClassesCache[$promoId])) {
+        if (! isset($promoClassesCache[$promoId])) {
             $promoClassesCache[$promoId] = PromoClass::where('promo_id', $promoId)->pluck('class_id')->toArray();
         }
 
@@ -1456,7 +1475,7 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
     }
 
     $netTotal = $totalPrice - $concessionDiscount - $promoDiscount;
-    $studentBranchId = is_object($studentInvoice) ? 
+    $studentBranchId = is_object($studentInvoice) ?
         (optional($studentInvoice->student)->branch_id) :
         (optional($studentInvoice['student'])['branch_id']);
     $royaltyPercentage = get_branch_royalty($studentBranchId);
@@ -1464,7 +1483,7 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
 
     $diffMonth = 1;
     $feePeriod = is_object($studentInvoice) ? $studentInvoice->fee_period : ($studentInvoice['fee_period'] ?? []);
-    if (!empty($feePeriod)) {
+    if (! empty($feePeriod)) {
         $fromDate = is_object($feePeriod) ? $feePeriod->from_date : ($feePeriod['from_date'] ?? null);
         $toDate = is_object($feePeriod) ? $feePeriod->to_date : ($feePeriod['to_date'] ?? null);
         if ($fromDate && $toDate) {
@@ -1487,7 +1506,7 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
 
     // Get arrears from new normalized structure if available, otherwise fall back to old method
     $arrearsData = ['arrears' => 0, 'royalty_amount' => 0, 'total_after_royalty' => 0];
-    
+
     $bankPaymentStatus = is_object($studentInvoice) ? $studentInvoice->bank_payment_status : ($studentInvoice['bank_payment_status'] ?? '');
     if ($type !== 'for_arrears' && $bankPaymentStatus !== 'cancelled') {
         // Check if this is a model instance with relationships (new structure)
@@ -1504,7 +1523,7 @@ function calculate_total_price_by_invoice_index($studentInvoice, $type = null, $
         }
     }
 
-    $feePackageType = is_object($studentInvoice) ? 
+    $feePackageType = is_object($studentInvoice) ?
         (optional($studentInvoice->student_fee_package->fee_package->fee_package_type)->name) :
         (optional($studentInvoice['student_fee_package']['fee_package']['fee_package_type'])['name']);
     $isMonthly = $feePackageType === 'Monthly';
@@ -1618,21 +1637,21 @@ function calculate_arrears($studentInvoice)
         $currentPeriod = optional($studentInvoice->fee_period)->from_date;
         $invoiceCreatedAt = Carbon::parse($studentInvoice->created_at ?? now());
         $royaltyPercentage = get_branch_royalty($studentInvoice->student->branch_id ?? null);
-        
+
         // If this is a model instance with arrears_carried_from relationship, use the new structure
         if (method_exists($studentInvoice, 'arrears_carried_from')) {
             $arrearsAmount = $studentInvoice->arrears_carried_from->sum('amount');
             $arrearMonths = $studentInvoice->arrears_carried_from->pluck('from_invoice_id')
-                ->map(function($invoiceId) {
+                ->map(function ($invoiceId) {
                     $invoice = StudentInvoice::find($invoiceId);
-                    return $invoice && $invoice->fee_period ? 
+                    return $invoice && $invoice->fee_period ?
                         Carbon::parse($invoice->fee_period->from_date)->format('F') : null;
                 })
                 ->filter()
                 ->unique()
                 ->values()
                 ->toArray();
-            
+
             return [
                 'arrears' => $arrearsAmount,
                 'royalty_amount' => $arrearsAmount * ($royaltyPercentage / 100),
@@ -1649,7 +1668,7 @@ function calculate_arrears($studentInvoice)
         $royaltyPercentage = get_branch_royalty($studentInvoice['student']['branch_id'] ?? null);
     }
 
-    if (!$studentId || !$currentInvoiceId || !$currentPeriod) {
+    if (! $studentId || ! $currentInvoiceId || ! $currentPeriod) {
         return [
             'arrears' => 0,
             'royalty_amount' => 0,
@@ -1675,7 +1694,7 @@ function calculate_arrears($studentInvoice)
         $invPeriod = optional($inv->fee_period)->from_date;
 
         // Extra safeguard: skip invoices with future or same months accidentally present
-        if (!$invPeriod || Carbon::parse($invPeriod)->gte($currentPeriodDate)) {
+        if (! $invPeriod || Carbon::parse($invPeriod)->gte($currentPeriodDate)) {
             continue;
         }
 
@@ -1740,7 +1759,7 @@ function get_ledger_unpaid_invoices($student_ledger, $current_invoice_sort = nul
             $query->whereIn('bank_payment_status', ['unpaid', 'adjusted']);
         });
 
-    if (!is_null($current_invoice_sort)) {
+    if (! is_null($current_invoice_sort)) {
         $unpaidInvoicesQuery = $unpaidInvoicesQuery->where('sort', '<', $current_invoice_sort);
     }
 
@@ -1756,7 +1775,6 @@ function get_arrears_royalty_total($unpaid_invoices, $studentInvoice, $max_paid_
     foreach ($unpaid_invoices as $unpaid_invoice) {
         $inv_data = $unpaid_invoice->toArray()['invoice'];
         if ($inv_data['bank_payment_status'] == 'unpaid') {
-
             if (get_month_name($inv_data['fee_period']['from_date']) == 'February') {
                 $calculation = calculate_total_price_by_invoice_index($inv_data, 'for_arrears');
             } else {
@@ -1845,10 +1863,8 @@ function getHomeWorkDiaryAttachments($diary_detail_id, $type)
         } else {
             return view('homeworkdiary.edit_attachments', compact('Files'));
         }
-
     }
     return '';
-
 }
 
 function getBranch($id)
@@ -1867,7 +1883,6 @@ function getBranch($id)
 function getUserByDepartmentAndBranchID($department_id, $branch_id)
 {
     return Employee::where('department_id', '=', $department_id)->where('branch_id', '=', $branch_id)->with('user')->get()->toArray();
-
 }
 
 function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
@@ -1881,7 +1896,7 @@ function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
     $date = Carbon::parse($dated)->format('Y-m-d');
 
 
-    $att_type = $leave_applied = $leave_status = $color = $leave_chk = NULL;
+    $att_type = $leave_applied = $leave_status = $color = $leave_chk = null;
     $attendance = EmployeeAttendance::where('employee_id', $employee_id)->where('academic_year_id', $academic_year_id)->whereDate('created_at', $date)->get();
     if (isset($attendance[0])) {
         $data[0]['id'] = $attendance[0]['id'];
@@ -1902,7 +1917,6 @@ function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
         $data[0]['attendance_day_color'] = '';
         $checkInDayName = date('l', strtotime($attendance[0]['created_at']));
         if ($attendance[0]['attendance_type'] == 0) {
-
             $employee = Employee::select('employees.id', 'eld.working_day_id', 'eld.official_leave_id', 'wd.abbreviation', 'wd.name', 'ld.start_time', 'ld.end_time', 'ld.status')
                 ->join('employee_official_leave_days as eld', 'employees.id', '=', 'eld.employee_id')
                 ->join('working_days as wd', 'eld.working_day_id', '=', 'wd.id')
@@ -1945,7 +1959,7 @@ function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
                 }
 
 
-                if (!is_null($attendance[0]['time_out'])) {
+                if (! is_null($attendance[0]['time_out'])) {
                     /*find checkout time difference*/
                     $checkOutTimeDiff = calculateTimeDifference($employee->end_time, $attendance[0]['time_out']);
                     if ($checkOutTimeDiff < -10) {
@@ -1963,13 +1977,11 @@ function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
                             $data[0]['leave_name'] = $leave_applied->leaveApplicationType->name;
                         }
                     }
-
                 }
             } else if (isset($employee->status) == 0) {
                 $data[0]['attendance_day'] = 'Off Day';
                 $data[0]['attendance_day_color'] = 'outline-info';
             }
-
         } else {
             if ($employee->status == 1) {
                 $data[0]['time_in'] = '';
@@ -2023,16 +2035,12 @@ function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
             } else {
                 //nothing todo.
             } /*  end schedule shifts status check. */
-
-
         }
 
         // check user applied leaves.
         // if($date == '2023-09-26'){
         //     dd($date);
         // }
-
-
     } else {
         $data[0]['attendance_type'] = '';
         $data[0]['academic_year_id'] = '';
@@ -2059,8 +2067,7 @@ function getEmployeeAttendance($employee_id, $dated, $acd_year_id = null)
                     $start = $leaves['attendance_not_marked_date']->toDateString();
                     $end = '';
                 }
-                if (isset($leaves->leaveApplicationType->name) && ($leaves->leaveApplicationType->name == 'Leave' || $leaves->leaveApplicationType->name == 'Out Station')) //$leaves->leaveApplicationType->name == 'Late Arrival' || $leaves->leaveApplicationType->name == 'Early Leaving'
-                {
+                if (isset($leaves->leaveApplicationType->name) && ($leaves->leaveApplicationType->name == 'Leave' || $leaves->leaveApplicationType->name == 'Out Station')) { //$leaves->leaveApplicationType->name == 'Late Arrival' || $leaves->leaveApplicationType->name == 'Early Leaving'
                     $start = $leaves['from_date']->toDateString();
                     if (isset($leaves['end_date'])) {
                         $end = $leaves['end_date']->toDateString();
@@ -2113,18 +2120,19 @@ function get_class_level($class_id)
     $class_obj = ComClass::find($class_id);
     $class_name = strtolower($class_obj['class_name']);
 
-    if (str_contains($class_name, 'kg') || str_contains($class_name, 'nursery')) //not applied seperate check for pre-nursery and nursery because both contains nursery
+    if (str_contains($class_name, 'kg') || str_contains($class_name, 'nursery')) { //not applied seperate check for pre-nursery and nursery because both contains nursery
         return 'EY';
-    else if (str_contains($class_name, '1') || str_contains($class_name, 'one') || str_contains($class_name, '2') || str_contains($class_name, 'two'))
+    } else if (str_contains($class_name, '1') || str_contains($class_name, 'one') || str_contains($class_name, '2') || str_contains($class_name, 'two')) {
         return 'LP';
-    else if (
+    } else if (
         str_contains($class_name, '3') || str_contains($class_name, 'three')
         || str_contains($class_name, '4') || str_contains($class_name, 'four')
         || str_contains($class_name, '5') || str_contains($class_name, 'five')
         || str_contains($class_name, '6') || str_contains($class_name, 'six')
         || str_contains($class_name, '7') || str_contains($class_name, 'seven')
-    )
+    ) {
         return 'UP';
+    }
 }
 
 function calculate_age($date)
@@ -2162,12 +2170,15 @@ function number_of_working_days($from, $to)
 
     $days = 0;
     foreach ($periods as $period) {
-        if (!in_array($period->format('N'), $workingDays))
+        if (! in_array($period->format('N'), $workingDays)) {
             continue;
-        if (in_array($period->format('Y-m-d'), $holidayDays))
+        }
+        if (in_array($period->format('Y-m-d'), $holidayDays)) {
             continue;
-        if (in_array($period->format('*-m-d'), $holidayDays))
+        }
+        if (in_array($period->format('*-m-d'), $holidayDays)) {
             continue;
+        }
         $days++;
     }
     return $days;
@@ -2248,10 +2259,10 @@ function get_student_grade($class_id, $marks)
         $query->where('ending_percentage', '>=', $marks);
     })->first();
 
-    return !empty($grading_key) ? $grading_key->grading_key : 'N/A';
+    return ! empty($grading_key) ? $grading_key->grading_key : 'N/A';
 }
 
-function sendOTPCode($message, $mobile = NULL)
+function sendOTPCode($message, $mobile = null)
 {
     Log::info('Log created at ' . Carbon::now() . '. Here is the message ' . $message);
 
@@ -2261,7 +2272,7 @@ function sendOTPCode($message, $mobile = NULL)
     $lang = "English";
     $mask = "1";
 
-    if ($mobile == NULL) {
+    if ($mobile == null) {
         /*$mobile = $this->phone;*/
         $mobile = '03001111111';
     }
@@ -2274,9 +2285,9 @@ function sendOTPCode($message, $mobile = NULL)
     $data = "id=" . $id . "&pass=" . $pass . "&msg=" . $message . "&to=" . $to . "&lang=" . $lang . "&mask=" . $mask . "&type=" . $type;
 
     $ch = curl_init('http://www.opencodes.pk/api/medver.php/sendsms/url');
-    curl_setopt($ch, CURLOPT_POST, TRUE);
+    curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $result = curl_exec($ch);
     $xml = simplexml_load_string($result);
     $api_response = $xml->code;

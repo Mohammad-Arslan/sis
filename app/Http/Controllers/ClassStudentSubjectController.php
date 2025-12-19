@@ -19,9 +19,8 @@ class ClassStudentSubjectController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
-            $data = ClassStudentSubject::whereHas('class_student',function ($query) use ($request){
-               $query->where('student_id', $request->student);
+            $data = ClassStudentSubject::whereHas('class_student', function ($query) use ($request) {
+                $query->where('student_id', $request->student);
             })
             ->with([
                 'subject',
@@ -64,21 +63,22 @@ class ClassStudentSubjectController extends Controller
     {
         $request_data = $request->only(['student_id','subject_id']);
 
-        if (!isset($request_data['student_id']))
+        if (! isset($request_data['student_id'])) {
             return redirect()->back()->with('error', 'No Students has been selected.');
-
-        else if (!isset($request_data['subject_id']))
+        } else if (! isset($request_data['subject_id'])) {
             return redirect()->back()->with('error', 'No Subjects has been selected.');
+        }
 
-        $student_ids = !empty($request_data['student_id']) ? $request_data['student_id'] : array();
-        $class_students = ClassStudent::whereIn('student_id',$student_ids)->where([['branch_class_section_id',$request->branch_class_section_id],['is_valid',1]])->get();
+        $student_ids = ! empty($request_data['student_id']) ? $request_data['student_id'] : array();
+        $class_students = ClassStudent::whereIn('student_id', $student_ids)->where([['branch_class_section_id',$request->branch_class_section_id],['is_valid',1]])->get();
 
-        foreach ($class_students as $class_student){
-            if (isset($request_data['subject_id'])){
-                foreach ($request_data['subject_id'] as $subject_id){
+        foreach ($class_students as $class_student) {
+            if (isset($request_data['subject_id'])) {
+                foreach ($request_data['subject_id'] as $subject_id) {
                     $subject = $class_student->class_student_subjects()->where([['subject_id',$subject_id],['is_valid',1]])->count();
-                    if ($subject < 1)
+                    if ($subject < 1) {
                         $class_student->class_student_subjects()->create(['subject_id' => $subject_id]);
+                    }
                 }
             }
         }

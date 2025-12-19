@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class FranchiseApplicationBdVisit extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'franchise_application_id',
@@ -54,7 +55,7 @@ class FranchiseApplicationBdVisit extends Model
 
     public function school_type()
     {
-        return $this->belongsTo(ClassGroup::class,'school_type', 'id');
+        return $this->belongsTo(ClassGroup::class, 'school_type', 'id');
     }
 
     public function getBdStatusAttribute($value)

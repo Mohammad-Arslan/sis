@@ -11,6 +11,6 @@ class ClassFeePackage extends Model
 
     public $fillable = [
         'class_id',
-        'fee_package_id'    
+        'fee_package_id'
     ];
 }

@@ -16,7 +16,6 @@ class FollowUpTypeController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = FollowUpType::get();
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -25,7 +24,6 @@ class FollowUpTypeController extends Controller
                 })
                 ->rawColumns(['action'])
                 ->make(true);
-
         }
         return view('settings.followup_types.followup_types');
     }
@@ -51,9 +49,8 @@ class FollowUpTypeController extends Controller
         $request->validate([
             'follow_up_type' => 'required',
         ]);
-        $follow_up_type = FollowUpType::where('follow_up_type',$request->follow_up_type)->get();
-        if(isset($follow_up_type[0]))
-        {
+        $follow_up_type = FollowUpType::where('follow_up_type', $request->follow_up_type)->get();
+        if (isset($follow_up_type[0])) {
             return redirect()->route('followUpType.index')
             ->with('error', 'Duplicate entries not allowed.');
         }
@@ -83,7 +80,7 @@ class FollowUpTypeController extends Controller
      */
     public function edit(FollowUpType $followUpType)
     {
-       
+
         return view('settings.followup_types.followup_types', ['followUpType' => $followUpType]);
     }
 

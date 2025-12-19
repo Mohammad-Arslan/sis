@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AssessmentLevel extends Model
 {
-    use HasFactory, SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'name',

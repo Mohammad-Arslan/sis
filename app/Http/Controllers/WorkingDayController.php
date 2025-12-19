@@ -6,6 +6,7 @@ use App\Models\WorkingDay;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Yajra\DataTables\DataTables;
+
 class WorkingDayController extends Controller
 {
     /**

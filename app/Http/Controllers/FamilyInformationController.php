@@ -21,8 +21,11 @@ class FamilyInformationController extends Controller
                 $query->where('student_id', $request->student);
             })->with('parent')->first();
 
-            if (isset($family)) $data = SiblingInformation::where('family_information_id', $family->id)->with('student')->orderBy("updated_at")->get();
-            else $data = [];
+            if (isset($family)) {
+                $data = SiblingInformation::where('family_information_id', $family->id)->with('student')->orderBy("updated_at")->get();
+            } else {
+                $data = [];
+            }
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('full_name', function ($row) {

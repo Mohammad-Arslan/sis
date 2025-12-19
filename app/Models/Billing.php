@@ -11,6 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 class Billing extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'order_id',
         'student_id',
@@ -44,7 +45,4 @@ class Billing extends Model
     {
         return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
-
-
-
 }

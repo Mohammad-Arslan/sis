@@ -30,26 +30,26 @@ class AssetController extends Controller
     {
         $query = Asset::with(['category', 'supplier', 'currentBranch', 'currentDepartment', 'assignedTo'])
             ->orderBy('created_at', 'desc');
-            
+
         // Apply filters
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('asset_tag', 'like', "%{$search}%");
             });
         }
-        
+
         if ($request->has('status') && $request->input('status')) {
             $query->where('status', $request->input('status'));
         }
-        
+
         if ($request->has('category') && $request->input('category')) {
             $query->where('category_id', $request->input('category'));
         }
-        
+
         $assets = $query->paginate(15);
-        
+
         // Append query parameters to pagination links
         $assets->appends($request->all());
 
@@ -206,13 +206,13 @@ class AssetController extends Controller
             'warranty_end_date' => 'nullable|date|after_or_equal:purchase_date',
             'condition' => ['required', function ($attribute, $value, $fail) {
                 $validConditions = ['new', 'good', 'fair', 'poor', 'damaged', 'New', 'Good', 'Fair', 'Poor', 'Damaged'];
-                if (!in_array($value, $validConditions)) {
+                if (! in_array($value, $validConditions)) {
                     $fail('Condition must be new, good, fair, poor, or damaged (case insensitive).');
                 }
             }],
             'status' => ['required', function ($attribute, $value, $fail) {
                 $validStatuses = ['active', 'inactive', 'maintenance', 'retired', 'lost', 'stolen', 'Active', 'Inactive', 'Maintenance', 'Retired', 'Lost', 'Stolen'];
-                if (!in_array($value, $validStatuses)) {
+                if (! in_array($value, $validStatuses)) {
                     $fail('Status must be active, inactive, maintenance, retired, lost, or stolen (case insensitive).');
                 }
             }],
@@ -252,7 +252,7 @@ class AssetController extends Controller
                 'current_branch_id' => $request->current_branch_id,
                 'current_department_id' => $request->current_department_id,
                 'assigned_to_user_id' => $request->assigned_to_user_id,
-                'image_url' => !empty($imageUrls) ? $imageUrls : null, // ✅ stored as JSON
+                'image_url' => ! empty($imageUrls) ? $imageUrls : null, // ✅ stored as JSON
                 'qr_code' => 'ASSET-' . $request->asset_tag
             ]);
 
@@ -263,7 +263,6 @@ class AssetController extends Controller
                 'message' => 'Asset created successfully',
                 'data' => $asset->load(['category', 'supplier', 'currentBranch', 'currentDepartment', 'assignedTo'])
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -295,13 +294,13 @@ class AssetController extends Controller
                 'warranty_end_date' => 'nullable|date|after_or_equal:purchase_date',
                 'condition' => ['required', function ($attribute, $value, $fail) {
                     $validConditions = ['new', 'excellent', 'good', 'fair', 'poor', 'damaged', 'New', 'Excellent', 'Good', 'Fair', 'Poor', 'Damaged'];
-                    if (!in_array($value, $validConditions)) {
+                    if (! in_array($value, $validConditions)) {
                         $fail('Condition must be new, excellent, good, fair, poor, or damaged (case insensitive).');
                     }
                 }],
                 'status' => ['required', function ($attribute, $value, $fail) {
                     $validStatuses = ['active', 'inactive', 'maintenance', 'retired', 'lost', 'stolen', 'Active', 'Inactive', 'Maintenance', 'Retired', 'Lost', 'Stolen'];
-                    if (!in_array($value, $validStatuses)) {
+                    if (! in_array($value, $validStatuses)) {
                         $fail('Status must be active, inactive, maintenance, retired, lost, or stolen (case insensitive).');
                     }
                 }],
@@ -581,19 +580,19 @@ class AssetController extends Controller
                 // Don't delete the file, just clear its contents
                 File::put($logPath, '');
             }
-            
+
             // Generate unique import ID with timestamp for better traceability
             $importId = 'asset_import_' . time() . '_' . uniqid();
-            
+
             // Clear any existing specific log file for this import
             $specificLogPath = storage_path("logs/asset_import_{$importId}.log");
             if (File::exists($specificLogPath)) {
                 File::put($specificLogPath, '');
             }
-            
+
             // Store the file temporarily
             $filePath = $request->file('file')->store('temp/asset-imports');
-            
+
             // Log the start of the import process
             Log::info('Asset import initiated', [
                 'import_id' => $importId,
@@ -602,10 +601,10 @@ class AssetController extends Controller
                 'file_size' => $request->file('file')->getSize(),
                 'timestamp' => now()->toDateTimeString()
             ]);
-            
+
             // Dispatch the import job to the queue with a unique ID
             ProcessAssetImport::dispatch($filePath, Auth::id(), $importId);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Asset import has been queued and will be processed in the background.',
@@ -613,7 +612,6 @@ class AssetController extends Controller
                 'import_id' => $importId,
                 'file_name' => $request->file('file')->getClientOriginalName()
             ]);
-
         } catch (\Exception $e) {
             Log::error('Asset import request failed', [
                 'error' => $e->getMessage(),
@@ -635,8 +633,8 @@ class AssetController extends Controller
     public function checkImportStatus(Request $request)
     {
         $importId = $request->get('import_id');
-        
-        if (!$importId) {
+
+        if (! $importId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Import ID is required'
@@ -646,7 +644,7 @@ class AssetController extends Controller
         $cacheKey = 'asset_import_' . $importId;
         $results = Cache::get($cacheKey);
 
-        if (!$results) {
+        if (! $results) {
             return response()->json([
                 'success' => false,
                 'message' => 'Import results not found. The import may still be processing or the results have expired.',
@@ -690,7 +688,7 @@ class AssetController extends Controller
             $importId = $request->get('import_id');
             $logPath = storage_path('logs/asset_import.log');
             $specificLogPath = null;
-            
+
             // Check if we should look for a specific import log file
             if ($importId) {
                 $specificLogPath = storage_path("logs/asset_import_{$importId}.log");
@@ -698,8 +696,8 @@ class AssetController extends Controller
                     $logPath = $specificLogPath;
                 }
             }
-            
-            if (!File::exists($logPath)) {
+
+            if (! File::exists($logPath)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Import log file not found. No imports have been processed yet.'
@@ -709,22 +707,22 @@ class AssetController extends Controller
             // Get file size to determine if we should paginate
             $fileSize = File::size($logPath);
             $isLargeFile = $fileSize > 5 * 1024 * 1024; // 5MB threshold
-            
+
             // For large files, read only the last portion to avoid memory issues
-            if ($isLargeFile && !$request->has('full')) {
+            if ($isLargeFile && ! $request->has('full')) {
                 // Read last 1000 lines or 2MB, whichever is smaller
                 $logContent = $this->readLastLinesFromFile($logPath, 1000);
             } else {
                 $logContent = File::get($logPath);
             }
-            
+
             $logs = [];
 
-            if (!empty($logContent)) {
+            if (! empty($logContent)) {
                 $lines = explode(PHP_EOL, trim($logContent));
-                
+
                 foreach ($lines as $line) {
-                    if (!empty(trim($line))) {
+                    if (! empty(trim($line))) {
                         try {
                             $logEntry = json_decode($line, true);
                             if ($logEntry && is_array($logEntry)) {
@@ -743,7 +741,7 @@ class AssetController extends Controller
             }
 
             // Sort logs by timestamp (newest first)
-            usort($logs, function($a, $b) {
+            usort($logs, function ($a, $b) {
                 $timeA = strtotime($a['timestamp'] ?? '');
                 $timeB = strtotime($b['timestamp'] ?? '');
                 return $timeB - $timeA;
@@ -753,7 +751,7 @@ class AssetController extends Controller
             $page = $request->get('page', 1);
             $perPage = $request->get('per_page', 100);
             $totalLogs = count($logs);
-            
+
             if ($request->has('page')) {
                 $offset = ($page - 1) * $perPage;
                 $logs = array_slice($logs, $offset, $perPage);
@@ -767,7 +765,6 @@ class AssetController extends Controller
                 'file_size' => $this->formatBytes($fileSize),
                 'import_id' => $importId ?: null
             ]);
-
         } catch (\Exception $e) {
             Log::error('Failed to read import logs', [
                 'error' => $e->getMessage(),
@@ -780,7 +777,7 @@ class AssetController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Read last N lines from a file efficiently
      */
@@ -792,10 +789,10 @@ class AssetController extends Controller
         $beginning = false;
         $text = [];
 
-        while ($lineCounter < $lines && !$beginning) {
+        while ($lineCounter < $lines && ! $beginning) {
             $t = " ";
             while ($t != "\n") {
-                if(fseek($handle, $pos, SEEK_END) == -1) {
+                if (fseek($handle, $pos, SEEK_END) == -1) {
                     $beginning = true;
                     break;
                 }
@@ -811,18 +808,18 @@ class AssetController extends Controller
         fclose($handle);
         return implode("", array_reverse($text));
     }
-    
+
     /**
      * Format bytes to human readable format
      */
     private function formatBytes($bytes, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
+
         return round($bytes, $precision) . ' ' . $units[$i];
     }
 
@@ -832,10 +829,10 @@ class AssetController extends Controller
     public function downloadImportLog(Request $request)
     {
         $importId = $request->get('import_id');
-        
+
         $logPath = storage_path('logs/asset_import.log');
-        
-        if (!File::exists($logPath)) {
+
+        if (! File::exists($logPath)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Import log file not found. No imports have been processed yet.'
@@ -848,7 +845,7 @@ class AssetController extends Controller
         } else {
             $filename = 'asset_import_log_' . date('Y-m-d_H-i-s') . '.txt';
         }
-        
+
         return response()->download($logPath, $filename, [
             'Content-Type' => 'text/plain',
         ]);

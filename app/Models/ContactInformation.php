@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class ContactInformation extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'address',
@@ -30,11 +32,11 @@ class ContactInformation extends Model
 
     public function state()
     {
-        return $this->belongsTo(State::class,'state_id','id');
+        return $this->belongsTo(State::class, 'state_id', 'id');
     }
 
     public function city()
     {
-        return $this->belongsTo(City::class,'city_id','id');
+        return $this->belongsTo(City::class, 'city_id', 'id');
     }
 }

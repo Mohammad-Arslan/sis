@@ -12,15 +12,15 @@ class SystemModuleSeeder extends Seeder
    *
    * @return void
    */
-  public function run()
-  {
-    // Skip if data already exists
-    if (DB::table('system_modules')->count() > 0) {
-      $this->command->info('System modules already exist, skipping...');
-      return;
-    }
-    
-    DB::insert("INSERT INTO `system_modules` (`id`, `name`, `description`, `parent_id`, `created_at`, `updated_at`, `deleted_at`) VALUES
+    public function run()
+    {
+      // Skip if data already exists
+        if (DB::table('system_modules')->count() > 0) {
+            $this->command->info('System modules already exist, skipping...');
+            return;
+        }
+
+        DB::insert("INSERT INTO `system_modules` (`id`, `name`, `description`, `parent_id`, `created_at`, `updated_at`, `deleted_at`) VALUES
     (1, 'Employee', 'Manage all types of employee details', 0, '2022-03-30 10:26:20', '2022-03-30 10:26:20', NULL),
     (2, 'Employee Basic', 'Employee basic information in system', 1, '2022-03-30 13:35:26', '2022-04-13 10:48:13', NULL),
     (3, 'Employee Service Info', 'Employee Service Information in the system', 1, '2022-03-30 14:44:54', '2022-04-13 10:48:30', NULL),
@@ -39,5 +39,5 @@ class SystemModuleSeeder extends Seeder
     (20, 'Franchise Application Legal', 'Manage franchise application Legal Application module', 16, '2022-05-20 01:17:03', '2022-05-20 01:17:03', NULL),
     (21, 'Franchise Application DD', 'Manage franchise application Deputy Director module', 16, '2022-05-20 01:17:25', '2022-05-20 01:17:54', NULL),
     (22, 'Franchise Application Upload Document', 'Manage franchise application Upload Document module', 16, '2022-05-20 01:49:03', '2022-05-20 01:49:03', NULL);");
-  }
+    }
 }

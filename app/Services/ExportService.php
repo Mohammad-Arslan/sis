@@ -17,17 +17,17 @@ class ExportService
     {
         // Set memory limit for large exports
         ini_set('memory_limit', env('EXCEL_MEMORY_LIMIT', '1G'));
-        
+
         // Set execution time limit
         ini_set('max_execution_time', env('EXCEL_EXECUTION_TIME', 300));
-        
+
         // Disable output buffering for streaming
         if (ob_get_level()) {
             ob_end_clean();
         }
-        
+
         // Set headers for large file downloads
-        if (!headers_sent()) {
+        if (! headers_sent()) {
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Cache-Control: max-age=0');
         }
@@ -39,12 +39,12 @@ class ExportService
     public static function getExportClass(Request $request): string
     {
         $estimatedCount = self::estimateRecordCount($request);
-        
+
         // Use streaming export for very large datasets (50K+ records)
         if ($estimatedCount > 50000) {
             return ExportStudentStreaming::class;
         }
-        
+
         // Use optimized export for smaller datasets
         return ExportStudent::class;
     }
@@ -55,7 +55,7 @@ class ExportService
     private static function estimateRecordCount(Request $request): int
     {
         $query = Student::query();
-        
+
         // Apply the same filters as the export
         if (auth()->user()->hasRole('network_associate')) {
             $query->where('branch_id', get_set_NWABranchId());
@@ -76,7 +76,7 @@ class ExportService
 
         if ($request->branch_id && $request->branch_id > 0) {
             $query->where('branch_id', $request->branch_id);
-        } elseif (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        } elseif (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $query->where('branch_id', get_branch_id());
         }
 
@@ -128,7 +128,7 @@ class ExportService
         $estimatedCount = self::estimateRecordCount($request);
         $memoryLimit = ini_get('memory_limit');
         $maxExecutionTime = ini_get('max_execution_time');
-        
+
         $recommendations = [
             'estimated_records' => $estimatedCount,
             'current_memory_limit' => $memoryLimit,
@@ -178,7 +178,7 @@ class ExportService
     {
         $unit = strtolower(substr($memoryLimit, -1));
         $value = (int) substr($memoryLimit, 0, -1);
-        
+
         switch ($unit) {
             case 'k':
                 return $value * 1024;
@@ -227,25 +227,25 @@ class ExportService
     public static function validateExportRequest(Request $request): array
     {
         $errors = [];
-        
+
         // Check if user has permission
-        if (!auth()->user()->can('export-student')) {
+        if (! auth()->user()->can('export-student')) {
             $errors[] = 'You do not have permission to export students.';
         }
-        
+
         // Check if filters are reasonable
         $estimatedCount = self::estimateRecordCount($request);
         if ($estimatedCount > 100000) {
             $errors[] = 'Export would contain more than 100,000 records. Please apply more specific filters.';
         }
-        
+
         // Check system resources
         $memoryLimit = ini_get('memory_limit');
         $memoryLimitBytes = self::convertToBytes($memoryLimit);
         if ($memoryLimitBytes < 268435456) { // Less than 256MB
             $errors[] = 'System memory limit is too low for this export. Contact administrator.';
         }
-        
+
         return $errors;
     }
-} 
+}

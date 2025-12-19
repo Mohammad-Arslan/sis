@@ -21,14 +21,14 @@ class RoleController extends Controller
             $data = Role::with('permissions')->get();
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     $actionBtn = '
-                    <a class="btn btn-sm btn-success btn-icon waves-effect waves-light" href="'.route("roles.edit",  $row->id).'"><i class="mdi mdi-lead-pencil"></i></a>
-                    <a class="btn btn-sm btn-danger btn-icon waves-effect delete-record" href="'.route("roles.destroy",  $row->id).'" data-table="roles-table"><i class="ri-delete-bin-5-line"></i></a>
+                    <a class="btn btn-sm btn-success btn-icon waves-effect waves-light" href="' . route("roles.edit", $row->id) . '"><i class="mdi mdi-lead-pencil"></i></a>
+                    <a class="btn btn-sm btn-danger btn-icon waves-effect delete-record" href="' . route("roles.destroy", $row->id) . '" data-table="roles-table"><i class="ri-delete-bin-5-line"></i></a>
                     ';
                     return $actionBtn;
                 })
-                ->addColumn('permissions', function($row){
+                ->addColumn('permissions', function ($row) {
                     $count = ($row->permissions->count());
                     return $count;
                 })
@@ -36,7 +36,6 @@ class RoleController extends Controller
                 ->make(true);
         }
         return view('roles.index');
-
     }
 
     public function create()
@@ -56,10 +55,9 @@ class RoleController extends Controller
 
             if ($role->wasRecentlyCreated) {
                 return redirect('roles')->with('success', 'Role is created!');
-            }else{
+            } else {
                 return redirect('roles')->withErrors($request)->withInput();
             }
-
         } catch (QueryException $exception) {
             throw new InvalidArgumentException($exception->getMessage());
         }
@@ -67,7 +65,6 @@ class RoleController extends Controller
 
     public function show(Role $role)
     {
-
     }
 
     public function edit(Role $role)
@@ -84,22 +81,21 @@ class RoleController extends Controller
 
             $system_modules = SystemModule::with('modules_permission')->orderBy('name')
             ->get();
-            foreach ($system_modules as $key => $system_module) {
-
-                $system_module->modules_permission->map(function ($permission) use ($role) {
-                    $permission->assigned = $role->permissions->pluck('id')->contains($permission->id);
-                    return $permission;
-                });
-            }
+        foreach ($system_modules as $key => $system_module) {
+            $system_module->modules_permission->map(function ($permission) use ($role) {
+                $permission->assigned = $role->permissions->pluck('id')->contains($permission->id);
+                return $permission;
+            });
+        }
 
         return view('roles.edit', [
-            'role'=> $role,
-            'permissions'=> $system_modules,
-            'role_permissions'=> $role_permissions,
+            'role' => $role,
+            'permissions' => $system_modules,
+            'role_permissions' => $role_permissions,
         ]);
     }
 
-    public function update(CreateRoleRequest $request,Role $role)
+    public function update(CreateRoleRequest $request, Role $role)
     {
         //dd($request->input('permissions'));
         $role->update([
@@ -108,7 +104,7 @@ class RoleController extends Controller
             'description' => $request->description,
         ]);
 
-        if($role->save()){
+        if ($role->save()) {
             //if($request->input('permissions')){
                 $role->syncPermissions($request->input('permissions') ?? []);
             //}
@@ -122,9 +118,8 @@ class RoleController extends Controller
         try {
             return $role->delete();
             //return redirect('roles')->with('success', 'Role record has been deleted');
-
-       } catch (QueryException $e) {
-           print_r($e->errorInfo);
-       }
+        } catch (QueryException $e) {
+            print_r($e->errorInfo);
+        }
     }
 }

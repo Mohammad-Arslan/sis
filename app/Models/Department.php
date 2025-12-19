@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'department_name',
         'abbreviation',
@@ -27,7 +30,7 @@ class Department extends Model
     {
         return $this->belongsTo(Company::class, 'company_id', 'id');
     }
-    
+
     /**
      * Get assets assigned to this department
      */

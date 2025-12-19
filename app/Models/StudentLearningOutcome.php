@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentLearningOutcome extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'teacher_activity',
@@ -16,7 +17,8 @@ class StudentLearningOutcome extends Model
         'lesson_plan_id',
     ];
 
-    public function student_activities(){
-        return $this->hasMany(StudentActivity::class,'student_learning_outcome_id','id');
+    public function student_activities()
+    {
+        return $this->hasMany(StudentActivity::class, 'student_learning_outcome_id', 'id');
     }
 }

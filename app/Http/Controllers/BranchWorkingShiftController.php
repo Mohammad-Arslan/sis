@@ -32,9 +32,9 @@ class BranchWorkingShiftController extends Controller
                     return $ShiftTiming;
                 })
                 ->addColumn('status', function ($row) {
-                    if($row->working_shift->status == '0'){
+                    if ($row->working_shift->status == '0') {
                         $Status =  "Off Day";
-                    }else{
+                    } else {
                         $Status =  "Working Shift";
                     }
                     return $Status;
@@ -50,7 +50,7 @@ class BranchWorkingShiftController extends Controller
         $working_days = WorkingDay::all();
         $working_shifts = WorkingShift::orderBy('start_time')->orderBy('end_time')->get();
 
-        return view('settings.branch_schedule.branch_schedules',[
+        return view('settings.branch_schedule.branch_schedules', [
             'staff_types' => $staff_types,
             'working_days' => $working_days,
             'working_shifts' => $working_shifts
@@ -83,12 +83,13 @@ class BranchWorkingShiftController extends Controller
             'working_shift_id' => 'required',
         ]);
         $inputs = [];
-        foreach($request->working_day_id as $working_day_id)
-        {
+        foreach ($request->working_day_id as $working_day_id) {
             $inputs[] = ['name' => $request->name,'staff_id' => $request->staff_id,'working_day_id' => $working_day_id, 'working_shift_id' => $request->working_shift_id];
         }
         //dd($inputs);
-        collect($inputs)->each(function ($input){ BranchWorkingShift::create($input); } );
+        collect($inputs)->each(function ($input) {
+            BranchWorkingShift::create($input);
+        });
 
 
         return redirect()->route('branch-working-shift.index')
@@ -110,34 +111,29 @@ class BranchWorkingShiftController extends Controller
     {
         $staff_schedules = $schedules = [];
         //$staff_types = StaffType::get();
-        $staff_schedules = BranchWorkingShift::select('branch_working_shifts.staff_id', 'branch_working_shifts.name as term', 'wd.abbreviation', 'wd.name as day', 'ws.start_time','ws.end_time','st.type_name','st.description')
+        $staff_schedules = BranchWorkingShift::select('branch_working_shifts.staff_id', 'branch_working_shifts.name as term', 'wd.abbreviation', 'wd.name as day', 'ws.start_time', 'ws.end_time', 'st.type_name', 'st.description')
         ->join('staff_types as st', 'branch_working_shifts.staff_id', '=', 'st.id')
         ->join('working_days as wd', 'branch_working_shifts.working_day_id', '=', 'wd.id')
         ->join('working_shifts as ws', 'branch_working_shifts.working_shift_id', '=', 'ws.id')
-        ->orderBy('branch_working_shifts.id','ASC')
-        ->orderBy('branch_working_shifts.staff_id','ASC')
-        ->orderBy('branch_working_shifts.working_day_id','ASC')
-        ->orderBy('branch_working_shifts.name','ASC')
-        ->groupBy('branch_working_shifts.id','branch_working_shifts.staff_id', 'branch_working_shifts.name', 'wd.abbreviation', 'wd.name', 'ws.start_time','ws.end_time','st.type_name','st.description')
+        ->orderBy('branch_working_shifts.id', 'ASC')
+        ->orderBy('branch_working_shifts.staff_id', 'ASC')
+        ->orderBy('branch_working_shifts.working_day_id', 'ASC')
+        ->orderBy('branch_working_shifts.name', 'ASC')
+        ->groupBy('branch_working_shifts.id', 'branch_working_shifts.staff_id', 'branch_working_shifts.name', 'wd.abbreviation', 'wd.name', 'ws.start_time', 'ws.end_time', 'st.type_name', 'st.description')
         ->get();
         //dd($staff_schedules->toArray());
-        if($staff_schedules){
+        if ($staff_schedules) {
             $term = $ramadan = $break = 1;
             $staff_id = $staff_schedules[0]->staff_id;
 
             // dd($schedules);
             //$schedules['description'] = $staff_schedules[0]->description;
             //$schedules['type_name'] = $staff_schedules[0]->type_name;
-            foreach($staff_schedules as $staff_schedule)
-            {
-                if($staff_schedule->staff_id == $staff_id)
-                {
-                    if($staff_schedule->term == "During Term")
-                    {
-
-                        if($staff_schedule->day == "Monday")
-                        {
-                            array_push($schedules , [
+            foreach ($staff_schedules as $staff_schedule) {
+                if ($staff_schedule->staff_id == $staff_id) {
+                    if ($staff_schedule->term == "During Term") {
+                        if ($staff_schedule->day == "Monday") {
+                            array_push($schedules, [
                                 "order" => $term,
                                 "term" => '1',
                                 "term_name" => $staff_schedule->term,
@@ -149,24 +145,8 @@ class BranchWorkingShiftController extends Controller
                                 "type_name" => $staff_schedule->type_name
                             ]);
                         }
-                        if($staff_schedule->day == "Tuesday")
-                        {
-                            array_push($schedules , [
-                                "order" => $term,
-                                "term" => '1',
-                                "term_name" => $staff_schedule->term,
-                                "staff" => $staff_schedule->staff_id,
-                                "day" => $staff_schedule->day,
-                                "start_time" => $staff_schedule->start_time,
-                                "end_time" => $staff_schedule->end_time,
-                                "description" => $staff_schedule->description,
-                                "type_name" => $staff_schedule->type_name
-                            ]);
-
-                        }
-                        if($staff_schedule->day == "Wednesday")
-                        {
-                            array_push($schedules , [
+                        if ($staff_schedule->day == "Tuesday") {
+                            array_push($schedules, [
                                 "order" => $term,
                                 "term" => '1',
                                 "term_name" => $staff_schedule->term,
@@ -178,9 +158,8 @@ class BranchWorkingShiftController extends Controller
                                 "type_name" => $staff_schedule->type_name
                             ]);
                         }
-                        if($staff_schedule->day == "Thursday")
-                        {
-                            array_push($schedules , [
+                        if ($staff_schedule->day == "Wednesday") {
+                            array_push($schedules, [
                                 "order" => $term,
                                 "term" => '1',
                                 "term_name" => $staff_schedule->term,
@@ -192,9 +171,21 @@ class BranchWorkingShiftController extends Controller
                                 "type_name" => $staff_schedule->type_name
                             ]);
                         }
-                        if($staff_schedule->day == "Friday")
-                        {
-                            array_push($schedules , [
+                        if ($staff_schedule->day == "Thursday") {
+                            array_push($schedules, [
+                                "order" => $term,
+                                "term" => '1',
+                                "term_name" => $staff_schedule->term,
+                                "staff" => $staff_schedule->staff_id,
+                                "day" => $staff_schedule->day,
+                                "start_time" => $staff_schedule->start_time,
+                                "end_time" => $staff_schedule->end_time,
+                                "description" => $staff_schedule->description,
+                                "type_name" => $staff_schedule->type_name
+                            ]);
+                        }
+                        if ($staff_schedule->day == "Friday") {
+                            array_push($schedules, [
                                 "order" => $term,
                                 "term" => '1',
                                 "term_name" => $staff_schedule->term,
@@ -208,12 +199,9 @@ class BranchWorkingShiftController extends Controller
                             $term++;
                         }
                     }
-                    if($staff_schedule->term == "During Ramadan")
-                    {
-
-                        if($staff_schedule->day == "Monday")
-                        {
-                            array_push($schedules , [
+                    if ($staff_schedule->term == "During Ramadan") {
+                        if ($staff_schedule->day == "Monday") {
+                            array_push($schedules, [
                                 "order" => $ramadan,
                                 "term" => '3',
                                 "term_name" => $staff_schedule->term,
@@ -227,24 +215,8 @@ class BranchWorkingShiftController extends Controller
                                 "type_name" => $staff_schedule->type_name
                             ]);
                         }
-                        if($staff_schedule->day == "Tuesday")
-                        {
-                            array_push($schedules , [
-                                "order" => $ramadan,
-                                "term" => '3',
-                                "term_name" => $staff_schedule->term,
-                                "staff" => $staff_schedule->staff_id,
-                                "day" => $staff_schedule->day,
-                                "start_time" => $staff_schedule->start_time,
-                                "end_time" => $staff_schedule->end_time,
-                                "description" => $staff_schedule->description,
-                                "type_name" => $staff_schedule->type_name
-                            ]);
-
-                        }
-                        if($staff_schedule->day == "Wednesday")
-                        {
-                            array_push($schedules , [
+                        if ($staff_schedule->day == "Tuesday") {
+                            array_push($schedules, [
                                 "order" => $ramadan,
                                 "term" => '3',
                                 "term_name" => $staff_schedule->term,
@@ -256,9 +228,8 @@ class BranchWorkingShiftController extends Controller
                                 "type_name" => $staff_schedule->type_name
                             ]);
                         }
-                        if($staff_schedule->day == "Thursday")
-                        {
-                            array_push($schedules , [
+                        if ($staff_schedule->day == "Wednesday") {
+                            array_push($schedules, [
                                 "order" => $ramadan,
                                 "term" => '3',
                                 "term_name" => $staff_schedule->term,
@@ -270,9 +241,21 @@ class BranchWorkingShiftController extends Controller
                                 "type_name" => $staff_schedule->type_name
                             ]);
                         }
-                        if($staff_schedule->day == "Friday")
-                        {
-                            array_push($schedules , [
+                        if ($staff_schedule->day == "Thursday") {
+                            array_push($schedules, [
+                                "order" => $ramadan,
+                                "term" => '3',
+                                "term_name" => $staff_schedule->term,
+                                "staff" => $staff_schedule->staff_id,
+                                "day" => $staff_schedule->day,
+                                "start_time" => $staff_schedule->start_time,
+                                "end_time" => $staff_schedule->end_time,
+                                "description" => $staff_schedule->description,
+                                "type_name" => $staff_schedule->type_name
+                            ]);
+                        }
+                        if ($staff_schedule->day == "Friday") {
+                            array_push($schedules, [
                                 "order" => $ramadan,
                                 "term" => '3',
                                 "term_name" => $staff_schedule->term,
@@ -286,12 +269,9 @@ class BranchWorkingShiftController extends Controller
                             $ramadan++;
                         }
                     }
-                    if($staff_schedule->term == "During Winter/Summer/Spring Break")
-                    {
-
-                       if($staff_schedule->day == "Monday")
-                       {
-                            array_push($schedules , [
+                    if ($staff_schedule->term == "During Winter/Summer/Spring Break") {
+                        if ($staff_schedule->day == "Monday") {
+                            array_push($schedules, [
                                "order" => $break,
                                "term" => '2',
                                "term_name" => $staff_schedule->term,
@@ -304,10 +284,9 @@ class BranchWorkingShiftController extends Controller
                                "description" => $staff_schedule->description,
                                "type_name" => $staff_schedule->type_name
                             ]);
-                       }
-                       if($staff_schedule->day == "Tuesday")
-                       {
-                            array_push($schedules , [
+                        }
+                        if ($staff_schedule->day == "Tuesday") {
+                            array_push($schedules, [
                                 "order" => $break,
                                 "term" => '2',
                                 "term_name" => $staff_schedule->term,
@@ -318,11 +297,9 @@ class BranchWorkingShiftController extends Controller
                                 "description" => $staff_schedule->description,
                                 "type_name" => $staff_schedule->type_name
                             ]);
-
-                       }
-                       if($staff_schedule->day == "Wednesday")
-                       {
-                            array_push($schedules , [
+                        }
+                        if ($staff_schedule->day == "Wednesday") {
+                            array_push($schedules, [
                                 "order" => $break,
                                 "term" => '2',
                                 "term_name" => $staff_schedule->term,
@@ -333,10 +310,9 @@ class BranchWorkingShiftController extends Controller
                                 "description" => $staff_schedule->description,
                                 "type_name" => $staff_schedule->type_name
                             ]);
-                       }
-                       if($staff_schedule->day == "Thursday")
-                       {
-                            array_push($schedules , [
+                        }
+                        if ($staff_schedule->day == "Thursday") {
+                            array_push($schedules, [
                                 "order" => $break,
                                 "term" => '2',
                                 "term_name" => $staff_schedule->term,
@@ -347,10 +323,9 @@ class BranchWorkingShiftController extends Controller
                                 "description" => $staff_schedule->description,
                                 "type_name" => $staff_schedule->type_name
                             ]);
-                       }
-                       if($staff_schedule->day == "Friday")
-                       {
-                            array_push($schedules , [
+                        }
+                        if ($staff_schedule->day == "Friday") {
+                            array_push($schedules, [
                                 "order" => $break,
                                 "term" => '2',
                                 "term_name" => $staff_schedule->term,
@@ -361,12 +336,10 @@ class BranchWorkingShiftController extends Controller
                                 "description" => $staff_schedule->description,
                                 "type_name" => $staff_schedule->type_name
                             ]);
-                            $break++;
-                       }
+                             $break++;
+                        }
                     }
-                }
-                else
-                {
+                } else {
                     //$staff_id = $staff_schedules[0]->staff_id;
                     //$schedules['description'] = $staff_schedules[0]->description;
                     //$schedules['type_name'] = $staff_schedules[0]->type_name;
@@ -374,7 +347,6 @@ class BranchWorkingShiftController extends Controller
 
                 $staff_id = $staff_schedule->staff_id;
             }
-
         }
 
         //dd($schedules);

@@ -22,7 +22,7 @@ class UpdateAcademicYearRequest extends FormRequest
     {
         $academicYear = $this->route('academicYear');
         $academicYearId = $academicYear instanceof \App\Models\AcademicYear ? $academicYear->id : $academicYear;
-        
+
         return [
             'title' => [
                 'required',
@@ -45,4 +45,3 @@ class UpdateAcademicYearRequest extends FormRequest
         ];
     }
 }
-

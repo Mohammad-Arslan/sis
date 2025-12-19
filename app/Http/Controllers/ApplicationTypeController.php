@@ -6,6 +6,7 @@ use App\Models\ApplicationType;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Yajra\DataTables\DataTables;
+
 class ApplicationTypeController extends Controller
 {
     /**

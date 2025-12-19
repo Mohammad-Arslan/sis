@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class StudentAddress extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         "res_country_id",

@@ -12,7 +12,7 @@ class ParentQueryController extends Controller
     public function index(Request $request)
     {
         $branch_id = 0;
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $branches = Branch::where('id', $branch_id)->get();
         } else {

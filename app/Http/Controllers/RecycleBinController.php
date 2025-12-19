@@ -13,7 +13,8 @@ class RecycleBinController extends Controller
 {
     public function __construct(
         private readonly RecycleBinService $service
-    ) {}
+    ) {
+    }
 
     /**
      * Display the recycle bin page
@@ -21,7 +22,7 @@ class RecycleBinController extends Controller
     public function index(): View
     {
         $filterData = $this->service->getFilterData();
-        
+
         return view('recycle-bin.index', [
             'models' => $filterData['models'],
         ]);
@@ -33,13 +34,13 @@ class RecycleBinController extends Controller
     #[\NoDiscard]
     public function indexData(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         try {
             $records = $this->service->buildDeletedRecordsQuery($request);
-            
+
             Log::info('RecycleBin Controller: Records received', [
                 'count' => $records->count(),
                 'first_record' => $records->first() ? [
@@ -53,7 +54,7 @@ class RecycleBinController extends Controller
             $data = $records->map(function ($record) {
                 try {
                     $formatted = $this->service->formatRecordForDataTable($record);
-                    
+
                     // Generate action buttons
                     $restoreUrl = route('recycle-bin.restore', [
                         'model_type' => base64_encode($formatted['model_type']),
@@ -70,7 +71,7 @@ class RecycleBinController extends Controller
                         'id' => $formatted['id'],
                         'modelType' => $formatted['model_type'],
                     ])->render();
-                    
+
                     return $formatted;
                 } catch (\Throwable $e) {
                     Log::error('RecycleBin: Error formatting record', [
@@ -165,7 +166,7 @@ class RecycleBinController extends Controller
 
             $deleted = $this->service->forceDeleteRecord($decodedModelType, $id);
 
-            if (!$deleted) {
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to permanently delete record.'
@@ -200,4 +201,3 @@ class RecycleBinController extends Controller
         }
     }
 }
-

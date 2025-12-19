@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class Language extends Model
 {
-    use HasFactory, SerializeDateTrait, LogsActivity;
+    use HasFactory;
+    use SerializeDateTrait;
+    use LogsActivity;
 
     protected $fillable = [
         'language_name'

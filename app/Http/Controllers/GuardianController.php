@@ -40,8 +40,9 @@ class GuardianController extends Controller
 
                 ->addColumn('full_name', function ($row) {
                     $student = $row->students;
-                    if (!$student)
+                    if (! $student) {
                         return '-';
+                    }
 
                     $firstName = $student['first_name'] ?? '';
                     $middleName = $student['middle_name'] ?? '';
@@ -227,9 +228,9 @@ class GuardianController extends Controller
             'email' => 'required | email',
         ]);
         // dd($guardian->CNIC, $request->CNIC);
-        if ($guardian->CNIC == $request->CNIC)
+        if ($guardian->CNIC == $request->CNIC) {
             $guardian->update($request->all());
-        else {
+        } else {
             \DB::beginTransaction();
 
             $siblings = Student::with('first_guardian.family.children')->whereHas('first_guardian', function ($query) use ($request) {

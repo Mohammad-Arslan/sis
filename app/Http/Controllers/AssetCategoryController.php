@@ -58,7 +58,7 @@ class AssetCategoryController extends Controller
 
         return response()->json($categories);
     }
-    
+
     /**
      * Generate a random code for asset categories.
      */
@@ -66,22 +66,22 @@ class AssetCategoryController extends Controller
     {
         // Always use ACAT as the prefix
         $prefix = 'ACAT';
-        
+
         // Generate a random 5-digit number
         $code = $prefix . '-' . str_pad(rand(1, 99999), 5, '0', STR_PAD_LEFT);
-        
+
         return response()->json([
             'code' => $code
         ]);
     }
-    
+
     /**
      * Update the specified asset category.
      */
     public function update(Request $request, $id)
     {
         $category = AssetCategory::findOrFail($id);
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:asset_categories,code,' . $id,
@@ -89,7 +89,7 @@ class AssetCategoryController extends Controller
             'description' => 'nullable|string',
             'is_active' => 'required|in:true,false,1,0'
         ]);
-        
+
         // Prevent circular reference
         if ($request->parent_id == $id) {
             return response()->json([
@@ -98,7 +98,7 @@ class AssetCategoryController extends Controller
                 'errors' => ['parent_id' => ['A category cannot be its own parent']]
             ], 422);
         }
-        
+
         $category->update([
             'name' => $request->name,
             'code' => $request->code,
@@ -106,28 +106,28 @@ class AssetCategoryController extends Controller
             'description' => $request->description,
             'is_active' => $request->is_active == 'true' || $request->is_active == '1'
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Asset category updated successfully',
             'data' => $category
         ]);
     }
-    
+
     /**
      * Remove the specified asset category.
      */
     public function destroy($id)
     {
         $category = AssetCategory::findOrFail($id);
-        
+
         // Update all child categories to have no parent
         if ($category->children()->count() > 0) {
             $category->children()->update(['parent_id' => null]);
         }
-        
+
         $category->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Asset category deleted successfully'

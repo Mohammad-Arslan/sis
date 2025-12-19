@@ -8,8 +8,6 @@ use App\Models\NetworkAssociate;
 use Illuminate\Http\Request;
 use Illuminate\Support\ViewErrorBag;
 
-
-
 class ContactInformationController extends Controller
 {
     /**
@@ -68,7 +66,6 @@ class ContactInformationController extends Controller
         }
 
         // dd('Saved');
-
     }
 
     /**

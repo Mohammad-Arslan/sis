@@ -39,17 +39,17 @@ class StudentTransferCaseController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = StudentTransferCase::whereHas('student', function (Builder $query) use ($request) {
                 //Filter by student status
                 if ($request->status && $request->status != 'all') {
-                    if (in_array($request->status, ['on_roll', 'registered', 'left']))
+                    if (in_array($request->status, ['on_roll', 'registered', 'left'])) {
                         $query->where('status', $request->status);
-                    else
+                    } else {
                         $query->whereNull('status');
+                    }
                 }
                 //Filter by student name
-                if (!empty($request->searchName)) {
+                if (! empty($request->searchName)) {
                     $query->where('first_name', 'like', $request->searchName . '%')
                         ->orWhere('middle_name', 'like', $request->searchName . '%')
                         ->orWhere('last_name', 'like', $request->searchName . '%');
@@ -61,8 +61,7 @@ class StudentTransferCaseController extends Controller
                 // elseif (!isHeadOfficeEmp() && !isSuperAdmin()/*!auth()->user()->hasRole('manager-parent-relations')*/) {
                 //     $query->where('to_branch', get_branch_id());
                 // }
-                elseif (!isHeadOfficeEmp() && !isSuperAdmin()) {
-
+                elseif (! isHeadOfficeEmp() && ! isSuperAdmin()) {
                     $query->where('to_branch', get_branch_id())->orWhere('from_branch', get_branch_id());
                 }
 
@@ -101,8 +100,7 @@ class StudentTransferCaseController extends Controller
                 })
                 ->addColumn('student_name', function ($row) {
                     $studentInfo = Student::where('id', $row['student']['id'])->first();
-                    if (!isHeadOfficeEmp() && !isSuperAdmin()) {
-
+                    if (! isHeadOfficeEmp() && ! isSuperAdmin()) {
                         return $studentInfo->first_name . ' ' . $studentInfo->middle_name . ' ' . $studentInfo->last_name;
                     } else {
                         $row = $studentInfo;
@@ -134,7 +132,7 @@ class StudentTransferCaseController extends Controller
 
         $branches = Branch::all();
         $academic_years = AcademicYear::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -191,8 +189,9 @@ class StudentTransferCaseController extends Controller
             return redirect()->back()->with('error', 'Student left the school');
         }
         $last_paid_invoice = StudentInvoice::where(['student_id' => $request->student_id, 'is_paid' => 0, 'bank_payment_status' => 'unpaid'])->latest('created_at')->first();
-        if (isset($last_paid_invoice))
+        if (isset($last_paid_invoice)) {
             return redirect()->back()->with('error', 'Fee is not paid');
+        }
         //Get last paid invoice
 
         $input = $request->all();
@@ -226,7 +225,7 @@ class StudentTransferCaseController extends Controller
         )->first();
         //Get approved by details
         $approvedInfo = Employee::where('user_id', $transferInfo->approved_by)->with('user')->first();
-        if (!$approvedInfo) {
+        if (! $approvedInfo) {
             $approvedInfo = NetworkAssociate::where('user_id', $transferInfo->approved_by)->with('user')->first();
         }
         // dd($approvedInfo);
@@ -316,7 +315,7 @@ class StudentTransferCaseController extends Controller
 
         //Get all employees
         $branch_id = 0;
-        if (!\Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+        if (! \Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
             $branch_id = get_branch_id();
         }
 
@@ -364,7 +363,7 @@ class StudentTransferCaseController extends Controller
         ]);
 
         $studentTransferRecord = StudentTransferCase::find($request->transfer_record_id);
-        if (!$studentTransferRecord) {
+        if (! $studentTransferRecord) {
             return redirect()->back()->with('error', 'Transfer record not found.');
         }
 
@@ -382,34 +381,34 @@ class StudentTransferCaseController extends Controller
             'branch_class_sections.sections'
         ])->first();
 
-        if (!$academic_info) {
+        if (! $academic_info) {
             return redirect()->back()->with('error', 'Student\'s academic info not found.');
         }
 
         $branch_class_section = BranchClassSection::find($request->section_id);
-        if (!$branch_class_section) {
+        if (! $branch_class_section) {
             return redirect()->back()->with('error', 'Branch class section not found.');
         }
 
         // Null safety checks for nested relationships
         if (
-            !$academic_info->academic_years ||
-            !$academic_info->branch_class_sections ||
-            !$academic_info->branch_class_sections->com_classes ||
-            !$academic_info->branch_class_sections->sections
+            ! $academic_info->academic_years ||
+            ! $academic_info->branch_class_sections ||
+            ! $academic_info->branch_class_sections->com_classes ||
+            ! $academic_info->branch_class_sections->sections
         ) {
             return redirect()->back()->with('error', 'Student academic info is incomplete. Please check class, section, or academic year assignments.');
         }
 
         // Try to create gradebook history, but don't fail the entire transfer if it fails
         $gradebookCreated = $this->createGradeBookHistory($academic_info, $studentId);
-        if (!$gradebookCreated) {
+        if (! $gradebookCreated) {
             \Log::warning("Student transfer: GradeBookHistory creation failed for student {$studentId}, but transfer will continue");
             // Don't return here - continue with the transfer process
         }
 
         $studentRecord = Student::find($studentId);
-        if (!$studentRecord) {
+        if (! $studentRecord) {
             return redirect()->back()->with('error', 'Student record not found.');
         }
         $studentRecord->branch_id = $studentTransferRecord->to_branch;
@@ -425,7 +424,7 @@ class StudentTransferCaseController extends Controller
                 $query->where('name', 'Monthly');
             })->first();
 
-        if (!$fee_package) {
+        if (! $fee_package) {
             return redirect()->back()->with('error', 'Fee package not found for the selected branch.');
         }
 
@@ -447,7 +446,7 @@ class StudentTransferCaseController extends Controller
         } else {
             Session::flash('success', 'Transfer case approved successfully. Note: Student gradebook history could not be created - please check with administrators.');
         }
-        
+
         return redirect()->back();
     }
 
@@ -467,7 +466,7 @@ class StudentTransferCaseController extends Controller
 
         //Get all employees
         $branch_id = 0;
-        if (!\Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+        if (! \Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
             $branch_id = get_branch_id();
         }
 
@@ -529,8 +528,8 @@ class StudentTransferCaseController extends Controller
     {
         // Use the actual academic year from the student's academic info instead of hardcoded value
         $academic_year_id = $academic_info->academic_years->id ?? null;
-        
-        if (!$academic_year_id) {
+
+        if (! $academic_year_id) {
             \Log::warning("Student transfer: No academic year found for student {$studentId}");
             return false;
         }
@@ -541,12 +540,12 @@ class StudentTransferCaseController extends Controller
             ->where('section_id', $academic_info->branch_class_sections->section_id)
             ->first();
 
-        if (!$studentBehaviourSkill) {
+        if (! $studentBehaviourSkill) {
             \Log::warning("Student transfer: No StudentBehaviourSkill found for student {$studentId} with academic_year_id: {$academic_year_id}, branch_id: {$academic_info->branch_class_sections->branch_id}, class_id: {$academic_info->branch_class_sections->class_id}, section_id: {$academic_info->branch_class_sections->section_id}");
-            
+
             // Try to create the StudentBehaviourSkill if it doesn't exist
             $studentBehaviourSkill = $this->createStudentBehaviourSkill($academic_info, $academic_year_id);
-            if (!$studentBehaviourSkill) {
+            if (! $studentBehaviourSkill) {
                 return false;
             }
         }

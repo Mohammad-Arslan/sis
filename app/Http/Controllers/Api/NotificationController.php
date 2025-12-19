@@ -11,8 +11,8 @@ class NotificationController extends Controller
     public function getNotification(Request $request)
     {
         $notifications = SystemNotification::where([
-            'class_id'=> $request->class_id,
-            'section_id'=>$request->section_id
+            'class_id' => $request->class_id,
+            'section_id' => $request->section_id
             ])->latest()->get();
         return response($notifications, 200);
     }

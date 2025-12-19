@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\Cache;
 
 class StudentAssessmentController extends Controller
 {
-
     //    public function studentTerms(Request $request)
 //     {
 //         $branch_class_section = BranchClassSection::find($request->branch_class_section_id);
@@ -47,8 +46,8 @@ class StudentAssessmentController extends Controller
     public function studentTerms(Request $request)
     {
         $branch_class_section = BranchClassSection::find($request->branch_class_section_id);
-        $section_id = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
-        $branch_id = !empty($branch_class_section) ? $branch_class_section->branch_id : 0;
+        $section_id = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
+        $branch_id = ! empty($branch_class_section) ? $branch_class_section->branch_id : 0;
 
         $query = StudentBehaviourSkill::where('academic_year_id', $request->academic_year_id)
             ->where('section_id', $section_id)
@@ -87,7 +86,7 @@ class StudentAssessmentController extends Controller
             // Validate IDs
             $studentId = (int) $student_id;
             $studentBehaviourSkillId = (int) $student_behaviour_skill_id;
-            
+
             if ($studentId <= 0 || $studentBehaviourSkillId <= 0) {
                 return response()->json([
                     'success' => false,
@@ -95,29 +94,29 @@ class StudentAssessmentController extends Controller
                     'message' => 'Student ID and Student Behaviour Skill ID must be valid positive integers'
                 ], 400);
             }
-            
+
             // Check cache first for existing PDF
             $cacheKey = "gradebook_pdf_{$studentId}_{$studentBehaviourSkillId}";
             $cachedPdf = Cache::get($cacheKey);
-            
+
             if ($cachedPdf) {
                 \Log::info('Returning cached PDF', [
                     'student_id' => $studentId,
                     'student_behaviour_skill_id' => $studentBehaviourSkillId
                 ]);
-                
+
                 return response()->json([
                     'success' => true,
                     'data' => $cachedPdf,
                     'cached' => true
                 ]);
             }
-            
+
             // Generate PDF using the service
             $pdfService = new GradeBookPdfService();
             $pdfData = $pdfService->generateAssessmentPdf($studentId, $studentBehaviourSkillId);
-            
-            if (!$pdfData) {
+
+            if (! $pdfData) {
                 return response()->json([
                     'success' => false,
                     'error' => 'Failed to generate PDF',
@@ -126,17 +125,16 @@ class StudentAssessmentController extends Controller
                     'student_behaviour_skill_id' => $studentBehaviourSkillId
                 ], 404);
             }
-            
+
             // Cache the PDF data for 24 hours
             Cache::put($cacheKey, $pdfData, now()->addHours(24));
-            
+
             // Return successful response
             return response()->json([
                 'success' => true,
                 'data' => $pdfData,
                 'cached' => false
             ]);
-            
         } catch (\Exception $e) {
             \Log::error('Failed to generate grade book PDF', [
                 'error' => $e->getMessage(),
@@ -144,7 +142,7 @@ class StudentAssessmentController extends Controller
                 'student_id' => $student_id,
                 'student_behaviour_skill_id' => $student_behaviour_skill_id
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Internal server error',
@@ -162,7 +160,7 @@ class StudentAssessmentController extends Controller
             // Validate IDs
             $studentId = (int) $student_id;
             $studentBehaviourSkillId = (int) $student_behaviour_skill_id;
-            
+
             if ($studentId <= 0 || $studentBehaviourSkillId <= 0) {
                 return response()->json([
                     'success' => false,
@@ -170,9 +168,9 @@ class StudentAssessmentController extends Controller
                     'message' => 'Student ID and Student Behaviour Skill ID must be valid positive integers'
                 ], 400);
             }
-            
+
             $cacheKey = "gradebook_pdf_{$studentId}_{$studentBehaviourSkillId}";
-            
+
             // Check if PDF already exists
             $cachedPdf = Cache::get($cacheKey);
             if ($cachedPdf) {
@@ -183,7 +181,7 @@ class StudentAssessmentController extends Controller
                     'cached' => true
                 ]);
             }
-            
+
             // Check if job is already processing
             $status = Cache::get($cacheKey . '_status');
             if ($status === 'processing') {
@@ -197,13 +195,13 @@ class StudentAssessmentController extends Controller
                     ])
                 ], 202);
             }
-            
+
             // Dispatch the job
             GenerateGradeBookPdfJob::dispatch($studentId, $studentBehaviourSkillId);
-            
+
             // Set initial status
             Cache::put($cacheKey . '_status', 'queued', now()->addMinutes(10));
-            
+
             return response()->json([
                 'success' => true,
                 'status' => 'queued',
@@ -213,14 +211,13 @@ class StudentAssessmentController extends Controller
                     'student_id' => $studentId
                 ])
             ], 202);
-            
         } catch (\Exception $e) {
             \Log::error('Failed to queue grade book PDF generation', [
                 'error' => $e->getMessage(),
                 'student_id' => $student_id,
                 'student_behaviour_skill_id' => $student_behaviour_skill_id
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Internal server error',
@@ -237,16 +234,16 @@ class StudentAssessmentController extends Controller
         try {
             $studentId = (int) $student_id;
             $studentBehaviourSkillId = (int) $student_behaviour_skill_id;
-            
+
             if ($studentId <= 0 || $studentBehaviourSkillId <= 0) {
                 return response()->json([
                     'success' => false,
                     'error' => 'Invalid parameters'
                 ], 400);
             }
-            
+
             $cacheKey = "gradebook_pdf_{$studentId}_{$studentBehaviourSkillId}";
-            
+
             // Check if PDF is ready
             $pdfData = Cache::get($cacheKey);
             if ($pdfData) {
@@ -256,23 +253,22 @@ class StudentAssessmentController extends Controller
                     'data' => $pdfData
                 ]);
             }
-            
+
             // Check generation status
             $status = Cache::get($cacheKey . '_status', 'not_found');
-            
+
             return response()->json([
                 'success' => true,
                 'status' => $status,
                 'message' => $this->getStatusMessage($status)
             ]);
-            
         } catch (\Exception $e) {
             \Log::error('Failed to check PDF status', [
                 'error' => $e->getMessage(),
                 'student_id' => $student_id,
                 'student_behaviour_skill_id' => $student_behaviour_skill_id
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to check status'
@@ -285,7 +281,7 @@ class StudentAssessmentController extends Controller
      */
     private function getStatusMessage(string $status): string
     {
-        return match($status) {
+        return match ($status) {
             'queued' => 'PDF generation is queued and will start soon.',
             'processing' => 'PDF is being generated. Please wait.',
             'completed' => 'PDF generation completed successfully.',
@@ -330,7 +326,7 @@ class StudentAssessmentController extends Controller
             'com_class',
             'section',
         ])->where('id', $student_behaviour_skill_id)->first();
-        
+
         // Debug logging to help identify the issue
         if (is_null($data['student_behaviour_skill'])) {
             \Log::warning('StudentBehaviourSkill query returned null', [
@@ -369,7 +365,7 @@ class StudentAssessmentController extends Controller
 
         $branch_class_section_id = BranchClassSection::where([['branch_id', $branch_id], ['class_id', $class_id], ['section_id', $section_id]])->first()?->id;
 
-        if (!is_null($student_id)) {
+        if (! is_null($student_id)) {
             $data['total_no_of_working_days'] = getBranchWorkingDays($branch_id, $term_id, $academic_year_id);
             $data = $this->getStudentAttendanceData($academic_year_id, $branch_class_section_id, $student_id, $term_start_date, $term_end_date, $data);
 
@@ -415,19 +411,18 @@ class StudentAssessmentController extends Controller
             // dd($subject_assessment_remarks);
 
             foreach ($assessment_entries_subject_wise as $single_subject_assessment_entries) {
-
                 $single_subject_assessments_levels_wise = $single_subject_assessment_entries->groupBy('assessment_level_two_id');
 
                 foreach ($single_subject_assessments_levels_wise as $single_subject_single_level_all_assessment => $assessment) {
                     if (is_null($assessment->first()->assessment_level_three_id)) {
-                        if (!is_null($assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first())) {
+                        if (! is_null($assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first())) {
                             $student_assessment_name = $assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first()?->assessment_entry?->assessment_level_two?->name ?? '';
                             $student_assessment_weight = $assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first()?->assessment_entry?->assessment_weightage ?? 0;
                             $assessment_weightage[$student_assessment_name] = $student_assessment_weight;
                         }
                         $assessment_level = 'assessment_level_two';
                     } else {
-                        if (!is_null($assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first())) {
+                        if (! is_null($assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first())) {
                             $student_assessment_name = $assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first()?->assessment_entry?->assessment_level_three?->name ?? '';
                             $student_assessment_weight = $assessment->first()?->student_assessment_marks?->where('student_id', $student_id)?->first()?->assessment_entry?->assessment_weightage ?? 0;
                             $assessment_weightage[$student_assessment_name] = $student_assessment_weight;
@@ -436,7 +431,7 @@ class StudentAssessmentController extends Controller
                     }
                     // dd($assessment->toArray());
                     $marks_percentage_result = $this->calculateMarksPercentage($student_id, $assessment, $assessment_level);
-                    (!is_null($marks_percentage_result)) ? $assessment_data[] = $marks_percentage_result : '';
+                    (! is_null($marks_percentage_result)) ? $assessment_data[] = $marks_percentage_result : '';
                 }
             }
 
@@ -468,8 +463,9 @@ class StudentAssessmentController extends Controller
                         ['section_id', $data['student_behaviour_skill']['section_id']],
                     ])->first();
 
-            if (!empty($data['student_behaviour']['student_behaviour_skill_marks']))
+            if (! empty($data['student_behaviour']['student_behaviour_skill_marks'])) {
                 $data['student_behaviour']['student_behaviour_skill_marks'] = $data['student_behaviour']['student_behaviour_skill_marks']->keyBy('general_behaviour_id');
+            }
 
             return $data;
         }
@@ -517,8 +513,9 @@ class StudentAssessmentController extends Controller
                     ['section_id', $data['student_behaviour_skill']['section_id']],
                 ])->first();
 
-        if (!empty($data['student_skill']['student_behaviour_skill_marks']))
+        if (! empty($data['student_skill']['student_behaviour_skill_marks'])) {
             $data['student_skill']['student_behaviour_skill_marks'] = $data['student_skill']['student_behaviour_skill_marks']->keyBy('skill_id');
+        }
 
         $student_id = (int) $data['student_id'];
         $branch_id = $data['student_behaviour_skill']['branch_id'];
@@ -568,21 +565,19 @@ class StudentAssessmentController extends Controller
 
             return $data;
         }
-        return NULL;
+        return null;
     }
 
     protected function removeDuplicateAssessmentNames($assessment_data): array
     {
         $single_subject_assessments_marks = array();
         $all_subject_assessments_data = array();
-        $next_ele = $previous_ele = NULL;
+        $next_ele = $previous_ele = null;
         $j = 0;
         $i = 0;
         //        dd($assessment_data);
         foreach ($assessment_data as $key => $assessment_marks) {
-
-            if (!is_null($previous_ele) && $previous_ele['subject_name'] === $assessment_marks['subject_name']) {
-
+            if (! is_null($previous_ele) && $previous_ele['subject_name'] === $assessment_marks['subject_name']) {
                 unset($assessment_data[$key - 1]);
                 ++$j;
                 $single_subject_assessments_marks = $previous_ele;
@@ -615,7 +610,7 @@ class StudentAssessmentController extends Controller
                  }
                 unset($assessment_data[$key]);*/
                 continue;
-            } else if (!is_null($previous_ele) && $j >= 1) {
+            } else if (! is_null($previous_ele) && $j >= 1) {
                 $all_subject_assessments_data[] = $single_subject_assessments_marks;
             }
             if (array_key_exists($key + 1, $assessment_data) && $assessment_marks['subject_name'] !== $assessment_data[$key + 1]['subject_name']) {

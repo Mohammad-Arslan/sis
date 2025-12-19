@@ -70,10 +70,10 @@ class ClassSubjectController extends Controller
                     return isset($row->state) ? $row->state->state_name : '';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<a href="'.route('class-subjects.edit', $row->id).' " class="btn btn-sm btn-success btn-icon waves-effect waves-light">
+                    $btn = '<a href="' . route('class-subjects.edit', $row->id) . ' " class="btn btn-sm btn-success btn-icon waves-effect waves-light">
                                 <i class="mdi mdi-lead-pencil"></i>
                             </a>
-                            <a href="'.route('class-subjects.destroy', $row->id) . '" class="btn btn-sm btn-danger btn-icon waves-effect waves-light delete-record" data-table="class-subject-datatable" data-id = "' . $row->id . '">
+                            <a href="' . route('class-subjects.destroy', $row->id) . '" class="btn btn-sm btn-danger btn-icon waves-effect waves-light delete-record" data-table="class-subject-datatable" data-id = "' . $row->id . '">
                                 <i class="ri-delete-bin-line"></i>
                             </a>';
                     return $btn;
@@ -153,7 +153,7 @@ class ClassSubjectController extends Controller
                 }
                 return redirect()->back()->with('error', $errorMessage)->withInput();
             }
-            
+
             // Handle other database errors
             return redirect()->back()->with('error', 'An error occurred while creating the class subject. Please try again.')->withInput();
         } catch (\Exception $e) {
@@ -243,7 +243,7 @@ class ClassSubjectController extends Controller
                 }
                 return redirect()->back()->with('error', $errorMessage)->withInput();
             }
-            
+
             // Handle other database errors
             return redirect()->back()->with('error', 'An error occurred while updating the class subject. Please try again.')->withInput();
         } catch (\Exception $e) {
@@ -267,7 +267,7 @@ class ClassSubjectController extends Controller
             if ($e->errorInfo[1] == 1451) {
                 return response()->json(['success' => false, 'message' => 'Cannot delete class subject: It is being used by other records.'], 400);
             }
-            
+
             // Handle other database errors
             return response()->json(['success' => false, 'message' => 'An error occurred while deleting the class subject.'], 500);
         } catch (\Exception $e) {

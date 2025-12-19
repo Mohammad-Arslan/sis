@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentAssessmentMark extends Model
 {
-    use HasFactory, SerializeDateTrait, SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'assessment_entry_id',

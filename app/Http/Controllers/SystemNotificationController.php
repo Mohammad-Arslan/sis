@@ -36,7 +36,7 @@ class SystemNotificationController extends Controller
     {
         if ($request->ajax()) {
             $data = SystemNotification::with(['branch', 'country', 'state', 'createdBy']);
-            if (!isSuperAdmin() && !isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
+            if (! isSuperAdmin() && ! isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
                 $data->where('branch_id', get_branch_id());
             }
             if ($request->notification_type) {
@@ -74,7 +74,7 @@ class SystemNotificationController extends Controller
         $countries = Country::get();
         $states = State::get();
         $cities = City::get();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $branches = [];
             $classes = [];
@@ -126,14 +126,12 @@ class SystemNotificationController extends Controller
         }
 
 
-        if($request->notification_type == 'Email'){
+        if ($request->notification_type == 'Email') {
             $request->merge(['message' => $request->message_email]);
         }
 
         $notification = SystemNotification::create($request->all());
         if ($request->branch_id) {
-
-
             if ($request->audience == 'Parents') {
                 $audience = Student::where('branch_id', $request->branch_id)
                     ->whereHas('branch', function ($q) use ($notification) {
@@ -259,7 +257,7 @@ class SystemNotificationController extends Controller
     private function send_notification_to_user($audiences, $header = null, $message, $salutation = null, $notification, $type, $isMobile)
     {
         foreach ($audiences as $audience) {
-            $user = User::where('id',$audience['user_id'])->first();
+            $user = User::where('id', $audience['user_id'])->first();
             // dd($user);
             $mobile_number = $isMobile ? $user->mobile_number : $audience['contact_information']['mobile'];
             $data = [
@@ -276,42 +274,43 @@ class SystemNotificationController extends Controller
         }
     }
 
-    public function nwa_notifcation_card(Request $request){
-    if ($request->ajax()) {
-        $data = SystemNotification::where('audience', "NWA")->where('branch_id', get_NWABranchCode())->get();
-        // dd($data);
-        // if ($request->notification_type) {
-        //     $data = $data->where('notification_type', $request->notification_type);
-        // }
-        // if ($request->audience) {
-        //     $data = $data->where('audience', $request->audience);
-        // }
-        // if ($request->branch_id) {
-        //     $data = $data->whereHas('branch', function ($q) use ($request) {
-        //         $q->where('id', $request->branch_id);
-        //     });
-        // }
-        // $data->get();
-        // dd($data->get()->toArray());
-        return Datatables::of($data)
+    public function nwa_notifcation_card(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = SystemNotification::where('audience', "NWA")->where('branch_id', get_NWABranchCode())->get();
+            // dd($data);
+            // if ($request->notification_type) {
+            //     $data = $data->where('notification_type', $request->notification_type);
+            // }
+            // if ($request->audience) {
+            //     $data = $data->where('audience', $request->audience);
+            // }
+            // if ($request->branch_id) {
+            //     $data = $data->whereHas('branch', function ($q) use ($request) {
+            //         $q->where('id', $request->branch_id);
+            //     });
+            // }
+            // $data->get();
+            // dd($data->get()->toArray());
+            return Datatables::of($data)
             ->addIndexColumn()
             ->addColumn('notification_type', function ($row) {
                 return $row->notification_type;
             })
-            ->addColumn('created_at', function ($row) {
-                return $row->created_at->format('d-m-Y');
-            })
-            ->addColumn('message', function ($row) {
-                $msg = null;
-                if(isset($row->notification_type)){
-                 $msg = $row->notification_type == "SMS" ? $row->message : $row->email_header;
-                }
-                return ($msg) ? "<span class='d-inline-block text-truncate' style='max-width: 60%;'>$msg</span>" :  "";
-                // return $msg;
-            })
-            ->rawColumns(['notification_type', 'created_at', 'message'])
-            ->make(true);
+                ->addColumn('created_at', function ($row) {
+                    return $row->created_at->format('d-m-Y');
+                })
+                ->addColumn('message', function ($row) {
+                    $msg = null;
+                    if (isset($row->notification_type)) {
+                        $msg = $row->notification_type == "SMS" ? $row->message : $row->email_header;
+                    }
+                    return ($msg) ? "<span class='d-inline-block text-truncate' style='max-width: 60%;'>$msg</span>" :  "";
+                    // return $msg;
+                })
+                ->rawColumns(['notification_type', 'created_at', 'message'])
+                ->make(true);
+        }
+        return view('settings.system_notifications.notifications');
     }
-    return view('settings.system_notifications.notifications');
-}
 }

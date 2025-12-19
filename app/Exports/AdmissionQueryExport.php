@@ -24,9 +24,8 @@ class AdmissionQueryExport implements FromCollection, WithHeadings
                 'academic_year',
                 'inquiry_type',
             );
-        }
-        else{
-            $admission_queries = AdmissionQuery::where('branch_id',get_branch_id())->with(
+        } else {
+            $admission_queries = AdmissionQuery::where('branch_id', get_branch_id())->with(
                 'city',
                 'town',
                 'branch',

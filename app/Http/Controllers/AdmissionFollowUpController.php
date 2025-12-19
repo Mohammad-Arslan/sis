@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Carbon\Carbon;
 use App\Models\FollowUpType;
 use Illuminate\Http\Request;
@@ -28,10 +29,10 @@ class AdmissionFollowUpController extends Controller
                     'admission_query.inquiry_type',
                     'followup_type',
                     'user'
-                ])->get();
+                ]
+            )->get();
             $data['followup_types'] = FollowUpType::all();
-            return view('admission_queries.admission_follow_up',$data);
-
+            return view('admission_queries.admission_follow_up', $data);
     }
 
     /**
@@ -62,7 +63,7 @@ class AdmissionFollowUpController extends Controller
         //dd($request->all());
         AdmissionFollowUp::create($request->all());
 
-        return redirect()->route('admissionFollowUp.index',['admission_query_id'=>$request->admission_query_id])
+        return redirect()->route('admissionFollowUp.index', ['admission_query_id' => $request->admission_query_id])
             ->with('success', 'Follow Up has been created successfully.');
     }
 
@@ -96,7 +97,7 @@ class AdmissionFollowUpController extends Controller
             'followup_type',
             'user'
         ])->get();
-        $followup_types= FollowUpType::all();
+        $followup_types = FollowUpType::all();
         return view('admission_queries.admission_follow_up', ['admissionFollowUp' => $admissionFollowUp , 'followup_types' => $followup_types, 'data' => $data]);
     }
 
@@ -118,7 +119,7 @@ class AdmissionFollowUpController extends Controller
 
         $admissionFollowUp->update($request->all());
 
-        return redirect()->route('admissionFollowUp.index',['admission_query_id'=>$request->admission_query_id])
+        return redirect()->route('admissionFollowUp.index', ['admission_query_id' => $request->admission_query_id])
             ->with('success', 'Follow Up has been updated successfully.');
     }
 

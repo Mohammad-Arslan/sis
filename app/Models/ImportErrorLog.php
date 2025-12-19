@@ -97,7 +97,7 @@ class ImportErrorLog extends Model
      */
     public function getTruncatedErrorMessageAttribute()
     {
-        return strlen($this->error_message) > 100 
+        return strlen($this->error_message) > 100
             ? substr($this->error_message, 0, 100) . '...'
             : $this->error_message;
     }

@@ -28,7 +28,7 @@ class SystemModuleController extends Controller
         }
         $parents = SystemModule::where('parent_id', '<=>')->orderBy('name')->get(['id','name']);
         //dd($parents->toArray());
-        return view('settings.system_modules.system_modules',['parents' => $parents]);
+        return view('settings.system_modules.system_modules', ['parents' => $parents]);
     }
 
     /**

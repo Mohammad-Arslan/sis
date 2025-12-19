@@ -18,7 +18,6 @@ class AssessmentLevelController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             // Use query builder instead of get() to allow DataTables server-side processing
             $data = AssessmentLevel::with('parent');
 
@@ -41,11 +40,10 @@ class AssessmentLevelController extends Controller
                 ->make(true);
         }
 
-        $data['assessment_levels'] = AssessmentLevel::where('status','active')->get();
+        $data['assessment_levels'] = AssessmentLevel::where('status', 'active')->get();
         $data['multi_levels'] = AssessmentLevel::where([['status','active'],['parent_id',0]])->get();
 
-        return view('settings.assessment_level.index',$data);
-
+        return view('settings.assessment_level.index', $data);
     }
 
     /**
@@ -103,9 +101,9 @@ class AssessmentLevelController extends Controller
     public function edit(AssessmentLevel $assessmentLevel)
     {
         $data['assessmentLevel'] = $assessmentLevel;
-        $data['assessment_levels'] = AssessmentLevel::where('status','active')->whereNotIn('id',[$assessmentLevel->id])->get();
+        $data['assessment_levels'] = AssessmentLevel::where('status', 'active')->whereNotIn('id', [$assessmentLevel->id])->get();
 
-        return view('settings.assessment_level.index',$data);
+        return view('settings.assessment_level.index', $data);
     }
 
     /**

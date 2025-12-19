@@ -123,7 +123,7 @@ class ClassStudentController extends Controller
         ]);
 
         $class_student = ClassStudent::create($input);
-        
+
         // Class Subjects
         // $class_subjects = ClassSubject::where(['class_id' => $request->class_id, 'branch_id' => $student->branch_id])->orWhere(['class_id' => $request->class_id, 'branch_id' => null])->get();
         $class_subjects = ClassSubject::where('class_id', $request->class_id)->where(function ($query) use ($student) {

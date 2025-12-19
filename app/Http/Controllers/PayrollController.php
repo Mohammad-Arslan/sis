@@ -27,16 +27,16 @@ class PayrollController extends Controller
         if ($request->ajax()) {
             $data = Payroll::with(['employee', 'processedBy']);
             return datatables()->of($data)
-                ->addColumn('employee', function($row) {
+                ->addColumn('employee', function ($row) {
                     $empName = $row->employee ? $row->employee->full_name ?? $row->employee->preferred_name : '-';
                     $empId = $row->employee ? $row->employee->employee_id : '-';
                     return '<div class="fw-bold">' . $empName . '</div><small class="text-muted">' . $empId . '</small>';
                 })
-                ->addColumn('period', function($row) {
+                ->addColumn('period', function ($row) {
                     $monthName = Carbon::createFromFormat('!m', $row->month)->format('F');
                     return $monthName . ' - ' . $row->year;
                 })
-                ->addColumn('salary_breakdown', function($row) {
+                ->addColumn('salary_breakdown', function ($row) {
                     $taxable = $row->taxable_gross_salary ?? null;
                     $taxableText = $taxable ? number_format($taxable, 2) : 'N/A';
                     return '<div class="text-end">'
@@ -44,46 +44,46 @@ class PayrollController extends Controller
                         . '<small class="text-muted">Taxable: ' . $taxableText . '</small>'
                         . '</div>';
                 })
-                ->addColumn('attendance', function($row) {
+                ->addColumn('attendance', function ($row) {
                     $present = $row->present_days ?? null;
                     $absent = $row->absent_days ?? null;
-                    
+
                     if ($present === null && $absent === null) {
                         return '<div class="text-center text-muted"><small>No data</small></div>';
                     }
-                    
+
                     return '<div class="text-center">'
                         . '<span class="badge bg-success">' . ($present ?? 0) . ' Present</span> '
                         . '<span class="badge bg-danger">' . ($absent ?? 0) . ' Absent</span>'
                         . '</div>';
                 })
-                ->addColumn('deductions', function($row) {
+                ->addColumn('deductions', function ($row) {
                     $totalDed = $row->total_deductions ?? null;
                     $tax = $row->income_tax ?? null;
-                    
+
                     if ($totalDed === null) {
                         return '<div class="text-end text-muted"><small>N/A</small></div>';
                     }
-                    
+
                     $taxText = $tax !== null ? number_format($tax, 2) : 'N/A';
                     return '<div class="text-end">'
                         . '<div class="text-danger">-' . number_format($totalDed, 2) . '</div>'
                         . '<small class="text-muted">Tax: ' . $taxText . '</small>'
                         . '</div>';
                 })
-                ->addColumn('net_salary', function($row) {
+                ->addColumn('net_salary', function ($row) {
                     return '<div class="text-end fw-bold text-success">' . number_format($row->net_salary, 2) . '</div>';
                 })
-                ->addColumn('status', function($row) {
+                ->addColumn('status', function ($row) {
                     $badge = $row->status === 'paid' ? 'success' : ($row->status === 'processed' ? 'info' : 'secondary');
                     return '<span class="badge bg-' . $badge . '">' . ucfirst($row->status) . '</span>';
                 })
-                ->addColumn('processed_by', function($row) {
+                ->addColumn('processed_by', function ($row) {
                     return $row->processedBy ? $row->processedBy->name : '-';
                 })
-                ->addColumn('action', function($row) {
-                    return '<a href="#" class="btn btn-sm btn-outline-primary view-payroll" data-id="'.$row->id.'" title="View Details"><i class="ri-eye-line"></i></a> '
-                        .'<a href="#" class="btn btn-sm btn-outline-danger delete-btn" data-id="'.$row->id.'" title="Delete"><i class="ri-delete-bin-line"></i></a>';
+                ->addColumn('action', function ($row) {
+                    return '<a href="#" class="btn btn-sm btn-outline-primary view-payroll" data-id="' . $row->id . '" title="View Details"><i class="ri-eye-line"></i></a> '
+                        . '<a href="#" class="btn btn-sm btn-outline-danger delete-btn" data-id="' . $row->id . '" title="Delete"><i class="ri-delete-bin-line"></i></a>';
                 })
                 ->rawColumns(['employee', 'salary_breakdown', 'attendance', 'deductions', 'net_salary', 'status', 'action'])
                 ->make(true);
@@ -96,17 +96,17 @@ class PayrollController extends Controller
         // Default to current month/year
         $currentMonth = now()->format('m');
         $currentYear = now()->format('Y');
-        
+
         // Get employees with salary structures for payroll creation
         // Initially show all employees, will be filtered by AJAX based on year/month
         $employees = Employee::with(['user', 'currentSalaryStructure', 'taxPreferences', 'deductionPreferences.deductionType'])
             ->whereHas('currentSalaryStructure')
             ->get();
-        
+
         $providentFund = ProvidentFundDefinition::where('status', 1)->orderByDesc('id')->first();
         $taxSlabs = IncomeTaxSlab::where('status', 1)->orderBy('min_salary')->get();
         $deductionTypes = DeductionType::where('status', 1)->get();
-        if (!$deductionTypes->contains('name', 'EOBI')) {
+        if (! $deductionTypes->contains('name', 'EOBI')) {
             $deductionTypes->push((object)[
                 'id' => 0,
                 'name' => 'EOBI',
@@ -114,7 +114,7 @@ class PayrollController extends Controller
                 'status' => 1
             ]);
         }
-        
+
         return view('payrolls.create', [
             'employees' => $employees,
             'providentFund' => $providentFund,
@@ -132,33 +132,33 @@ class PayrollController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        
-        if (!$month || !$year) {
+
+        if (! $month || ! $year) {
             return response()->json([
                 'success' => false,
                 'message' => 'Month and year are required'
             ]);
         }
-        
+
         // Get employees with salary structures
         $employees = Employee::with(['user', 'currentSalaryStructure'])
             ->whereHas('currentSalaryStructure')
             ->get();
-        
+
         // Get employee IDs that already have payroll for this month/year
         $processedEmployeeIds = Payroll::where('month', $month)
             ->where('year', $year)
             ->pluck('employee_id')
             ->toArray();
-        
+
         // Filter out already processed employees
-        $availableEmployees = $employees->filter(function($employee) use ($processedEmployeeIds) {
-            return !in_array($employee->id, $processedEmployeeIds);
+        $availableEmployees = $employees->filter(function ($employee) use ($processedEmployeeIds) {
+            return ! in_array($employee->id, $processedEmployeeIds);
         })->values(); // Reset array keys to ensure proper array structure
-        
+
         return response()->json([
             'success' => true,
-            'employees' => $availableEmployees->map(function($employee) {
+            'employees' => $availableEmployees->map(function ($employee) {
                 return [
                     'id' => $employee->id,
                     'name' => $employee->user->name ?? $employee->preferred_name,
@@ -186,7 +186,7 @@ class PayrollController extends Controller
             'month' => 'required|integer|min:1|max:12',
             'year' => 'required|integer|min:2000|max:2100',
         ]);
-        
+
         // Check for duplicate payroll
         $exists = Payroll::where('employee_id', $validated['employee_id'])
             ->where('month', $validated['month'])
@@ -195,57 +195,61 @@ class PayrollController extends Controller
         if ($exists) {
             return back()->withErrors(['employee_id' => 'Payroll for this employee in the selected month and year already exists.'])->withInput();
         }
-        
+
         // Get employee with salary structure and preferences
         $employee = Employee::with(['user', 'company', 'department', 'designation', 'currentSalaryStructure', 'taxPreferences', 'deductionPreferences.deductionType'])
             ->findOrFail($validated['employee_id']);
-        
+
         // Check if employee has salary structure
-        if (!$employee->currentSalaryStructure) {
+        if (! $employee->currentSalaryStructure) {
             return back()->withErrors(['employee_id' => 'Employee does not have a salary structure. Please assign salary first.'])->withInput();
         }
-        
+
         $company_name = $employee->company ? $employee->company->company_name : '';
-        
+
         // Get salary from employee salary structure
         $salaryStructure = $employee->currentSalaryStructure;
         $basic_salary = $salaryStructure->basic_salary;
         $gross_salary = $salaryStructure->gross_salary; // This is Basic + Permanent allowances from salary structure
-        
+
         // Separate permanent and temporary allowances
         $allowances = $request->input('allowances', []);
-        $permanentAllowances = collect($allowances)->filter(function($a) {
+        $permanentAllowances = collect($allowances)->filter(function ($a) {
             return isset($a['is_permanent']) && $a['is_permanent'] == '1';
         });
-        $temporaryAllowances = collect($allowances)->filter(function($a) {
-            return !isset($a['is_permanent']) || $a['is_permanent'] == '0';
+        $temporaryAllowances = collect($allowances)->filter(function ($a) {
+            return ! isset($a['is_permanent']) || $a['is_permanent'] == '0';
         });
-        
+
         // Calculate sums
-        $permanentAllowanceSum = $permanentAllowances->sum(function($a) { return floatval($a['amount'] ?? 0); });
-        $temporaryAllowanceSum = $temporaryAllowances->sum(function($a) { return floatval($a['amount'] ?? 0); });
-        
+        $permanentAllowanceSum = $permanentAllowances->sum(function ($a) {
+            return floatval($a['amount'] ?? 0);
+        });
+        $temporaryAllowanceSum = $temporaryAllowances->sum(function ($a) {
+            return floatval($a['amount'] ?? 0);
+        });
+
         $month = $validated['month'];
         $year = $validated['year'];
         $period_start = Carbon::create($year, $month, 1)->toDateString();
         $period_end = Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
-        
+
         // Check probation status - Permanent allowances only for regular employees
         $probationEnd = $employee->probation_end_date;
-        $allowances_applicable = !$probationEnd || $period_end > $probationEnd;
-        
+        $allowances_applicable = ! $probationEnd || $period_end > $probationEnd;
+
         // If employee is on probation, permanent allowances are NOT applicable
-        if (!$allowances_applicable) {
+        if (! $allowances_applicable) {
             $permanentAllowanceSum = 0;
             // Filter out permanent allowances from the allowances array (only keep temporary)
             $allowances = $temporaryAllowances->toArray();
             // Clear permanent allowances collection
             $permanentAllowances = collect([]);
         }
-        
+
         // Taxable gross salary = Basic + Permanent allowances (only if not on probation)
         $taxable_gross_salary = $basic_salary + $permanentAllowanceSum;
-        
+
         // Total gross salary = Taxable gross + Temporary allowances (non-taxable)
         $total_gross_salary = $taxable_gross_salary + $temporaryAllowanceSum;
 
@@ -261,7 +265,7 @@ class PayrollController extends Controller
         // Count approved leaves with pay
         $approvedPaidLeaves = 0;
         foreach ($leaveBreakdown as $leave) {
-            if (!empty($leave['with_pay']) && $leave['with_pay']) {
+            if (! empty($leave['with_pay']) && $leave['with_pay']) {
                 $approvedPaidLeaves += $leave['days'];
             }
         }
@@ -276,7 +280,7 @@ class PayrollController extends Controller
 
         // Get employee working days first
         $workingDays = EmployeeWorkingDay::where('employee_id', $employee->id)
-            ->whereHas('workingShift', function($query) {
+            ->whereHas('workingShift', function ($query) {
                 $query->where('status', 1);
             })
             ->pluck('working_day_id')->toArray();
@@ -286,7 +290,7 @@ class PayrollController extends Controller
         $totalWorkingDays = 0;
         foreach ($period as $date) {
             $dayName = $date->format('l');
-            $workingDayId = array_search($dayName, [1=>'Sunday',2=>'Monday',3=>'Tuesday',4=>'Wednesday',5=>'Thursday',6=>'Friday',7=>'Saturday']);
+            $workingDayId = array_search($dayName, [1 => 'Sunday',2 => 'Monday',3 => 'Tuesday',4 => 'Wednesday',5 => 'Thursday',6 => 'Friday',7 => 'Saturday']);
             if (in_array($workingDayId, $workingDays)) {
                 $totalWorkingDays++;
             }
@@ -296,10 +300,10 @@ class PayrollController extends Controller
         // Use total gross salary (including temporary allowances) for per-day calculation
         $fullGrossSalary = $total_gross_salary;
         $perDaySalary = $fullGrossSalary / 30; // Standard 30-day calculation
-        
+
         // Calculate actual gross salary based on present days out of 30 days
         $gross_salary = $salaryDays * $perDaySalary;
-        
+
         // Calculate taxable portion (FULL MONTHLY SALARY - Industry Standard)
         // Tax is calculated on full monthly salary, not proportional to attendance
         $taxable_gross_proportional = $taxable_gross_salary;
@@ -308,11 +312,11 @@ class PayrollController extends Controller
         $start = Carbon::create($year, $month, 1)->startOfDay();
         $end = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay();
         $shifts = EmployeeWorkingDay::where('employee_id', $employee->id)
-            ->with(['workingShift' => function($query) {
+            ->with(['workingShift' => function ($query) {
                 $query->where('status', 1);
             }])
             ->get()
-            ->filter(function($item) {
+            ->filter(function ($item) {
                 return $item->workingShift && $item->workingShift->status == 1;
             })
             ->keyBy('working_day_id');
@@ -329,16 +333,16 @@ class PayrollController extends Controller
         $casualLeaveQuota = 0;
         $leaveQuota = null;
         $leaveDebugInfo = [];
-        
+
         // Add debugging for all available leave types
         $allLeaveTypes = LeaveType::all();
         $leaveDebugInfo['all_leave_types'] = $allLeaveTypes->pluck('name')->toArray();
-        
+
         // Add debugging for ALL employee leave quotas (like dashboard does)
         $allEmployeeLeaveQuotas = EmployeeLeaveQuota::with('leaveType')
             ->where('employee_id', $employee->id)
             ->get();
-        $leaveDebugInfo['all_employee_leave_quotas'] = $allEmployeeLeaveQuotas->map(function($quota) {
+        $leaveDebugInfo['all_employee_leave_quotas'] = $allEmployeeLeaveQuotas->map(function ($quota) {
             return [
                 'leave_type_name' => $quota->leaveType ? $quota->leaveType->name : 'Unknown',
                 'leave_type_id' => $quota->leave_type_id,
@@ -346,7 +350,7 @@ class PayrollController extends Controller
                 'balance' => $quota->no_of_balanced_leaves
             ];
         })->toArray();
-        
+
         if ($casualLeaveType) {
             $leaveQuota = \App\Models\EmployeeLeaveQuota::where('employee_id', $employee->id)
                 ->where('leave_type_id', $casualLeaveType->id)
@@ -375,10 +379,14 @@ class PayrollController extends Controller
         foreach ($attendances as $attendance) {
             $attendanceDate = Carbon::parse($attendance->created_at);
             $dayName = $attendanceDate->format('l');
-            $workingDayId = array_search($dayName, [1=>'Sunday',2=>'Monday',3=>'Tuesday',4=>'Wednesday',5=>'Thursday',6=>'Friday',7=>'Saturday']);
-            if (!in_array($workingDayId, $workingDays)) continue;
+            $workingDayId = array_search($dayName, [1 => 'Sunday',2 => 'Monday',3 => 'Tuesday',4 => 'Wednesday',5 => 'Thursday',6 => 'Friday',7 => 'Saturday']);
+            if (! in_array($workingDayId, $workingDays)) {
+                continue;
+            }
             $shift = $shifts[$workingDayId]->workingShift ?? null;
-            if (!$shift) continue;
+            if (! $shift) {
+                continue;
+            }
             if ($attendance->time_in) {
                 $late = calculateTimeDifference($shift->start_time, $attendance->time_in);
                 if ($late >= 61 && $late <= 120) {
@@ -414,45 +422,49 @@ class PayrollController extends Controller
                 break;
             }
         }
-        if ($monthlyLateAccum > 780) $monthlyLateDays = 12;
+        if ($monthlyLateAccum > 780) {
+            $monthlyLateDays = 12;
+        }
         $totalLateDays = $singleDayLateFullDay + $monthlyLateDays;
-        
+
         // Add debugging information for late deduction calculation
         $leaveDebugInfo['single_day_late_full_day'] = $singleDayLateFullDay;
         $leaveDebugInfo['monthly_late_accum'] = $monthlyLateAccum;
         $leaveDebugInfo['monthly_late_days'] = $monthlyLateDays;
         $leaveDebugInfo['total_late_days'] = $totalLateDays;
         $leaveDebugInfo['per_day_salary'] = $perDaySalary;
-        
+
         // Deduct from casual leave if available, else from salary
         $lateDeductFromLeave = min($totalLateDays, $casualLeaveQuota);
         $lateDeductFromSalary = $totalLateDays - $lateDeductFromLeave;
-        
+
         $leaveDebugInfo['late_deduct_from_leave'] = $lateDeductFromLeave;
         $leaveDebugInfo['late_deduct_from_salary'] = $lateDeductFromSalary;
-        
+
         // Update leave quota if deduction from leave
         if ($lateDeductFromLeave > 0 && $leaveQuota) {
             $leaveQuota->no_of_balanced_leaves = max(0, $leaveQuota->no_of_balanced_leaves - $lateDeductFromLeave);
             $leaveQuota->save();
         }
         $lateDeduction = $lateDeductFromSalary * $perDaySalary;
-        
+
         $leaveDebugInfo['final_late_deduction'] = $lateDeduction;
 
-        // Salary deduction for unexcused absents 
+        // Salary deduction for unexcused absents
         // Note: $absents already excludes:
         // - Off days (weekends, holidays) - only working days are counted
         // - Approved paid leaves - already subtracted in attendance calculation
         // - Official leave days - already subtracted in attendance calculation
         $absentDeduction = $absents * $perDaySalary;
-        if ($absentDeduction < 0) $absentDeduction = 0;
+        if ($absentDeduction < 0) {
+            $absentDeduction = 0;
+        }
 
         // --- Additional Deductions ---
         $additionalDeductions = [];
         $inputDeductions = $request->input('deductions', []);
         foreach ($inputDeductions as $id => $deduction) {
-            if (!empty($deduction['amount'])) {
+            if (! empty($deduction['amount'])) {
                 $deductionType = DeductionType::find($id);
                 $deductionName = $deductionType ? $deductionType->name : 'Additional Deduction ' . $id;
                 $additionalDeductions[$id] = [
@@ -473,7 +485,7 @@ class PayrollController extends Controller
         // NOT on temporary allowances (travel, bonus, etc.)
         // Industry Standard: Tax is calculated on full monthly salary regardless of attendance
         $providentFund = ProvidentFundDefinition::where('status', 1)->orderByDesc('id')->first();
-        
+
         $taxResult = $this->calculateTax($employee, $taxable_gross_proportional);
         $income_tax = $taxResult['amount'];
         $tax_slab_info = $taxResult['info'] . ' (Tax on Basic + Permanent allowances only)';
@@ -507,7 +519,7 @@ class PayrollController extends Controller
         // Calculate total deductions - FIXED: Include employee deductions in main deductions array
         // to avoid double counting in the view
         $allDeductions = $deductions; // Start with absent and late deductions
-        
+
         // Add employee-specific deductions to the main deductions array
         $employeeDeductionLabels = [];
         foreach ($employeeDeductions as $empDeduction) {
@@ -517,13 +529,13 @@ class PayrollController extends Controller
             ];
             $employeeDeductionLabels[] = strtolower($empDeduction['label']);
         }
-        
+
         // Add additional deductions to the main deductions array
         // Skip if already exists in employee deductions to avoid duplicates
         foreach ($additionalDeductions as $id => $deduction) {
-            if (!empty($deduction['amount'])) {
+            if (! empty($deduction['amount'])) {
                 // Check if this deduction already exists in employee preferences
-                if (!in_array(strtolower($deduction['name']), $employeeDeductionLabels)) {
+                if (! in_array(strtolower($deduction['name']), $employeeDeductionLabels)) {
                     $allDeductions[] = [
                         'label' => $deduction['name'],
                         'amount' => $deduction['amount']
@@ -531,17 +543,17 @@ class PayrollController extends Controller
                 }
             }
         }
-        
+
         // Calculate total deductions from the combined array
         $totalDeductions = array_sum(array_column($allDeductions, 'amount')); // All deductions
         $totalDeductions += $pf_employee; // Provident Fund (Employee)
         $totalDeductions += $income_tax; // Income Tax
-        
+
         // Net salary is gross salary minus all deductions
         $net_salary = $gross_salary - $totalDeductions;
         $net_salary = max(0, $net_salary); // Ensure net salary is never negative
 
-        if (!$request->has('confirm')) {
+        if (! $request->has('confirm')) {
             return view('payrolls.preview', [
                 'employee' => $employee,
                 'company_name' => $company_name,
@@ -583,12 +595,12 @@ class PayrollController extends Controller
         // Note: We don't override calculated values - we use the freshly calculated ones
         // $income_tax = $request->input('income_tax', $income_tax);
         // $lateDeduction = $request->input('late_deduction', $lateDeduction);
-        
+
         // Recalculate net salary with the confirmed values - FIXED: Use combined deductions
         $totalDeductions = array_sum(array_column($allDeductions, 'amount')); // All deductions from combined array
         $totalDeductions += $pf_employee; // Provident Fund (Employee)
         $totalDeductions += $income_tax; // Income Tax
-        
+
         $net_salary = $gross_salary - $totalDeductions;
         $net_salary = max(0, $net_salary); // Ensure net salary is never negative
 
@@ -597,14 +609,14 @@ class PayrollController extends Controller
             'employee_id' => $employee->id,
             'month' => $month,
             'year' => $year,
-            
+
             // Salary Breakdown
             'basic_salary' => $basic_salary,
             'permanent_allowances_total' => $permanentAllowanceSum,
             'temporary_allowances_total' => $temporaryAllowanceSum,
             'taxable_gross_salary' => $taxable_gross_proportional,
             'gross_salary' => $gross_salary, // Attendance-adjusted total
-            
+
             // Deductions Breakdown
             'total_deductions' => $totalDeductions,
             'absent_deduction' => $absentDeduction,
@@ -613,7 +625,7 @@ class PayrollController extends Controller
             'provident_fund_employer' => $pf_employer,
             'income_tax' => $income_tax,
             'other_deductions_total' => array_sum(array_column($allDeductions, 'amount')) - ($absentDeduction + $lateDeduction),
-            
+
             // Attendance Data
             'present_days' => $presents,
             'absent_days' => $absents,
@@ -621,20 +633,20 @@ class PayrollController extends Controller
             'extra_minutes' => $extraHours,
             'approved_leaves' => $approvedLeaves,
             'total_working_days' => $totalWorkingDays,
-            
+
             // Tax Information
             'tax_slab_applied' => $tax_slab_info,
             'tax_exemption_applied' => $taxResult['exemption_applied'] ?? 0,
-            
+
             'net_salary' => $net_salary,
             'status' => 'processed',
             'processed_by' => auth()->id(),
             'processed_at' => now(),
         ]);
-        
+
         // Save allowances
         foreach ($allowances as $a) {
-            if (!empty($a['label']) && !empty($a['amount'])) {
+            if (! empty($a['label']) && ! empty($a['amount'])) {
                 $isPermanent = isset($a['is_permanent']) && $a['is_permanent'] == '1';
                 $payroll->details()->create([
                     'type' => 'allowance',
@@ -646,13 +658,13 @@ class PayrollController extends Controller
                 ]);
             }
         }
-        
+
         // Save all deductions from combined array - FIXED: Avoid duplicate entries
         foreach ($allDeductions as $deduction) {
             // Determine category based on deduction label (case-insensitive)
             $labelLower = strtolower($deduction['label']);
             $category = 'other';
-            
+
             if (in_array($labelLower, ['absent', 'late', 'absent days', 'late arrival'])) {
                 $category = 'attendance';
             } elseif (in_array($labelLower, ['eobi', 'sessi', 'social security', 'essi'])) {
@@ -660,7 +672,7 @@ class PayrollController extends Controller
             } elseif (stripos($labelLower, 'loan') !== false || stripos($labelLower, 'advance') !== false) {
                 $category = 'loan';
             }
-            
+
             $payroll->details()->create([
                 'type' => 'deduction',
                 'label' => $deduction['label'],
@@ -670,7 +682,7 @@ class PayrollController extends Controller
                 'category' => $category,
             ]);
         }
-        
+
         // Save Provident Fund (Statutory)
         if ($pf_employee > 0) {
             $payroll->details()->create([
@@ -682,7 +694,7 @@ class PayrollController extends Controller
                 'category' => 'statutory',
             ]);
         }
-        
+
         // Save Income Tax (Statutory)
         if ($income_tax > 0) {
             $payroll->details()->create([
@@ -701,32 +713,32 @@ class PayrollController extends Controller
     public function show($id)
     {
         $payroll = Payroll::with(['employee.user', 'employee.department', 'employee.designation', 'details', 'processedBy'])->findOrFail($id);
-        
+
         // Format month name
         $monthName = Carbon::createFromFormat('!m', $payroll->month)->format('F');
-        
+
         // Get allowances directly from payroll_details - SIMPLIFIED
         $allowances = $payroll->details()->where('type', 'allowance')->get();
         $permanentAllowances = [];
         $temporaryAllowances = [];
-        
+
         foreach ($allowances as $allowance) {
             $item = [
                 'label' => $allowance->label,
                 'amount' => number_format($allowance->amount, 2),
             ];
-            
+
             if ($allowance->is_permanent == 1) {
                 $permanentAllowances[] = $item;
             } else {
                 $temporaryAllowances[] = $item;
             }
         }
-        
+
         // Get all deductions directly from payroll_details - SIMPLIFIED
         $deductions = $payroll->details()->where('type', 'deduction')->get();
         $allDeductions = [];
-        
+
         foreach ($deductions as $deduction) {
             $allDeductions[] = [
                 'label' => $deduction->label,
@@ -734,7 +746,7 @@ class PayrollController extends Controller
                 'category' => $deduction->category ?? 'other',
             ];
         }
-        
+
         $data = [
             'id' => $payroll->id,
             'employee_id' => $payroll->employee->employee_id,
@@ -744,7 +756,7 @@ class PayrollController extends Controller
             'period' => $monthName . ' - ' . $payroll->year,
             'month' => $payroll->month,
             'year' => $payroll->year,
-            
+
             // Salary Breakdown
             'basic_salary' => number_format($payroll->basic_salary ?? 0, 2),
             'permanent_allowances_total' => number_format($payroll->permanent_allowances_total ?? 0, 2),
@@ -752,10 +764,10 @@ class PayrollController extends Controller
             'taxable_gross_salary' => number_format($payroll->taxable_gross_salary ?? 0, 2),
             'gross_salary' => number_format($payroll->gross_salary, 2),
             'net_salary' => number_format($payroll->net_salary, 2),
-            
+
             // Deductions Summary
             'total_deductions' => number_format($payroll->total_deductions ?? 0, 2),
-            
+
             // Attendance Data
             'present_days' => $payroll->present_days ?? 0,
             'absent_days' => $payroll->absent_days ?? 0,
@@ -763,25 +775,25 @@ class PayrollController extends Controller
             'extra_minutes' => $payroll->extra_minutes ?? 0,
             'approved_leaves' => $payroll->approved_leaves ?? 0,
             'total_working_days' => $payroll->total_working_days ?? 30,
-            
+
             // Tax Info
             'tax_slab_applied' => $payroll->tax_slab_applied ?? '-',
             'tax_exemption_applied' => number_format($payroll->tax_exemption_applied ?? 0, 2),
             'provident_fund_employee' => number_format($payroll->provident_fund_employee ?? 0, 2),
             'provident_fund_employer' => number_format($payroll->provident_fund_employer ?? 0, 2),
             'income_tax' => number_format($payroll->income_tax ?? 0, 2),
-            
+
             // Details - SIMPLIFIED: Just return the arrays directly
             'permanent_allowances' => $permanentAllowances,
             'temporary_allowances' => $temporaryAllowances,
             'all_deductions' => $allDeductions,
-            
+
             // Status
             'status' => ucfirst($payroll->status),
             'processed_by' => $payroll->processedBy->name ?? '-',
             'processed_at' => $payroll->processed_at ? (is_string($payroll->processed_at) ? $payroll->processed_at : $payroll->processed_at->format('Y-m-d H:i:s')) : '-',
         ];
-        
+
         return response()->json(['success' => true, 'data' => $data]);
     }
 
@@ -817,7 +829,7 @@ class PayrollController extends Controller
         $employeeId = $request->employee_id;
         $month = $request->month;
         $year = $request->year;
-        if (!$employeeId || !$month || !$year) {
+        if (! $employeeId || ! $month || ! $year) {
             return response()->json(['error' => 'Missing required parameters.'], 422);
         }
         $summary = $this->getAttendanceSummary($employeeId, $month, $year);
@@ -827,7 +839,7 @@ class PayrollController extends Controller
     private function getAttendanceSummary($employeeId, $month, $year)
     {
         $today = Carbon::today();
-        
+
         // Handle future years - return empty data for future periods
         if ($year > $today->year || ($year == $today->year && $month > $today->month)) {
             return [
@@ -839,23 +851,23 @@ class PayrollController extends Controller
                 'leave_breakdown' => [],
             ];
         }
-        
+
         $period_start = Carbon::create($year, $month, 1)->startOfDay();
         $period_end = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay();
         if ($year == $today->year && $month == $today->month) {
             $period_end = $today->endOfDay();
         }
         $workingDays = EmployeeWorkingDay::where('employee_id', $employeeId)
-            ->whereHas('workingShift', function($query) {
+            ->whereHas('workingShift', function ($query) {
                 $query->where('status', 1);
             })
             ->pluck('working_day_id')->toArray();
         $shifts = EmployeeWorkingDay::where('employee_id', $employeeId)
-            ->with(['workingShift' => function($query) {
+            ->with(['workingShift' => function ($query) {
                 $query->where('status', 1);
             }])
             ->get()
-            ->filter(function($item) {
+            ->filter(function ($item) {
                 return $item->workingShift && $item->workingShift->status == 1;
             })
             ->keyBy('working_day_id');
@@ -868,7 +880,7 @@ class PayrollController extends Controller
         $leaves = LeaveApplication::with('leaveType')
             ->where('employee_id', $employeeId)
             ->where('status', 1)
-            ->where(function($q) use ($period_start, $period_end) {
+            ->where(function ($q) use ($period_start, $period_end) {
                 $q->whereBetween('from_date', [$period_start, $period_end])
                   ->orWhereBetween('to_date', [$period_start, $period_end]);
             })
@@ -895,25 +907,33 @@ class PayrollController extends Controller
         foreach ($attendances as $attendance) {
             $attendanceDate = Carbon::parse($attendance->created_at);
             $dayName = $attendanceDate->format('l');
-            $workingDayId = array_search($dayName, [1=>'Sunday',2=>'Monday',3=>'Tuesday',4=>'Wednesday',5=>'Thursday',6=>'Friday',7=>'Saturday']);
-            if (!in_array($workingDayId, $workingDays)) continue;
+            $workingDayId = array_search($dayName, [1 => 'Sunday',2 => 'Monday',3 => 'Tuesday',4 => 'Wednesday',5 => 'Thursday',6 => 'Friday',7 => 'Saturday']);
+            if (! in_array($workingDayId, $workingDays)) {
+                continue;
+            }
             $shift = $shifts[$workingDayId]->workingShift ?? null;
-            if (!$shift) continue;
+            if (! $shift) {
+                continue;
+            }
             $presents++;
             if ($attendance->time_in) {
                 $late = calculateTimeDifference($shift->start_time, $attendance->time_in);
-                if ($late > 0) $lateMinutes += $late;
+                if ($late > 0) {
+                    $lateMinutes += $late;
+                }
             }
             if ($attendance->time_out) {
                 $extra = calculateTimeDifference($shift->end_time, $attendance->time_out);
-                if ($extra > 0) $extraHours += $extra;
+                if ($extra > 0) {
+                    $extraHours += $extra;
+                }
             }
         }
         $period = CarbonPeriod::create($period_start, $period_end);
         $totalWorkingDays = 0;
         foreach ($period as $date) {
             $dayName = $date->format('l');
-            $workingDayId = array_search($dayName, [1=>'Sunday',2=>'Monday',3=>'Tuesday',4=>'Wednesday',5=>'Thursday',6=>'Friday',7=>'Saturday']);
+            $workingDayId = array_search($dayName, [1 => 'Sunday',2 => 'Monday',3 => 'Tuesday',4 => 'Wednesday',5 => 'Thursday',6 => 'Friday',7 => 'Saturday']);
             if (in_array($workingDayId, $workingDays)) {
                 $totalWorkingDays++;
             }
@@ -934,26 +954,28 @@ class PayrollController extends Controller
         }
         // Calculate absent days (only for working days, excluding weekends and holidays)
         $absents = $totalWorkingDays - $presents - $approvedLeaves - $officialLeaveCount;
-        if ($absents < 0) $absents = 0;
-        
+        if ($absents < 0) {
+            $absents = 0;
+        }
+
         // Calculate absent days breakdown
         $absentDates = [];
-        $attendanceDates = $attendances->pluck('created_at')->map(function($date) {
+        $attendanceDates = $attendances->pluck('created_at')->map(function ($date) {
             return Carbon::parse($date)->format('Y-m-d');
         })->toArray();
-        
+
         $allLeaveDates = array_merge($leaveDates, $officialLeaves);
-        
+
         foreach ($period as $date) {
             $dayName = $date->format('l');
-            $workingDayId = array_search($dayName, [1=>'Sunday',2=>'Monday',3=>'Tuesday',4=>'Wednesday',5=>'Thursday',6=>'Friday',7=>'Saturday']);
-            
+            $workingDayId = array_search($dayName, [1 => 'Sunday',2 => 'Monday',3 => 'Tuesday',4 => 'Wednesday',5 => 'Thursday',6 => 'Friday',7 => 'Saturday']);
+
             if (in_array($workingDayId, $workingDays)) {
                 $dateStr = $date->format('Y-m-d');
                 $isPresent = in_array($dateStr, $attendanceDates);
                 $isOnLeave = in_array($dateStr, $allLeaveDates);
-                
-                if (!$isPresent && !$isOnLeave) {
+
+                if (! $isPresent && ! $isOnLeave) {
                     $absentDates[] = [
                         'date' => $dateStr,
                         'day' => $dayName,
@@ -962,7 +984,7 @@ class PayrollController extends Controller
                 }
             }
         }
-        
+
         return [
             'presents' => $presents,
             'absents' => $absents,
@@ -993,27 +1015,27 @@ class PayrollController extends Controller
     {
         $data = Employee::with(['currentSalaryStructure', 'department', 'designation'])
             ->whereHas('currentSalaryStructure');
-        
+
         return datatables()->of($data)
-            ->addColumn('employee_name', function($row) {
+            ->addColumn('employee_name', function ($row) {
                 return $row->full_name ?? $row->preferred_name;
             })
-            ->addColumn('department', function($row) {
+            ->addColumn('department', function ($row) {
                 return $row->department ? $row->department->department_name : '-';
             })
-            ->addColumn('designation', function($row) {
+            ->addColumn('designation', function ($row) {
                 return $row->designation ? $row->designation->designation_name : '-';
             })
-            ->addColumn('basic_salary', function($row) {
+            ->addColumn('basic_salary', function ($row) {
                 return $row->currentSalaryStructure ? number_format($row->currentSalaryStructure->basic_salary, 2) : 'Not Set';
             })
-            ->addColumn('gross_salary', function($row) {
+            ->addColumn('gross_salary', function ($row) {
                 return $row->currentSalaryStructure ? number_format($row->currentSalaryStructure->gross_salary, 2) : 'Not Set';
             })
-            ->addColumn('effective_from', function($row) {
+            ->addColumn('effective_from', function ($row) {
                 return $row->currentSalaryStructure ? $row->currentSalaryStructure->effective_from->format('Y-m-d') : '-';
             })
-            ->addColumn('action', function($row) {
+            ->addColumn('action', function ($row) {
                 return '<a href="' . route('payrolls.salary.edit', $row->id) . '" class="btn btn-sm btn-outline-primary">
                         <i class="ri-edit-line"></i> Edit
                     </a>
@@ -1033,10 +1055,10 @@ class PayrollController extends Controller
         $employees = Employee::with(['currentSalaryStructure', 'department', 'designation'])
             ->whereDoesntHave('currentSalaryStructure')
             ->get();
-        
+
         $taxSlabs = IncomeTaxSlab::where('status', 1)->orderBy('min_salary')->get();
         $deductionTypes = DeductionType::where('status', 1)->get();
-        
+
         return view('payrolls.salary.create', compact('employees', 'taxSlabs', 'deductionTypes'));
     }
 
@@ -1067,10 +1089,10 @@ class PayrollController extends Controller
             ]);
 
             // Calculate gross salary
-            $grossSalary = $validated['basic_salary'] + 
-                          ($validated['house_rent_allowance'] ?? 0) + 
-                          ($validated['medical_allowance'] ?? 0) + 
-                          ($validated['transport_allowance'] ?? 0) + 
+            $grossSalary = $validated['basic_salary'] +
+                          ($validated['house_rent_allowance'] ?? 0) +
+                          ($validated['medical_allowance'] ?? 0) +
+                          ($validated['transport_allowance'] ?? 0) +
                           ($validated['other_allowances'] ?? 0);
 
             // Deactivate any existing active salary structure
@@ -1107,10 +1129,10 @@ class PayrollController extends Controller
             }
 
             // Create deduction preferences
-            if (isset($validated['deductions']) && !empty($validated['deductions'])) {
+            if (isset($validated['deductions']) && ! empty($validated['deductions'])) {
                 foreach ($validated['deductions'] as $deduction) {
                     // Only create deduction if deduction_type_id is provided
-                    if (!empty($deduction['deduction_type_id'])) {
+                    if (! empty($deduction['deduction_type_id'])) {
                         EmployeeDeductionPreference::create([
                             'employee_id' => $validated['employee_id'],
                             'deduction_type_id' => $deduction['deduction_type_id'],
@@ -1124,7 +1146,6 @@ class PayrollController extends Controller
 
             return redirect()->route('payrolls.salary.index')
                 ->with('success', 'Employee salary structure created successfully.');
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
@@ -1144,10 +1165,10 @@ class PayrollController extends Controller
     {
         $employee = Employee::with(['currentSalaryStructure', 'taxPreferences', 'deductionPreferences.deductionType'])
             ->findOrFail($id);
-        
+
         $taxSlabs = IncomeTaxSlab::where('status', 1)->orderBy('min_salary')->get();
         $deductionTypes = DeductionType::where('status', 1)->get();
-        
+
         return view('payrolls.salary.edit', compact('employee', 'taxSlabs', 'deductionTypes'));
     }
 
@@ -1175,20 +1196,20 @@ class PayrollController extends Controller
             'deductions.*.amount' => 'required_with:deductions|numeric|min:0',
             'deductions.*.type' => 'required_with:deductions|in:fixed,percentage',
             'deductions.*.is_active' => 'nullable|in:on'
-        ]);
+            ]);
 
-        $employee = Employee::findOrFail($id);
-        
+            $employee = Employee::findOrFail($id);
+
         // Calculate gross salary
-        $grossSalary = $validated['basic_salary'] + 
-                      ($validated['house_rent_allowance'] ?? 0) + 
-                      ($validated['medical_allowance'] ?? 0) + 
-                      ($validated['transport_allowance'] ?? 0) + 
+            $grossSalary = $validated['basic_salary'] +
+                      ($validated['house_rent_allowance'] ?? 0) +
+                      ($validated['medical_allowance'] ?? 0) +
+                      ($validated['transport_allowance'] ?? 0) +
                       ($validated['other_allowances'] ?? 0);
 
         // Update current salary structure
-        if ($employee->currentSalaryStructure) {
-            $employee->currentSalaryStructure->update([
+            if ($employee->currentSalaryStructure) {
+                $employee->currentSalaryStructure->update([
                 'basic_salary' => $validated['basic_salary'],
                 'house_rent_allowance' => $validated['house_rent_allowance'] ?? 0,
                 'medical_allowance' => $validated['medical_allowance'] ?? 0,
@@ -1198,51 +1219,50 @@ class PayrollController extends Controller
                 'effective_from' => $validated['effective_from'],
                 'effective_to' => $validated['effective_to'],
                 'notes' => $validated['notes']
-            ]);
-        }
+                ]);
+            }
 
         // Update tax preferences
-        EmployeeTaxPreference::updateOrCreate(
-            ['employee_id' => $id],
-            [
+            EmployeeTaxPreference::updateOrCreate(
+                ['employee_id' => $id],
+                [
                 'tax_slab_id' => $validated['tax_slab_id'] ?? null,
                 'tax_exemption_amount' => $validated['tax_exemption_amount'] ?? 0,
                 'apply_tax' => isset($validated['apply_tax']) ? true : false,
                 'notes' => $validated['notes']
-            ]
-        );
+                ]
+            );
 
         // Update deduction preferences
-        if (isset($validated['deductions'])) {
-            // Deactivate all existing deductions
-            EmployeeDeductionPreference::where('employee_id', $id)->update(['is_active' => false]);
-            
-            foreach ($validated['deductions'] as $deduction) {
-                if (isset($deduction['id'])) {
-                    // Update existing deduction
-                    EmployeeDeductionPreference::where('id', $deduction['id'])
+            if (isset($validated['deductions'])) {
+                // Deactivate all existing deductions
+                EmployeeDeductionPreference::where('employee_id', $id)->update(['is_active' => false]);
+
+                foreach ($validated['deductions'] as $deduction) {
+                    if (isset($deduction['id'])) {
+                        // Update existing deduction
+                        EmployeeDeductionPreference::where('id', $deduction['id'])
                         ->update([
                             'deduction_type_id' => $deduction['deduction_type_id'],
                             'amount' => $deduction['amount'],
                             'type' => $deduction['type'],
                             'is_active' => ($deduction['is_active'] === 'on') ? true : false
                         ]);
-                } else {
-                    // Create new deduction
-                    EmployeeDeductionPreference::create([
+                    } else {
+                        // Create new deduction
+                        EmployeeDeductionPreference::create([
                         'employee_id' => $id,
                         'deduction_type_id' => $deduction['deduction_type_id'],
                         'amount' => $deduction['amount'],
                         'type' => $deduction['type'],
                         'is_active' => ($deduction['is_active'] === 'on') ? true : false
-                    ]);
+                        ]);
+                    }
                 }
             }
-        }
 
             return redirect()->route('payrolls.salary.index')
                 ->with('success', 'Employee salary structure updated successfully.');
-                
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
@@ -1260,7 +1280,7 @@ class PayrollController extends Controller
     public function salaryHistory($id)
     {
         $employee = Employee::with(['salaryHistory', 'department', 'designation'])->findOrFail($id);
-        
+
         return view('payrolls.salary.history', compact('employee'));
     }
 
@@ -1275,7 +1295,7 @@ class PayrollController extends Controller
                 ->orderBy('min_salary')
                 ->get(['id', 'min_salary', 'max_salary', 'tax_percent', 'fixed_amount']);
         });
-        
+
         return response()->json($taxSlabs);
     }
 
@@ -1286,8 +1306,8 @@ class PayrollController extends Controller
     {
         try {
             $employeeId = $request->input('employee_id');
-            
-            if (!$employeeId) {
+
+            if (! $employeeId) {
                 return response()->json(['success' => false, 'message' => 'Employee ID is required']);
             }
 
@@ -1297,7 +1317,7 @@ class PayrollController extends Controller
                 'deductionPreferences.deductionType'
             ])->find($employeeId);
 
-            if (!$employee) {
+            if (! $employee) {
                 return response()->json(['success' => false, 'message' => 'Employee not found']);
             }
 
@@ -1314,7 +1334,7 @@ class PayrollController extends Controller
                 $salary = $employee->currentSalaryStructure;
                 $data['basic_salary'] = $salary->basic_salary;
                 $data['gross_salary'] = $salary->gross_salary;
-                
+
                 // Add allowances from salary structure
                 if ($salary->house_rent_allowance > 0) {
                     $data['allowances'][] = [
@@ -1366,7 +1386,6 @@ class PayrollController extends Controller
             }
 
             return response()->json(['success' => true, 'data' => $data]);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error fetching employee data: ' . $e->getMessage()]);
         }
@@ -1379,7 +1398,7 @@ class PayrollController extends Controller
     {
         $employee = Employee::with(['currentSalaryStructure', 'taxPreferences.taxSlab', 'deductionPreferences.deductionType'])
             ->findOrFail($id);
-        
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -1399,12 +1418,12 @@ class PayrollController extends Controller
         $employees = Employee::with(['department', 'designation'])
             ->whereDoesntHave('currentSalaryStructure')
             ->get();
-        
+
         $taxSlabs = IncomeTaxSlab::where('status', 1)->orderBy('min_salary')->get();
         $deductionTypes = DeductionType::where('status', 1)->get();
         $departments = \App\Models\Department::orderBy('department_name')->get();
         $designations = \App\Models\Designation::orderBy('designation_name')->get();
-        
+
         return view('payrolls.salary.bulk-create', compact('employees', 'taxSlabs', 'deductionTypes', 'departments', 'designations'));
     }
 
@@ -1440,10 +1459,10 @@ class PayrollController extends Controller
             foreach ($validated['employee_ids'] as $employeeId) {
                 try {
                     // Calculate gross salary
-                    $grossSalary = $validated['basic_salary'] + 
-                                  ($validated['house_rent_allowance'] ?? 0) + 
-                                  ($validated['medical_allowance'] ?? 0) + 
-                                  ($validated['transport_allowance'] ?? 0) + 
+                    $grossSalary = $validated['basic_salary'] +
+                                  ($validated['house_rent_allowance'] ?? 0) +
+                                  ($validated['medical_allowance'] ?? 0) +
+                                  ($validated['transport_allowance'] ?? 0) +
                                   ($validated['other_allowances'] ?? 0);
 
                     // Deactivate any existing active salary structure
@@ -1479,10 +1498,10 @@ class PayrollController extends Controller
                     }
 
                     // Create deduction preferences
-                    if (isset($validated['deductions']) && !empty($validated['deductions'])) {
+                    if (isset($validated['deductions']) && ! empty($validated['deductions'])) {
                         foreach ($validated['deductions'] as $deduction) {
                             // Only create deduction if deduction_type_id is provided
-                            if (!empty($deduction['deduction_type_id'])) {
+                            if (! empty($deduction['deduction_type_id'])) {
                                 EmployeeDeductionPreference::create([
                                     'employee_id' => $employeeId,
                                     'deduction_type_id' => $deduction['deduction_type_id'],
@@ -1531,20 +1550,20 @@ class PayrollController extends Controller
         $taxAmount = 0;
         $slabInfo = '';
         $exemptionApplied = 0;
-        
+
         // Get employee tax preferences
         $taxPreferences = $employee->taxPreferences;
-        
+
         if ($taxPreferences && $taxPreferences->apply_tax) {
             // Calculate taxable income (gross - exemption) - MONTHLY
             $taxExemption = $taxPreferences->tax_exemption_amount ?? 0;
             $exemptionApplied = $taxExemption;
             $monthlyTaxableIncome = max(0, $taxableGrossSalary - $taxExemption);
             $annualTaxableIncome = $monthlyTaxableIncome * 12; // Convert to annual for slab determination
-            
+
             // Get tax slabs
             $taxSlabs = IncomeTaxSlab::where('status', 1)->orderBy('min_salary')->get();
-            
+
             // Find applicable tax slab based on ANNUAL taxable income
             $applicableSlab = null;
             foreach ($taxSlabs as $slab) {
@@ -1553,13 +1572,13 @@ class PayrollController extends Controller
                     break;
                 }
             }
-            
+
             if ($applicableSlab) {
                 // Calculate ANNUAL tax based on annual taxable income
                 $annualTaxAmount = ($annualTaxableIncome * $applicableSlab->tax_percent / 100) + ($applicableSlab->fixed_amount ?? 0);
                 // Convert back to monthly tax
                 $taxAmount = $annualTaxAmount / 12;
-                
+
                 $slabInfo = "Slab: {$applicableSlab->min_salary} - {$applicableSlab->max_salary}, Rate: {$applicableSlab->tax_percent}%";
                 if ($taxExemption > 0) {
                     $slabInfo .= " (Taxable: " . number_format($monthlyTaxableIncome, 2) . " after {$taxExemption} exemption)";
@@ -1570,7 +1589,7 @@ class PayrollController extends Controller
         } else {
             $slabInfo = 'Tax not applicable';
         }
-        
+
         return [
             'amount' => $taxAmount,
             'info' => $slabInfo,

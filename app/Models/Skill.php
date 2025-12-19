@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Skill extends Model
 {
-    use HasFactory, SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'title',
@@ -29,21 +30,21 @@ class Skill extends Model
 
     public function parent()
     {
-        return $this->belongsTo(self::class,'parent_id','id');
+        return $this->belongsTo(self::class, 'parent_id', 'id');
     }
 
     public function subject()
     {
-        return $this->belongsTo(Subject::class,'subject_id','id');
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
     public function com_class()
     {
-        return $this->belongsTo(ComClass::class,'class_id','id');
+        return $this->belongsTo(ComClass::class, 'class_id', 'id');
     }
 
     public function term()
     {
-        return $this->belongsTo(Term::class,'term_id','id');
+        return $this->belongsTo(Term::class, 'term_id', 'id');
     }
 }

@@ -12,8 +12,6 @@ use App\Models\TeacherObservation;
 use App\Models\BranchClassSection;
 use App\Models\QuestionDimension;
 use App\Models\Rating;
-
-
 use App\Models\ClassSubject;
 use App\Models\AcademicYear;
 use App\Models\Employee;
@@ -94,7 +92,7 @@ class ObservationDetailController extends Controller
 
         // Check if the referenced class_id exists in branch_class_sections
         $classExists = DB::table('branch_class_sections')->where('id', $request->class_id)->exists();
-        if (!$classExists) {
+        if (! $classExists) {
             return back()->withInput()->withErrors([
                 'class_id' => 'The selected class is invalid or does not exist in the system. Please select a valid class.'
             ]);
@@ -102,7 +100,7 @@ class ObservationDetailController extends Controller
 
         // Check if the referenced section_id exists in sections
         $sectionExists = DB::table('sections')->where('id', $request->section_id)->exists();
-        if (!$sectionExists) {
+        if (! $sectionExists) {
             return back()->withInput()->withErrors([
                 'section_id' => 'The selected section is invalid or does not exist in the system. Please select a valid section.'
             ]);
@@ -110,7 +108,7 @@ class ObservationDetailController extends Controller
 
         // Check if the referenced subject_id exists in class_subjects
         $subjectExists = DB::table('class_subjects')->where('id', $request->subject_id)->exists();
-        if (!$subjectExists) {
+        if (! $subjectExists) {
             return back()->withInput()->withErrors([
                 'subject_id' => 'The selected subject is invalid or does not exist in the system. Please select a valid subject.'
             ]);
@@ -166,7 +164,6 @@ class ObservationDetailController extends Controller
             $classTeacher = ClassTeacher::where('employee_id', $teacher->id)->first();
             $subjectName = $classTeacher->subject->subject_name;
             $preferredName = $teacher->preferred_name;
-
         }
         // dd($observationDetails);
 
@@ -195,7 +192,7 @@ class ObservationDetailController extends Controller
 
         $observationDetail = ObservationDetail::where('id', $request->id)->first();
 
-        if (!$observationDetail) {
+        if (! $observationDetail) {
             return back()->with('error', 'Observation detail not found.');
         }
 
@@ -214,9 +211,7 @@ class ObservationDetailController extends Controller
                 ], [
                     'rating' => $ratingSum,
                 ]);
-
             }
-
         }
 
         // Update the planning_preparing_rating column

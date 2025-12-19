@@ -6,6 +6,7 @@ use App\Models\CampusOfficeType;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use DataTables;
+
 class CampusOfficeTypeController extends Controller
 {
     /**
@@ -16,7 +17,6 @@ class CampusOfficeTypeController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = CampusOfficeType::get();
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -25,7 +25,6 @@ class CampusOfficeTypeController extends Controller
                 })
                 ->rawColumns(['action'])
                 ->make(true);
-
         }
         return view('settings.campus_office_types.campus_types');
     }
@@ -51,9 +50,8 @@ class CampusOfficeTypeController extends Controller
         $request->validate([
             'type' => 'required',
         ]);
-        $type = CampusOfficeType::where('type',$request->type)->get();
-        if(isset($type[0]))
-        {
+        $type = CampusOfficeType::where('type', $request->type)->get();
+        if (isset($type[0])) {
             return redirect()->route('campusOfficeType.index')
             ->with('error', 'Duplicate entries not allowed.');
         }

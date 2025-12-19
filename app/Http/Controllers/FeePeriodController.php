@@ -23,22 +23,19 @@ class FeePeriodController extends Controller
     {
         if ($request->ajax()) {
             $data = FeePeriod::with(['academic_year', 'branch']);
-            if($request->academic_year_id)
-            {
-                $data=$data->whereHas('academic_year',function($q)use($request){
-                    $q->where('id',$request->academic_year_id);
+            if ($request->academic_year_id) {
+                $data = $data->whereHas('academic_year', function ($q) use ($request) {
+                    $q->where('id', $request->academic_year_id);
                 });
             }
-            if($request->branch_id)
-            {
-                $data=$data->whereHas('branch',function($q) use ($request){
-                    $q->where('id',$request->branch_id);
+            if ($request->branch_id) {
+                $data = $data->whereHas('branch', function ($q) use ($request) {
+                    $q->where('id', $request->branch_id);
                 });
             }
-            if($request->fee_period_id)
-            {
-                $data=$data->whereHas('fee_period',function($q) use ($request){
-                    $q->where('fee_period_id',$request->fee_period_id);
+            if ($request->fee_period_id) {
+                $data = $data->whereHas('fee_period', function ($q) use ($request) {
+                    $q->where('fee_period_id', $request->fee_period_id);
                 });
             }
             return Datatables::of($data)

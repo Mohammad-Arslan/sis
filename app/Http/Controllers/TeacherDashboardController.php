@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use DateTime;
 use App\Models\ClassTeacher;
 use App\Models\EmployeeAttendance;
@@ -27,37 +28,33 @@ class TeacherDashboardController extends Controller
         ])->get();
 
         $attendanceClasses = ClassTeacher::with('teacher_type')
-            ->where(function($q){
-                $q->whereHas('teacher_type',function($q1){
-                    $q1->where('abbreviation','class');
+            ->where(function ($q) {
+                $q->whereHas('teacher_type', function ($q1) {
+                    $q1->where('abbreviation', 'class');
                 });
-                $q->orWhereHas('branch_class_section.com_classes.attendance_type',function ($q2){
-                    $q2->where('abbreviation','subject');
+                $q->orWhereHas('branch_class_section.com_classes.attendance_type', function ($q2) {
+                    $q2->where('abbreviation', 'subject');
                 });
             })->where('employee_id', $employeeId)->get();
 
-        $leaveQuotas = EmployeeLeaveQuota::with('leaveType')->where('employee_id',auth()->user()->employee->id)->get();
+        $leaveQuotas = EmployeeLeaveQuota::with('leaveType')->where('employee_id', auth()->user()->employee->id)->get();
         $today = date('Y-m-d');
 
-        $today_start = $today.' 00:00:00';
-        $today_end = $today.' 23:59:59';
-        $mark_time_in = EmployeeAttendance::whereBetween('created_at',[$today_start,$today_end])->where('employee_id',auth()->user()->employee->id)->get(['id','time_in','time_out','created_at']);
-        if(isset($mark_time_in[0]->time_in) && is_null($mark_time_in[0]->time_out))
-        {
+        $today_start = $today . ' 00:00:00';
+        $today_end = $today . ' 23:59:59';
+        $mark_time_in = EmployeeAttendance::whereBetween('created_at', [$today_start,$today_end])->where('employee_id', auth()->user()->employee->id)->get(['id','time_in','time_out','created_at']);
+        if (isset($mark_time_in[0]->time_in) && is_null($mark_time_in[0]->time_out)) {
             $time_in = $mark_time_in[0]->time_in;
-            $time_out = NULL;
+            $time_out = null;
             $id = $mark_time_in[0]->id;
-        }
-        else if(isset($mark_time_in[0]->time_in) && isset($mark_time_in[0]->time_out))
-        {
+        } else if (isset($mark_time_in[0]->time_in) && isset($mark_time_in[0]->time_out)) {
             $time_in = $mark_time_in[0]->time_in;
             $time_out = $mark_time_in[0]->time_out;
             $id = $mark_time_in[0]->id;
-        }
-        else{
-            $time_in = NULL;
-            $time_out = NULL;
-            $id = NULL;
+        } else {
+            $time_in = null;
+            $time_out = null;
+            $id = null;
         }
         return view('employees.teachers.dashboard', [
             'user_id' => $employeeId,

@@ -22,7 +22,7 @@ class UpdateTaxTypeRequest extends FormRequest
     {
         $taxType = $this->route('taxType');
         $taxTypeId = $taxType instanceof \App\Models\TaxType ? $taxType->id : $taxType;
-        
+
         return [
             'name' => [
                 'required',
@@ -46,4 +46,3 @@ class UpdateTaxTypeRequest extends FormRequest
         ];
     }
 }
-

@@ -4,7 +4,7 @@ namespace App\Traits;
 
 /**
  * Trait for generating action buttons in DataTables
- * 
+ *
  * This trait provides flexible methods to generate action buttons
  * for DataTables across the application, supporting both modal-based
  * and route-based actions with permission checks.
@@ -13,7 +13,7 @@ trait GeneratesActionButtons
 {
     /**
      * Generate action buttons HTML for DataTables
-     * 
+     *
      * @param int|string $id The record ID
      * @param array $options Configuration options
      * @return string HTML string for action buttons
@@ -62,7 +62,7 @@ trait GeneratesActionButtons
                 title: $options['view_title'],
                 dataTable: $options['data_table']
             );
-            
+
             if ($viewButton) {
                 $buttons[] = $viewButton;
             }
@@ -81,7 +81,7 @@ trait GeneratesActionButtons
                 title: $options['edit_title'],
                 dataTable: $options['data_table']
             );
-            
+
             if ($editButton) {
                 $buttons[] = $editButton;
             }
@@ -100,7 +100,7 @@ trait GeneratesActionButtons
                 title: $options['delete_title'],
                 dataTable: $options['data_table']
             );
-            
+
             if ($deleteButton) {
                 $buttons[] = $deleteButton;
             }
@@ -110,14 +110,14 @@ trait GeneratesActionButtons
             return '<span class="text-muted">N/A</span>';
         }
 
-        return '<div class="' . htmlspecialchars($options['container_class'], ENT_QUOTES, 'UTF-8') . '">' . 
-               implode('', $buttons) . 
+        return '<div class="' . htmlspecialchars($options['container_class'], ENT_QUOTES, 'UTF-8') . '">' .
+               implode('', $buttons) .
                '</div>';
     }
 
     /**
      * Generate a single action button
-     * 
+     *
      * @param int|string $id The record ID
      * @param string $type Button type (edit, delete, view)
      * @param string|null $route Route name or URL
@@ -143,7 +143,7 @@ trait GeneratesActionButtons
         // Check permission if provided
         if ($permission) {
             $user = \Illuminate\Support\Facades\Auth::user();
-            if (!$user || (method_exists($user, 'hasPermission') && !$user->hasPermission($permission))) {
+            if (! $user || (method_exists($user, 'hasPermission') && ! $user->hasPermission($permission))) {
                 return null;
             }
         }
@@ -157,15 +157,15 @@ trait GeneratesActionButtons
         if ($route) {
             $url = str_starts_with($route, 'http') ? $route : route($route, $id);
             $urlEscaped = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
-            
+
             if ($type === 'delete') {
                 $dataTableAttr = $dataTable ? ' data-table="' . htmlspecialchars($dataTable, ENT_QUOTES, 'UTF-8') . '"' : '';
-                return '<a href="' . $urlEscaped . '"' . 
-                       $dataTableAttr . 
+                return '<a href="' . $urlEscaped . '"' .
+                       $dataTableAttr .
                        ' class="' . $classEscaped . ' delete-record" title="' . $titleEscaped . '">' .
                        '<i class="' . $iconEscaped . '"></i></a>';
             }
-            
+
             return '<a href="' . $urlEscaped . '" class="' . $classEscaped . '" title="' . $titleEscaped . '">' .
                    '<i class="' . $iconEscaped . '"></i></a>';
         }
@@ -183,7 +183,7 @@ trait GeneratesActionButtons
 
     /**
      * Generate action buttons with modal-based edit/delete
-     * 
+     *
      * @param int|string $id The record ID
      * @param string $entityType Entity type name (e.g., 'Country', 'State')
      * @param array $options Additional options
@@ -213,7 +213,7 @@ trait GeneratesActionButtons
             title: 'Edit',
             dataTable: null
         );
-        
+
         if ($editButton) {
             $buttons[] = $editButton;
         }
@@ -230,7 +230,7 @@ trait GeneratesActionButtons
             title: 'Delete',
             dataTable: null
         );
-        
+
         if ($deleteButton) {
             $buttons[] = $deleteButton;
         }
@@ -244,7 +244,7 @@ trait GeneratesActionButtons
 
     /**
      * Generate action buttons with route-based edit/delete
-     * 
+     *
      * @param int|string $id The record ID
      * @param string $routePrefix Route name prefix (e.g., 'countries' for 'countries.edit', 'countries.destroy')
      * @param array $options Additional options
@@ -275,7 +275,7 @@ trait GeneratesActionButtons
             title: 'Edit',
             dataTable: null
         );
-        
+
         if ($editButton) {
             $buttons[] = $editButton;
         }
@@ -292,7 +292,7 @@ trait GeneratesActionButtons
             title: 'Delete',
             dataTable: $mergedOptions['data_table']
         );
-        
+
         if ($deleteButton) {
             $buttons[] = $deleteButton;
         }
@@ -304,4 +304,3 @@ trait GeneratesActionButtons
         return '<div class="d-flex gap-2">' . implode('', $buttons) . '</div>';
     }
 }
-

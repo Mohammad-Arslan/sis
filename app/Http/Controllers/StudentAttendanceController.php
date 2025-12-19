@@ -126,7 +126,6 @@ class StudentAttendanceController extends Controller
 
         \DB::commit();
         return redirect()->back()->with('success', 'Attendance saved successfully.');
-
     }
 
     /**
@@ -187,7 +186,7 @@ class StudentAttendanceController extends Controller
         $sections = Section::all();
         $academic_years = AcademicYear::all();
 
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return view('reports.attendance_report', compact(['academic_years', 'branches', 'classes', 'sections']));
         }
 
@@ -206,7 +205,7 @@ class StudentAttendanceController extends Controller
             $section = $branch_class_section->section_id;
 
             $studentCondition = ['branch_id' => $branch, 'status' => 'on_roll'];
-            if (!empty($filters['student_id'])) {
+            if (! empty($filters['student_id'])) {
                 $studentCondition['roll_no'] = $filters['student_id'];
             }
 
@@ -224,19 +223,19 @@ class StudentAttendanceController extends Controller
                 'student_attendance' => function ($query) use ($filters, $date_range_array, $month, $academic_year_id) {
                     $query->orderBy('attendance_date', 'asc');
 
-                    if (!empty($filters['selected_month'])) {
+                    if (! empty($filters['selected_month'])) {
                         $query->whereMonth('attendance_date', $month);
                     }
 
-                    if (!empty($date_range_array[0])) {
+                    if (! empty($date_range_array[0])) {
                         $query->whereDate('attendance_date', '>=', $date_range_array[0]);
                     }
 
-                    if (!empty($date_range_array[1])) {
+                    if (! empty($date_range_array[1])) {
                         $query->whereDate('attendance_date', '<=', $date_range_array[1]);
                     }
 
-                    if (!empty($academic_year_id)) {
+                    if (! empty($academic_year_id)) {
                         $query->where('academic_year_id', $academic_year_id);
                     }
                 }
@@ -247,5 +246,4 @@ class StudentAttendanceController extends Controller
 
         return response()->json($data);
     }
-
 }

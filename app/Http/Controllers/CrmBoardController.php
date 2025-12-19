@@ -40,16 +40,12 @@ use App\Models\StudentPromotionRequest;
 use App\Models\ExitInterviewFeedback;
 use App\Models\Payroll;
 use App\Models\BranchAcademicYear;
-
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-
 class CrmBoardController extends Controller
 {
-
-
     // public function communication_manager()
     // {
     //     // dd("hee");
@@ -149,8 +145,8 @@ class CrmBoardController extends Controller
         $this->own_visit($request);
 
         // Get all states with branch counts
-        $states_with_counts = State::withCount(['contactInformation' => function($query) {
-            $query->whereHas('contact_informationable', function($q) {
+        $states_with_counts = State::withCount(['contactInformation' => function ($query) {
+            $query->whereHas('contact_informationable', function ($q) {
                 $q->where('contact_informationable_type', 'App\\Models\\Branch');
             });
         }])->get();
@@ -161,7 +157,7 @@ class CrmBoardController extends Controller
         $data['total_students'] = Student::whereNull('deleted_at')->count();
         $data['onroll'] = Student::where('status', 'on_roll')->whereNull('deleted_at')->count();
         $data['register'] = Student::where('status', 'registered')->whereNull('deleted_at')->count();
-        $data['processing'] = Student::where(function($query) {
+        $data['processing'] = Student::where(function ($query) {
             $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
@@ -184,28 +180,28 @@ class CrmBoardController extends Controller
         $data['exit_interviews'] = ExitInterviewFeedback::count();
 
         // Students with arrears (not paid 3+ invoices)
-        $data['students_with_arrears'] = Student::whereHas('invoices', function($q) {
+        $data['students_with_arrears'] = Student::whereHas('invoices', function ($q) {
             $q->where('status', '!=', 'paid');
-        })->withCount(['invoices' => function($q) {
+        })->withCount(['invoices' => function ($q) {
             $q->where('status', '!=', 'paid');
         }])->having('invoices_count', '>=', 3)->count();
 
         // Revenue trends data
         $data['revenue_trends'] = $this->getRevenueTrendsData();
         $data['all_branches'] = Branch::select('id', 'br_name')->orderBy('br_name')->get();
-        
+
         // Academic years data
         $data['academic_years'] = $this->getAcademicYearsData();
-        
+
         // Recent students data
         $data['recent_students'] = $this->getRecentStudentsData();
-        
+
         // Financial health data
         $data['financial_health'] = $this->getFinancialHealthData();
-        
+
         // Growth indicators data
         $data['growth_indicators'] = $this->getGrowthIndicatorsData();
-        
+
         // Student enrollment trends data
         $data['student_trends'] = $this->getStudentEnrollmentTrendsData();
 
@@ -215,8 +211,8 @@ class CrmBoardController extends Controller
     private function getFinanceData(Request $request)
     {
         // Similar to super admin but finance-specific
-        $states_with_counts = State::withCount(['contactInformation' => function($query) {
-            $query->whereHas('contact_informationable', function($q) {
+        $states_with_counts = State::withCount(['contactInformation' => function ($query) {
+            $query->whereHas('contact_informationable', function ($q) {
                 $q->where('contact_informationable_type', 'App\\Models\\Branch');
             });
         }])->get();
@@ -226,7 +222,7 @@ class CrmBoardController extends Controller
         $data['total_students'] = Student::whereNull('deleted_at')->count();
         $data['onroll'] = Student::where('status', 'on_roll')->whereNull('deleted_at')->count();
         $data['register'] = Student::where('status', 'registered')->whereNull('deleted_at')->count();
-        $data['processing'] = Student::where(function($query) {
+        $data['processing'] = Student::where(function ($query) {
             $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
@@ -266,7 +262,7 @@ class CrmBoardController extends Controller
         $data['total_students'] = Student::where('branch_id', $branch_id)->whereNull('deleted_at')->count();
         $data['onroll'] = Student::where('status', 'on_roll')->where('branch_id', $branch_id)->whereNull('deleted_at')->count();
         $data['register'] = Student::where('status', 'registered')->where('branch_id', $branch_id)->whereNull('deleted_at')->count();
-        $data['processing'] = Student::where(function($query) {
+        $data['processing'] = Student::where(function ($query) {
             $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
@@ -281,8 +277,8 @@ class CrmBoardController extends Controller
     {
         $state_id = get_state_id();
 
-        $states_with_counts = State::withCount(['contactInformation' => function($query) {
-            $query->whereHas('contact_informationable', function($q) {
+        $states_with_counts = State::withCount(['contactInformation' => function ($query) {
+            $query->whereHas('contact_informationable', function ($q) {
                 $q->where('contact_informationable_type', 'App\\Models\\Branch');
             });
         }])->get();
@@ -296,7 +292,7 @@ class CrmBoardController extends Controller
             $data['total_students'] = Student::whereIn('branch_id', $first_state_branches)->whereNull('deleted_at')->count();
             $data['onroll'] = Student::where('status', 'on_roll')->whereIn('branch_id', $first_state_branches)->whereNull('deleted_at')->count();
             $data['register'] = Student::where('status', 'registered')->whereIn('branch_id', $first_state_branches)->whereNull('deleted_at')->count();
-            $data['processing'] = Student::where(function($query) {
+            $data['processing'] = Student::where(function ($query) {
                 $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
@@ -309,7 +305,7 @@ class CrmBoardController extends Controller
             $data['total_students'] = Student::whereIn('branch_id', $second_state_branches)->whereNull('deleted_at')->count();
             $data['onroll'] = Student::where('status', 'on_roll')->whereIn('branch_id', $second_state_branches)->whereNull('deleted_at')->count();
             $data['register'] = Student::where('status', 'registered')->whereIn('branch_id', $second_state_branches)->whereNull('deleted_at')->count();
-            $data['processing'] = Student::where(function($query) {
+            $data['processing'] = Student::where(function ($query) {
                 $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
@@ -321,7 +317,7 @@ class CrmBoardController extends Controller
             $data['total_students'] = Student::whereNull('deleted_at')->count();
             $data['onroll'] = Student::where('status', 'on_roll')->whereNull('deleted_at')->count();
             $data['register'] = Student::where('status', 'registered')->whereNull('deleted_at')->count();
-            $data['processing'] = Student::where(function($query) {
+            $data['processing'] = Student::where(function ($query) {
                 $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
@@ -386,16 +382,16 @@ class CrmBoardController extends Controller
         $mark_time_in = EmployeeAttendance::whereBetween('created_at', [$today_start, $today_end])->where('employee_id', auth()->user()->employee->id)->get(['id', 'time_in', 'time_out']);
         if (isset($mark_time_in[0]->time_in) && is_null($mark_time_in[0]->time_out)) {
             $time_in = $mark_time_in[0]->time_in;
-            $time_out = NULL;
+            $time_out = null;
             $id = $mark_time_in[0]->id;
         } elseif (isset($mark_time_in[0]->time_in) && isset($mark_time_in[0]->time_out)) {
             $time_in = $mark_time_in[0]->time_in;
             $time_out = $mark_time_in[0]->time_out;
             $id = $mark_time_in[0]->id;
         } else {
-            $time_in = NULL;
-            $time_out = NULL;
-            $id = NULL;
+            $time_in = null;
+            $time_out = null;
+            $id = null;
         }
         return [
             'user_id' => $employeeId,
@@ -408,11 +404,17 @@ class CrmBoardController extends Controller
     }
 
 
-    public function addTask(Request $request) {}
+    public function addTask(Request $request)
+    {
+    }
 
-    public function addTaskMember(Request $request) {}
+    public function addTaskMember(Request $request)
+    {
+    }
 
-    public function addProjectMember(Request $request) {}
+    public function addProjectMember(Request $request)
+    {
+    }
 
     public function taskDetail(Request $request)
     {
@@ -595,35 +597,35 @@ class CrmBoardController extends Controller
     private function getRevenueTrendsData()
     {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        
+
         // Get student fee revenue (paid invoices) for each month across all years
         $revenueData = [];
         $expenseData = [];
-        
+
         for ($i = 1; $i <= 12; $i++) {
             // Student fee revenue (paid invoices) - all time data for this month
             $revenue = StudentInvoice::where('is_paid', 1)
                 ->whereRaw('MONTH(paid_date) = ?', [$i])
                 ->sum('paid_amount');
             $revenueData[] = (int) $revenue;
-            
+
             // Expenses: Payroll + Asset purchases - all time data for this month
             $payrollExpense = Payroll::whereIn('status', ['paid', 'processed'])
                 ->where('month', $i)
                 ->sum('net_salary');
-            
+
             $assetExpense = PurchaseOrder::whereIn('status', ['approved', 'completed'])
                 ->whereRaw('MONTH(created_at) = ?', [$i])
                 ->sum('total_cost');
-            
+
             $expenseData[] = (int) ($payrollExpense + $assetExpense);
         }
-        
+
         return [
             'months' => $months,
             'revenue' => $revenueData,
             'expenses' => $expenseData,
-            'profit' => array_map(function($rev, $exp) {
+            'profit' => array_map(function ($rev, $exp) {
                 return $rev - $exp;
             }, $revenueData, $expenseData)
         ];
@@ -636,26 +638,26 @@ class CrmBoardController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
-            ->map(function($student) {
+            ->map(function ($student) {
                 // Concatenate name from first_name, middle_name, last_name with null checks
                 $nameParts = [];
-                if (!empty($student->first_name)) {
+                if (! empty($student->first_name)) {
                     $nameParts[] = $student->first_name;
                 }
-                if (!empty($student->middle_name)) {
+                if (! empty($student->middle_name)) {
                     $nameParts[] = $student->middle_name;
                 }
-                if (!empty($student->last_name)) {
+                if (! empty($student->last_name)) {
                     $nameParts[] = $student->last_name;
                 }
-                $fullName = !empty($nameParts) ? implode(' ', $nameParts) : 'N/A';
-                
+                $fullName = ! empty($nameParts) ? implode(' ', $nameParts) : 'N/A';
+
                 // Handle status - if empty or null, set to 'Processing'
                 $status = $student->status;
                 if (empty($status) || is_null($status)) {
                     $status = 'Processing';
                 }
-                
+
                 return [
                     'id' => $student->id,
                     'name' => $fullName,
@@ -673,14 +675,14 @@ class CrmBoardController extends Controller
     {
         // Total Revenue (all paid invoices)
         $totalRevenue = StudentInvoice::where('is_paid', 1)->sum('paid_amount');
-        
+
         // Outstanding Payments (unpaid invoices)
         $outstandingPayments = StudentInvoice::where('is_paid', 0)->sum('total_payable');
-        
+
         // Collection Rate (percentage of paid vs total)
         $totalInvoices = StudentInvoice::sum('total_payable');
         $collectionRate = $totalInvoices > 0 ? round(($totalRevenue / $totalInvoices) * 100, 1) : 0;
-        
+
         return [
             'total_revenue' => $totalRevenue,
             'outstanding_payments' => $outstandingPayments,
@@ -695,29 +697,29 @@ class CrmBoardController extends Controller
         $currentYear = now()->year;
         $lastMonth = $currentMonth == 1 ? 12 : $currentMonth - 1;
         $lastMonthYear = $currentMonth == 1 ? $currentYear - 1 : $currentYear;
-        
+
         $currentMonthStudents = Student::whereNull('deleted_at')
             ->whereYear('created_at', $currentYear)
             ->whereMonth('created_at', $currentMonth)
             ->count();
-            
+
         $lastMonthStudents = Student::whereNull('deleted_at')
             ->whereYear('created_at', $lastMonthYear)
             ->whereMonth('created_at', $lastMonth)
             ->count();
-            
-        $monthlyGrowth = $lastMonthStudents > 0 ? 
+
+        $monthlyGrowth = $lastMonthStudents > 0 ?
             round((($currentMonthStudents - $lastMonthStudents) / $lastMonthStudents) * 100, 1) : 0;
-        
+
         // New Admissions (students added this month)
         $newAdmissions = Student::whereNull('deleted_at')
             ->whereYear('created_at', $currentYear)
             ->whereMonth('created_at', $currentMonth)
             ->count();
-        
+
         // Branch Expansion (new branches added this year)
         $branchExpansion = Branch::whereYear('created_at', $currentYear)->count();
-        
+
         return [
             'monthly_growth' => $monthlyGrowth,
             'new_admissions' => $newAdmissions,
@@ -728,11 +730,11 @@ class CrmBoardController extends Controller
     private function getStudentEnrollmentTrendsData()
     {
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        
+
         $onRollData = [];
         $newRegistrationsData = [];
         $withdrawalsData = [];
-        
+
         for ($i = 1; $i <= 12; $i++) {
             // On Roll students (all time data for this month)
             $onRoll = Student::where('status', 'on_roll')
@@ -740,14 +742,14 @@ class CrmBoardController extends Controller
                 ->whereRaw('MONTH(created_at) = ?', [$i])
                 ->count();
             $onRollData[] = $onRoll;
-            
+
             // New Registrations (registered students added in this month)
             $newRegistrations = Student::where('status', 'registered')
                 ->whereNull('deleted_at')
                 ->whereRaw('MONTH(created_at) = ?', [$i])
                 ->count();
             $newRegistrationsData[] = $newRegistrations;
-            
+
             // Withdrawals (students who left in this month)
             $withdrawals = Student::where('status', 'left')
                 ->whereNull('deleted_at')
@@ -755,7 +757,7 @@ class CrmBoardController extends Controller
                 ->count();
             $withdrawalsData[] = $withdrawals;
         }
-        
+
         return [
             'months' => $months,
             'on_roll' => $onRollData,
@@ -768,14 +770,14 @@ class CrmBoardController extends Controller
     {
         $academicYearId = $request->academic_year_id;
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        
+
         $onRollData = [];
         $newRegistrationsData = [];
         $withdrawalsData = [];
-        
+
         for ($i = 1; $i <= 12; $i++) {
             $query = Student::whereNull('deleted_at');
-            
+
             // Apply academic year filter if provided
             if ($academicYearId) {
                 $academicYear = BranchAcademicYear::where('academic_year_id', $academicYearId)->first();
@@ -786,26 +788,26 @@ class CrmBoardController extends Controller
                     ]);
                 }
             }
-            
+
             // On Roll students for this month
             $onRoll = (clone $query)->where('status', 'on_roll')
                 ->whereRaw('MONTH(created_at) = ?', [$i])
                 ->count();
             $onRollData[] = $onRoll;
-            
+
             // New Registrations for this month
             $newRegistrations = (clone $query)->where('status', 'registered')
                 ->whereRaw('MONTH(created_at) = ?', [$i])
                 ->count();
             $newRegistrationsData[] = $newRegistrations;
-            
+
             // Withdrawals for this month
             $withdrawals = (clone $query)->where('status', 'left')
                 ->whereRaw('MONTH(created_at) = ?', [$i])
                 ->count();
             $withdrawalsData[] = $withdrawals;
         }
-        
+
         return response()->json([
             'months' => $months,
             'on_roll' => $onRollData,
@@ -818,18 +820,18 @@ class CrmBoardController extends Controller
     {
         // Get current academic year based on current date
         $currentDate = now();
-        
+
         // Get all academic years with their date ranges
         $academicYears = BranchAcademicYear::with('academic_year')
             ->where('start_date', '<=', $currentDate)
             ->where('end_date', '>=', $currentDate)
-            ->orWhere(function($query) use ($currentDate) {
+            ->orWhere(function ($query) use ($currentDate) {
                 $query->where('start_date', '>=', $currentDate->copy()->subYear())
                     ->where('end_date', '<=', $currentDate->copy()->addYear());
             })
             ->get()
             ->groupBy('academic_year_id')
-            ->map(function($group) {
+            ->map(function ($group) {
                 $firstRecord = $group->first();
                 return [
                     'id' => $firstRecord->academic_year_id,
@@ -850,7 +852,7 @@ class CrmBoardController extends Controller
         $branchId = $request->branch_id;
         $academicYearId = $request->academic_year_id;
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        
+
         // Get academic year date range if provided
         $academicYearDates = null;
         if ($academicYearId) {
@@ -862,24 +864,24 @@ class CrmBoardController extends Controller
                 ];
             }
         }
-        
+
         // Use 2024 as default year since that's likely where the data exists
         $defaultYear = 2024;
         $currentYear = now()->year;
-        
+
         $revenueData = [];
         $expenseData = [];
-        
+
         for ($i = 1; $i <= 12; $i++) {
             // Student fee revenue - filter by branch if provided
             $revenueQuery = StudentInvoice::where('is_paid', 1);
-            
+
             if ($branchId) {
-                $revenueQuery->whereHas('student', function($q) use ($branchId) {
+                $revenueQuery->whereHas('student', function ($q) use ($branchId) {
                     $q->where('branch_id', $branchId);
                 });
             }
-            
+
             // If academic year is selected, filter by date range
             if ($academicYearDates) {
                 $academicStartYear = Carbon::parse($academicYearDates['start_date'])->year;
@@ -891,19 +893,19 @@ class CrmBoardController extends Controller
             else {
                 $revenueQuery->whereRaw('MONTH(paid_date) = ?', [$i]);
             }
-            
+
             $revenue = $revenueQuery->sum('paid_amount');
             $revenueData[] = (int) $revenue;
-            
+
             // Payroll expenses - filter by employee branch if provided
             $payrollQuery = Payroll::whereIn('status', ['paid', 'processed']);
-            
+
             if ($branchId) {
-                $payrollQuery->whereHas('employee', function($q) use ($branchId) {
+                $payrollQuery->whereHas('employee', function ($q) use ($branchId) {
                     $q->where('branch_id', $branchId);
                 });
             }
-            
+
             // If academic year is selected, filter by year and month
             if ($academicYearDates) {
                 $payrollYear = Carbon::parse($academicYearDates['start_date'])->year;
@@ -913,16 +915,16 @@ class CrmBoardController extends Controller
             else {
                 $payrollQuery->where('month', $i);
             }
-            
+
             $payrollExpense = $payrollQuery->sum('net_salary');
-            
+
             // Asset purchase expenses - filter by branch if provided
             $assetQuery = PurchaseOrder::whereIn('status', ['approved', 'completed']);
-            
+
             if ($branchId) {
                 $assetQuery->where('branch_id', $branchId);
             }
-            
+
             // If academic year is selected, filter by date range
             if ($academicYearDates) {
                 $academicStartYear = Carbon::parse($academicYearDates['start_date'])->year;
@@ -934,17 +936,17 @@ class CrmBoardController extends Controller
             else {
                 $assetQuery->whereRaw('MONTH(created_at) = ?', [$i]);
             }
-            
+
             $assetExpense = $assetQuery->sum('total_cost');
-            
+
             $expenseData[] = (int) ($payrollExpense + $assetExpense);
         }
-        
+
         return response()->json([
             'months' => $months,
             'revenue' => $revenueData,
             'expenses' => $expenseData,
-            'profit' => array_map(function($rev, $exp) {
+            'profit' => array_map(function ($rev, $exp) {
                 return $rev - $exp;
             }, $revenueData, $expenseData)
         ]);
@@ -957,15 +959,15 @@ class CrmBoardController extends Controller
         $dateRange = $request->date_range;
         $startDate = $request->start_date;
         $endDate = $request->end_date;
-        
+
         // Build base query for students
         $studentQuery = Student::whereNull('deleted_at');
-        
+
         // Apply branch filter
         if ($branchId) {
             $studentQuery->where('branch_id', $branchId);
         }
-        
+
         // Apply academic year filter
         if ($academicYearId) {
             $academicYear = BranchAcademicYear::where('academic_year_id', $academicYearId)->first();
@@ -976,7 +978,7 @@ class CrmBoardController extends Controller
                 ]);
             }
         }
-        
+
         // Apply date range filter
         if ($dateRange && $dateRange !== 'all') {
             $now = now();
@@ -1000,25 +1002,25 @@ class CrmBoardController extends Controller
                     break;
             }
         }
-        
+
         // Get student counts by status
         $totalStudents = $studentQuery->count();
         $activeStudents = (clone $studentQuery)->where('status', 'on_roll')->count();
         $newRegistrations = (clone $studentQuery)->where('status', 'registered')->count();
-        $processing = (clone $studentQuery)->where(function($query) {
+        $processing = (clone $studentQuery)->where(function ($query) {
             $query->whereNull('status')
                   ->orWhere('status', '')
                   ->orWhere('status', 'processing');
         })->count();
         $withdrawn = (clone $studentQuery)->where('status', 'left')->count();
-        
+
         // Calculate percentages
         $total = $totalStudents > 0 ? $totalStudents : 1;
         $activePercentage = round(($activeStudents / $total) * 100, 1);
         $newRegPercentage = round(($newRegistrations / $total) * 100, 1);
         $processingPercentage = round(($processing / $total) * 100, 1);
         $withdrawnPercentage = round(($withdrawn / $total) * 100, 1);
-        
+
         return response()->json([
             'data' => [
                 ['value' => $activeStudents, 'name' => 'On Roll', 'percentage' => $activePercentage],
@@ -1036,18 +1038,18 @@ class CrmBoardController extends Controller
         $branchId = $request->branch_id;
         $academicYearId = $request->academic_year_id;
         $dateRange = $request->date_range;
-        
+
         // Build base queries
         $studentQuery = Student::whereNull('deleted_at');
         $employeeQuery = Employee::whereNull('left_date');
         $branchQuery = Branch::query();
-        
+
         // Apply branch filter
         if ($branchId) {
             $studentQuery->where('branch_id', $branchId);
             $employeeQuery->where('branch_id', $branchId);
         }
-        
+
         // Apply academic year filter
         if ($academicYearId) {
             $academicYear = BranchAcademicYear::where('academic_year_id', $academicYearId)->first();
@@ -1058,7 +1060,7 @@ class CrmBoardController extends Controller
                 ]);
             }
         }
-        
+
         // Apply date range filter
         if ($dateRange && $dateRange !== 'all') {
             $now = now();
@@ -1074,30 +1076,30 @@ class CrmBoardController extends Controller
                     break;
             }
         }
-        
+
         // Get counts
         $totalStudents = $studentQuery->count();
         $totalEmployees = $employeeQuery->count();
         $totalBranches = $branchQuery->count();
-        
+
         $onRollStudents = (clone $studentQuery)->where('status', 'on_roll')->count();
         $registeredStudents = (clone $studentQuery)->where('status', 'registered')->count();
         $leftStudents = (clone $studentQuery)->where('status', 'left')->count();
-        
+
         // Calculate metrics
         $studentTeacherRatio = $totalStudents > 0 && $totalEmployees > 0 ? round($totalStudents / $totalEmployees, 1) : 0;
         $avgStudentsPerBranch = $totalBranches > 0 ? round($totalStudents / $totalBranches, 1) : 0;
         $staffPerBranch = $totalBranches > 0 ? round($totalEmployees / $totalBranches, 1) : 0;
-        
+
         $retentionRate = ($onRollStudents + $leftStudents) > 0 ? round(($onRollStudents / ($onRollStudents + $leftStudents)) * 100, 1) : 0;
         $newAdmissionsRate = ($onRollStudents + $registeredStudents) > 0 ? round(($registeredStudents / ($onRollStudents + $registeredStudents)) * 100, 1) : 0;
         $withdrawalRate = ($onRollStudents + $leftStudents) > 0 ? round(($leftStudents / ($onRollStudents + $leftStudents)) * 100, 1) : 0;
-        
+
         // System health metrics (these could be made dynamic based on actual system monitoring)
         $systemUptime = 99.9; // This could be calculated from actual uptime logs
         $dataIntegrity = 100.0; // This could be calculated from data validation checks
         $securityScore = 'A+'; // This could be calculated from security assessments
-        
+
         return response()->json([
             'staff_efficiency' => [
                 'student_teacher_ratio' => $studentTeacherRatio,
@@ -1127,38 +1129,38 @@ class CrmBoardController extends Controller
     {
         // Get all branches
         $branches = Branch::select('id', 'br_name')->get();
-        
+
         $branchData = [];
-        
+
         foreach ($branches as $branch) {
             $branchId = $branch->id;
             $branchName = $branch->br_name;
-            
+
             // Calculate revenue (all time)
             $revenue = StudentInvoice::where('is_paid', 1)
-                ->whereHas('student', function($q) use ($branchId) {
+                ->whereHas('student', function ($q) use ($branchId) {
                     $q->where('branch_id', $branchId);
                 })
                 ->sum('paid_amount');
-            
+
             // Calculate expenses (all time)
             // Payroll expenses
             $payrollExpense = Payroll::whereIn('status', ['paid', 'processed'])
-                ->whereHas('employee', function($q) use ($branchId) {
+                ->whereHas('employee', function ($q) use ($branchId) {
                     $q->where('branch_id', $branchId);
                 })
                 ->sum('net_salary');
-            
+
             // Asset purchase expenses
             $assetExpense = PurchaseOrder::whereIn('status', ['approved', 'completed'])
                 ->where('branch_id', $branchId)
                 ->sum('total_cost');
-            
+
             $totalExpenses = $payrollExpense + $assetExpense;
-            
+
             // Calculate profit
             $profit = $revenue - $totalExpenses;
-            
+
             // Only include branches where expenses < revenue (profitable branches)
             if ($totalExpenses < $revenue && $profit > 0) {
                 $branchData[] = [
@@ -1170,15 +1172,15 @@ class CrmBoardController extends Controller
                 ];
             }
         }
-        
+
         // Sort by profit (descending)
-        usort($branchData, function($a, $b) {
+        usort($branchData, function ($a, $b) {
             return $b['profit'] <=> $a['profit'];
         });
-        
+
         // Get top 10 profitable branches
         $topBranches = array_slice($branchData, 0, 10);
-        
+
         return response()->json([
             'branches' => $topBranches,
             'metric' => 'profit',
@@ -1189,19 +1191,19 @@ class CrmBoardController extends Controller
     public function getBranchWiseStaffStudentsData(Request $request)
     {
         $academicYearId = $request->academic_year_id;
-        
+
         // Get all branches with their staff and student counts
         $branches = Branch::select('id', 'br_name')->get();
-        
+
         $branchData = [];
-        
+
         foreach ($branches as $branch) {
             $branchId = $branch->id;
             $branchName = $branch->br_name;
-            
+
             // Get student count for this branch
             $studentQuery = Student::where('branch_id', $branchId)->whereNull('deleted_at');
-            
+
             // Apply academic year filter if provided
             if ($academicYearId) {
                 $academicYear = BranchAcademicYear::where('academic_year_id', $academicYearId)->first();
@@ -1212,15 +1214,15 @@ class CrmBoardController extends Controller
                     ]);
                 }
             }
-            
+
             $totalStudents = $studentQuery->count();
             $onRollStudents = (clone $studentQuery)->where('status', 'on_roll')->count();
             $registeredStudents = (clone $studentQuery)->where('status', 'registered')->count();
             $leftStudents = (clone $studentQuery)->where('status', 'left')->count();
-            
+
             // Get staff count for this branch
             $staffQuery = Employee::where('branch_id', $branchId)->whereNull('left_date');
-            
+
             // Apply academic year filter if provided
             if ($academicYearId) {
                 $academicYear = BranchAcademicYear::where('academic_year_id', $academicYearId)->first();
@@ -1231,9 +1233,9 @@ class CrmBoardController extends Controller
                     ]);
                 }
             }
-            
+
             $totalStaff = $staffQuery->count();
-            
+
             // Only include branches with data
             if ($totalStudents > 0 || $totalStaff > 0) {
                 $branchData[] = [
@@ -1247,12 +1249,12 @@ class CrmBoardController extends Controller
                 ];
             }
         }
-        
+
         // Sort by total students (descending)
-        usort($branchData, function($a, $b) {
+        usort($branchData, function ($a, $b) {
             return $b['total_students'] <=> $a['total_students'];
         });
-        
+
         return response()->json([
             'branches' => $branchData,
             'last_updated' => now()->format('M d, Y H:i')

@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PaperType extends Model
 {
-    use HasFactory, SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'name',
@@ -19,6 +20,6 @@ class PaperType extends Model
 
     public function subject()
     {
-        return $this->belongsTo(Subject::class,'subject_id','id');
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 }

@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FranchiseApplication extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'appl_name',
         'appl_last_name',
@@ -99,8 +102,9 @@ class FranchiseApplication extends Model
         return $this->morphOne(Task::class, 'taskable');
     }
 
-    public function recommendedBy(){
-        return $this->belongsTo(User::class,'recommended_by','id');
+    public function recommendedBy()
+    {
+        return $this->belongsTo(User::class, 'recommended_by', 'id');
     }
 
     public function other_informations()
@@ -108,42 +112,52 @@ class FranchiseApplication extends Model
         return $this->belongsTo(FranchiseOtherInformation::class, 'id', 'inquiry_id');
     }
 
-    public function franchise_application_qa(){
-        return $this->hasOne(FranchiseApplicationQa::class,'franchise_application_id','id')->latestOfMany();
+    public function franchise_application_qa()
+    {
+        return $this->hasOne(FranchiseApplicationQa::class, 'franchise_application_id', 'id')->latestOfMany();
     }
 
-    public function franchise_application_bd(){
-        return $this->hasOne(FranchiseApplicationBdVisit::class,'franchise_application_id','id')->latestOfMany();
+    public function franchise_application_bd()
+    {
+        return $this->hasOne(FranchiseApplicationBdVisit::class, 'franchise_application_id', 'id')->latestOfMany();
     }
 
-    public function franchise_application_bd_approved(){
-        return $this->hasOne(FranchiseApplicationBdVisit::class,'franchise_application_id','id')->where('bd_status','approved')->latest('id');
+    public function franchise_application_bd_approved()
+    {
+        return $this->hasOne(FranchiseApplicationBdVisit::class, 'franchise_application_id', 'id')->where('bd_status', 'approved')->latest('id');
     }
 
-    public function franchise_application_tor(){
-        return $this->hasOne(FranchiseApplicationTorsResponse::class,'franchise_application_id','id')->latestOfMany();
+    public function franchise_application_tor()
+    {
+        return $this->hasOne(FranchiseApplicationTorsResponse::class, 'franchise_application_id', 'id')->latestOfMany();
     }
 
-    public function franchise_application_legal(){
-        return $this->hasOne(FranchiseApplicationLaResponse::class,'franchise_application_id','id')->latestOfMany();
+    public function franchise_application_legal()
+    {
+        return $this->hasOne(FranchiseApplicationLaResponse::class, 'franchise_application_id', 'id')->latestOfMany();
     }
 
-    public function franchise_application_dd(){
-        return $this->hasOne(FranchiseApplicationDdResponse::class,'franchise_application_id','id')->latestOfMany();
+    public function franchise_application_dd()
+    {
+        return $this->hasOne(FranchiseApplicationDdResponse::class, 'franchise_application_id', 'id')->latestOfMany();
     }
 
-    public function franchise_application_observation(){
-        return $this->hasOne(FrachiseApplicationRemark::class,'franchise_application_id','id')->latestOfMany();
+    public function franchise_application_observation()
+    {
+        return $this->hasOne(FrachiseApplicationRemark::class, 'franchise_application_id', 'id')->latestOfMany();
     }
 
-    public function franchise_application_qa_remarks(){
-        return $this->hasOne(FrachiseApplicationRemark::class,'franchise_application_id','id')->where('observation_for','IASF')->where('user_role','sr_officer_quality_assurance')->orWhere('user_role','manager-quality-assurance')->latest('id');
+    public function franchise_application_qa_remarks()
+    {
+        return $this->hasOne(FrachiseApplicationRemark::class, 'franchise_application_id', 'id')->where('observation_for', 'IASF')->where('user_role', 'sr_officer_quality_assurance')->orWhere('user_role', 'manager-quality-assurance')->latest('id');
     }
-    public function franchise_application_bd_remarks(){
-        return $this->hasOne(FrachiseApplicationRemark::class,'franchise_application_id','id')->where('observation_for','IASF')->where('user_role','manager-business-development')->orWhere('user_role','senior-manager-business-development')->latest('id');
+    public function franchise_application_bd_remarks()
+    {
+        return $this->hasOne(FrachiseApplicationRemark::class, 'franchise_application_id', 'id')->where('observation_for', 'IASF')->where('user_role', 'manager-business-development')->orWhere('user_role', 'senior-manager-business-development')->latest('id');
     }
-    public function franchise_application_dd_remarks(){
-        return $this->hasOne(FrachiseApplicationRemark::class,'franchise_application_id','id')->where('observation_for','IASF')->where('user_role','deputy-director')->latest('id');
+    public function franchise_application_dd_remarks()
+    {
+        return $this->hasOne(FrachiseApplicationRemark::class, 'franchise_application_id', 'id')->where('observation_for', 'IASF')->where('user_role', 'deputy-director')->latest('id');
     }
     //->whereIn('user_role',['deputy-director','sr_officer_quality_assurance','manager-quality-assurance','manager-business-development','senior-manager-business-development'])
 }

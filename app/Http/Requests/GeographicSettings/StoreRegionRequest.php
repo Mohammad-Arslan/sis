@@ -39,4 +39,3 @@ class StoreRegionRequest extends FormRequest
         ];
     }
 }
-

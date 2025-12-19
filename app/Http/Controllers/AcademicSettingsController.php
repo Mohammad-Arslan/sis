@@ -27,7 +27,8 @@ class AcademicSettingsController extends Controller
 {
     public function __construct(
         private readonly AcademicSettingsService $service
-    ) {}
+    ) {
+    }
 
     /**
      * Display the unified academic settings page
@@ -36,7 +37,7 @@ class AcademicSettingsController extends Controller
     {
         $academicYears = $this->service->getAcademicYears();
         $branches = $this->service->getBranches();
-        
+
         return view('settings.academic.index', compact('academicYears', 'branches'));
     }
 
@@ -45,12 +46,12 @@ class AcademicSettingsController extends Controller
      */
     public function getLanguages(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = Language::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Language'))
@@ -63,12 +64,12 @@ class AcademicSettingsController extends Controller
      */
     public function getAcademicYears(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = AcademicYear::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('active_status', fn($row) => $row->active ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>')
@@ -82,51 +83,55 @@ class AcademicSettingsController extends Controller
      */
     public function getBranchAcademicYears(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = BranchAcademicYear::with(['branch', 'academic_year']);
-        
+
         if ($request->branch_id && $request->branch_id > 0) {
             $data = $data->where('branch_id', $request->branch_id);
         }
-        
+
         if ($request->academic_year_id && $request->academic_year_id > 0) {
             $data = $data->where('academic_year_id', $request->academic_year_id);
         }
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('br_name', fn($row) => $row->branch?->br_name ?? 'N/A')
             ->addColumn('academic_year_title', fn($row) => $row->academic_year?->title ?? 'N/A')
-            ->addColumn('start_date_formatted', function($row) {
-                if (!$row->start_date) return 'N/A';
-                return is_string($row->start_date) 
+            ->addColumn('start_date_formatted', function ($row) {
+                if (! $row->start_date) {
+                    return 'N/A';
+                }
+                return is_string($row->start_date)
                     ? Carbon::parse($row->start_date)->format('Y-m-d')
                     : $row->start_date->format('Y-m-d');
             })
-            ->addColumn('end_date_formatted', function($row) {
-                if (!$row->end_date) return 'N/A';
-                return is_string($row->end_date) 
+            ->addColumn('end_date_formatted', function ($row) {
+                if (! $row->end_date) {
+                    return 'N/A';
+                }
+                return is_string($row->end_date)
                     ? Carbon::parse($row->end_date)->format('Y-m-d')
                     : $row->end_date->format('Y-m-d');
             })
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'BranchAcademicYear'))
-            ->filterColumn('branch_name', function($query, $keyword) {
-                $query->whereHas('branch', function($q) use ($keyword) {
+            ->filterColumn('branch_name', function ($query, $keyword) {
+                $query->whereHas('branch', function ($q) use ($keyword) {
                     $q->where('br_name', 'like', "%{$keyword}%");
                 });
             })
-            ->filterColumn('academic_year_title', function($query, $keyword) {
-                $query->whereHas('academic_year', function($q) use ($keyword) {
+            ->filterColumn('academic_year_title', function ($query, $keyword) {
+                $query->whereHas('academic_year', function ($q) use ($keyword) {
                     $q->where('title', 'like', "%{$keyword}%");
                 });
             })
-            ->filterColumn('start_date', function($query, $keyword) {
+            ->filterColumn('start_date', function ($query, $keyword) {
                 $query->whereDate('start_date', 'like', "%{$keyword}%");
             })
-            ->filterColumn('end_date', function($query, $keyword) {
+            ->filterColumn('end_date', function ($query, $keyword) {
                 $query->whereDate('end_date', 'like', "%{$keyword}%");
             })
             ->rawColumns(['action'])
@@ -138,12 +143,12 @@ class AcademicSettingsController extends Controller
      */
     public function getStudentPreviousSchools(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = StudentPreviousSchool::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'StudentPreviousSchool'))
@@ -205,14 +210,14 @@ class AcademicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteLanguage($language);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete language.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Language deleted successfully.'
@@ -288,14 +293,14 @@ class AcademicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteAcademicYear($academicYear);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete academic year.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Academic year deleted successfully.'
@@ -371,14 +376,14 @@ class AcademicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteBranchAcademicYear($branchAcademicYear);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete branch academic year.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Branch academic year deleted successfully.'
@@ -454,14 +459,14 @@ class AcademicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteStudentPreviousSchool($studentPreviousSchool);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete student previous school.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Student previous school deleted successfully.'
@@ -505,7 +510,7 @@ class AcademicSettingsController extends Controller
     public function getBranchAcademicYear(BranchAcademicYear $branchAcademicYear): JsonResponse
     {
         $branchAcademicYear = $branchAcademicYear->load(['branch', 'academic_year']);
-        
+
         // Format dates for frontend
         $data = $branchAcademicYear->toArray();
         if ($branchAcademicYear->start_date instanceof \Carbon\Carbon) {
@@ -517,7 +522,7 @@ class AcademicSettingsController extends Controller
                 // Keep original if parsing fails
             }
         }
-        
+
         if ($branchAcademicYear->end_date instanceof \Carbon\Carbon) {
             $data['end_date'] = $branchAcademicYear->end_date->format('Y-m-d');
         } elseif ($branchAcademicYear->end_date && is_string($branchAcademicYear->end_date)) {
@@ -527,7 +532,7 @@ class AcademicSettingsController extends Controller
                 // Keep original if parsing fails
             }
         }
-        
+
         return response()->json($data);
     }
 
@@ -550,4 +555,3 @@ class AcademicSettingsController extends Controller
         }
     }
 }
-

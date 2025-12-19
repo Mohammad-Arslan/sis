@@ -45,4 +45,3 @@ class StoreBranchAcademicYearRequest extends FormRequest
         ];
     }
 }
-

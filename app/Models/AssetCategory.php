@@ -70,7 +70,7 @@ class AssetCategory extends Model
     {
         return $query->whereNull('parent_id');
     }
-    
+
     /**
      * Get assets in this category
      */

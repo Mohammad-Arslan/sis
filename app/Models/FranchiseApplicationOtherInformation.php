@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FranchiseApplicationOtherInformation extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'franchise_application_id',
         'company_name',

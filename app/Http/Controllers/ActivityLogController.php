@@ -11,7 +11,8 @@ class ActivityLogController extends Controller
 {
     public function __construct(
         private readonly ActivityLogService $service
-    ) {}
+    ) {
+    }
 
     public function index(): View
     {
@@ -31,7 +32,7 @@ class ActivityLogController extends Controller
     #[\NoDiscard]
     public function getJsonData(int $id, string $type): JsonResponse
     {
-        if (!in_array($type, ['old', 'new'], true)) {
+        if (! in_array($type, ['old', 'new'], true)) {
             return response()->json(['success' => false, 'message' => 'Invalid type'], 400);
         }
 
@@ -40,4 +41,3 @@ class ActivityLogController extends Controller
         return response()->json($data);
     }
 }
-

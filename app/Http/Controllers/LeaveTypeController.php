@@ -43,7 +43,7 @@ class LeaveTypeController extends Controller
     {
         if ($id != null) {
             $leaveType = LeaveType::find($id);
-            if (!empty($leaveType)) {
+            if (! empty($leaveType)) {
                 $leaveTypes = LeaveType::all();
                 return view('settings.leave_types.index', compact('leaveTypes', 'leaveType'));
             }
@@ -77,5 +77,4 @@ class LeaveTypeController extends Controller
             LeaveType::find($request->id)->delete();
         }
     }
-
 }

@@ -9,7 +9,8 @@ use Illuminate\Queue\SerializesModels;
 
 class GenericEmail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public $subject, $template, $name, $fromEmail, $message, $documents;
 
@@ -39,18 +40,18 @@ class GenericEmail extends Mailable
 
         $email = $this->subject($this->subject);
 
-        if ($this->fromEmail && $this->name)
+        if ($this->fromEmail && $this->name) {
             $email = $email->from($this->fromEmail, $this->name);
+        }
 
         $email = $email->view($this->template, ['data' => $data]);
 
-        if (!empty($this->documents)) {
-            if(is_array($this->documents)){
+        if (! empty($this->documents)) {
+            if (is_array($this->documents)) {
                 foreach ($this->documents as $document) {
                     $email->attach($document);
                 }
-            }
-            else{
+            } else {
                 $email->attach($this->documents);
             }
         }

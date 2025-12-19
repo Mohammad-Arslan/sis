@@ -33,7 +33,6 @@ class CurriculumController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $query = Curriculum::with(['curriculum_class', 'curriculum_subject']);
             // Check if class_id is present in the query string and filter accordingly
             if ($request->class_id && $request->class_id > 0) {
@@ -66,7 +65,8 @@ class CurriculumController extends Controller
         $subjects = Subject::all();
         $curriculum_types = CurriculumType::all();
 
-        return view('settings.curriculum.index',
+        return view(
+            'settings.curriculum.index',
             [
                 'classes' => $classes,
                 'subjects' => $subjects,
@@ -89,7 +89,8 @@ class CurriculumController extends Controller
         $subjects = Subject::all();
         $curriculum_types = CurriculumType::all();
 
-        return view('settings.curriculum.create',
+        return view(
+            'settings.curriculum.create',
             [
                 'classes' => $classes,
                 'subjects' => $subjects,
@@ -130,7 +131,7 @@ class CurriculumController extends Controller
                 'title' => '',
                 'description' => '',
             ];
-        }else{
+        } else {
             $data = [
                 'title' => $request->title,
                 'description' => $request->description,
@@ -141,7 +142,6 @@ class CurriculumController extends Controller
         $curriculumRecord = Curriculum::updateOrCreate($conditions, $data);
 
         if ($request->has('targets')) {
-
             //Update curriculum is_target flag to true
             $curriculumRecord->is_targets = 1;
             $curriculumRecord->save();
@@ -154,7 +154,7 @@ class CurriculumController extends Controller
             foreach ($request->targets as $targetText) {
                 // Store each target in the "CurriculumTarget" table
                 //Skip if its empty
-                if(!empty($targetText)) {
+                if (! empty($targetText)) {
                     CurriculumAttainmentTarget::create([
                         'curriculum_id' => $curriculumRecord->id,
                         'target' => $targetText,
@@ -252,43 +252,45 @@ class CurriculumController extends Controller
         }
         //dd($groupedClassSubjects);
 
-        if($request->has('class')){
+        if ($request->has('class')) {
             $selectedClass = $request->class;
             $currentClass = ComClass::find($selectedClass);
         }
-        if($request->has('subject')){
+        if ($request->has('subject')) {
             $selectedSubject = $request->subject;
             $currentSubject = Subject::find($selectedSubject);
         }
-        if($request->has('type')){
+        if ($request->has('type')) {
             $selectedType = $request->type;
             $curriculumCategories = CurriculumCategory::where('curriculum_type_id', $selectedType)->get();
             $currentCurriculumType = CurriculumType::find($selectedType);
         }
-        if($request->has('category')){
+        if ($request->has('category')) {
             $selectedCategory = $request->category;
             $curriculumDetails = Curriculum::where('class_id', $selectedClass)
             ->where('subject_id', $selectedSubject)
             ->where('curriculum_category_id', $selectedCategory)
                 ->first();
-            if($curriculumDetails)
+            if ($curriculumDetails) {
                 $curriculumDescription = $curriculumDetails->description;
-            else
+            } else {
                 $curriculumDescription = '';
+            }
             //Get current selected category details
             $currentCurriculumCategory = CurriculumCategory::findOrFail($selectedCategory);
 
             //Get attainment targets, if curriculum contains targets
-            if( isset($curriculumDetails->is_targets) && ($curriculumDetails->is_targets == 1) ){
+            if (isset($curriculumDetails->is_targets) && ($curriculumDetails->is_targets == 1)) {
                 $attainmentTargets = CurriculumAttainmentTarget::where('curriculum_id', $curriculumDetails->id)->get();
             }
-        }else{
+        } else {
             $curriculumDescription = 'Welcome to Online Curriculum Centre. Please select category from left to show curriculum.';
         }
 
         //dd($groupedClassSubjects);
 
-        return view('curriculum.view',
+        return view(
+            'curriculum.view',
             [
                 'groupedClassSubjects' => $groupedClassSubjects,
                 'curriculumTypes' => $curriculumTypes,

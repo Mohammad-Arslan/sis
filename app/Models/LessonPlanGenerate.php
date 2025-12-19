@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LessonPlanGenerate extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $table = 'lesson_plans_generate';
     protected $fillable = [
         'branch_id',

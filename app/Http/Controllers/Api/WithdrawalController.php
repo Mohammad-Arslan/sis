@@ -23,7 +23,9 @@ class WithdrawalController extends Controller
     public function setWithdrawalRequest(Request $request)
     {
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make(
+            $request->all(),
+            [
             //'student_id' => 'required|unique:student_withdrawals|unique:student_withdrawal_requests',//unique:student_withdrawal_requests',//unique:student_withdrawals|
             'student_id' => 'required',
             'guardian_id' => 'required',
@@ -32,7 +34,7 @@ class WithdrawalController extends Controller
             'withdrawal_reason_id' => 'required',
             //'guardian_cnic_image_front' => 'required',//|image|mimes:jpg,png,jpeg,gif,svg|max:2048',
             //'guardian_cnic_image_back' => 'required',//|image|mimes:jpg,png,jpeg,gif,svg|max:2048',
-        ],
+            ],
             [ 'student_id.unique' => 'The :attribute already exists for withdrawal.']
         );
 
@@ -46,19 +48,19 @@ class WithdrawalController extends Controller
         //Get student id
         //$guardianId = $request->input('guardian_id');
         $studentId = $request->input('student_id');
-        $destinationPath = 'guardian_docs/' . $studentId.'/';
+        $destinationPath = 'guardian_docs/' . $studentId . '/';
 
-        if ($request->hasfile('guardian_cnic_image_front')){
-
+        if ($request->hasfile('guardian_cnic_image_front')) {
             //Remove previous folder if already exists
-            if (Storage::disk('s3')->exists($destinationPath))
+            if (Storage::disk('s3')->exists($destinationPath)) {
                 Storage::disk('s3')->delete($destinationPath);
+            }
 
             $extension = $request->guardian_cnic_image_front->getClientOriginalExtension();
-            $fileBasename = basename($request->guardian_cnic_image_front->getClientOriginalName(),'.'.$extension);
+            $fileBasename = basename($request->guardian_cnic_image_front->getClientOriginalName(), '.' . $extension);
             //$filename = $request->guardian_cnic_image_front->getClientOriginalName();
 
-            $filename = $fileBasename.'-'.time().'.' . $extension;
+            $filename = $fileBasename . '-' . time() . '.' . $extension;
 
             //$input['file_name'] = $filename;
             //$filepath = 'guardian_docs/' . $guardianId.'/'. $filename;
@@ -72,23 +74,23 @@ class WithdrawalController extends Controller
             //$filesystem->putFileAs($destinationPath, $request->guardian_cnic_image_front, $filename);
             //dd($filesystem);
 
-            $studentWithdrawalRequest->guardian_cnic_image_front = $destinationPath.$filename;
+            $studentWithdrawalRequest->guardian_cnic_image_front = $destinationPath . $filename;
             $studentWithdrawalRequest->save();
 
             //return response(['Record added & file successfully uploaded!'], Response::HTTP_CREATED);
         }
 
-        if ($request->hasfile('guardian_cnic_image_back')){
-
+        if ($request->hasfile('guardian_cnic_image_back')) {
             //Remove previous folder if already exists
-            if (Storage::disk('s3')->exists($destinationPath))
+            if (Storage::disk('s3')->exists($destinationPath)) {
                 Storage::disk('s3')->delete($destinationPath);
+            }
 
             $extension = $request->guardian_cnic_image_back->getClientOriginalExtension();
-            $fileBasename = basename($request->guardian_cnic_image_back->getClientOriginalName(),'.'.$extension);
+            $fileBasename = basename($request->guardian_cnic_image_back->getClientOriginalName(), '.' . $extension);
             //$filename = $request->guardian_cnic_image_back->getClientOriginalName();
 
-            $filename = $fileBasename.'-'.time().'.' . $extension;
+            $filename = $fileBasename . '-' . time() . '.' . $extension;
 
             //$input['file_name'] = $filename;
             //$filepath = 'guardian_docs/' . $guardianId.'/'. $filename;
@@ -102,15 +104,12 @@ class WithdrawalController extends Controller
             //$filesystem->putFileAs($destinationPath, $request->guardian_cnic_image_back, $filename);
             //dd($filesystem);
 
-            $studentWithdrawalRequest->guardian_cnic_image_back = $destinationPath.$filename;
+            $studentWithdrawalRequest->guardian_cnic_image_back = $destinationPath . $filename;
             $studentWithdrawalRequest->save();
 
             return response(['Record added & file successfully uploaded!'], Response::HTTP_CREATED);
         }
 
         return response(['Record successfully created!'], Response::HTTP_CREATED);
-
     }
-
-
 }

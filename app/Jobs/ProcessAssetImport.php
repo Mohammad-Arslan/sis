@@ -16,12 +16,15 @@ use Carbon\Carbon;
 
 class ProcessAssetImport implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public $timeout = 3600; // 60 minutes for large imports
     public $tries = 1; // Only try once to avoid duplicate imports
     public $maxExceptions = 1;
-    
+
     // Add memory management for large imports
     public $deleteWhenMissingModels = true; // Clean up if model is missing
 
@@ -39,7 +42,7 @@ class ProcessAssetImport implements ShouldQueue
         $this->userId = $userId;
         $this->importId = $importId;
         $this->specificLogFile = $importId ? "asset_import_{$importId}.log" : null;
-        
+
         // Set higher memory limit for this job
         ini_set('memory_limit', '2G');
     }
@@ -55,7 +58,7 @@ class ProcessAssetImport implements ShouldQueue
                 $logPath = storage_path("logs/{$this->specificLogFile}");
                 File::put($logPath, ''); // Create or clear the file
             }
-            
+
             $this->writeLog('info', 'Starting asset import job', [
                 'file_path' => $this->filePath,
                 'user_id' => $this->userId,
@@ -65,7 +68,7 @@ class ProcessAssetImport implements ShouldQueue
             ]);
 
             // Check if file exists
-            if (!Storage::exists($this->filePath)) {
+            if (! Storage::exists($this->filePath)) {
                 throw new \Exception("Import file not found: {$this->filePath}");
             }
 
@@ -79,33 +82,33 @@ class ProcessAssetImport implements ShouldQueue
 
             // Create import instance with optimized settings
             $import = new ImportAsset($this->importId);
-            
+
             // Reset counters
             $import->resetCounters();
 
             // Process the import
             $startTime = microtime(true);
-            
+
             // Use queue import for very large files to optimize memory usage
             if ($fileSize > 10 * 1024 * 1024) { // Over 10MB
                 $this->writeLog('info', 'Using queue import for large file', [
                     'file_size' => $this->formatBytes($fileSize)
                 ]);
-                
+
                 Excel::queueImport($import, $this->filePath);
             } else {
                 Excel::import($import, $this->filePath);
             }
-            
+
             $endTime = microtime(true);
             $executionTime = round($endTime - $startTime, 2);
 
             // Log import summary before getting final stats
             $import->logImportSummary();
-            
+
             // Get import statistics
             $stats = $import->getImportStats();
-            
+
             // Log completion
             $this->writeLog('info', 'Asset import job completed successfully', [
                 'import_id' => $this->importId,
@@ -144,7 +147,6 @@ class ProcessAssetImport implements ShouldQueue
                 'cache_key' => $cacheKey,
                 'file_cleaned_up' => true
             ]);
-
         } catch (\Exception $e) {
             $this->writeLog('error', 'Asset import job failed', [
                 'import_id' => $this->importId,
@@ -230,7 +232,7 @@ class ProcessAssetImport implements ShouldQueue
             ]);
         }
     }
-    
+
     /**
      * Write log to both general and specific log file
      */
@@ -238,20 +240,20 @@ class ProcessAssetImport implements ShouldQueue
     {
         // Always log to the main Laravel log
         Log::$level($message, $context);
-        
+
         $logEntry = array_merge([
             'level' => $level,
             'message' => $message,
             'timestamp' => now()->toDateTimeString(),
             'import_id' => $this->importId
         ], $context);
-        
+
         // Only write error-related logs to the main asset import log
         $errorLevels = ['error', 'critical', 'alert', 'emergency'];
         if (in_array($level, $errorLevels)) {
             File::append(storage_path('logs/asset_import.log'), json_encode($logEntry) . PHP_EOL);
         }
-        
+
         // Always write to specific log file if we have one
         if ($this->specificLogFile) {
             File::append(storage_path("logs/{$this->specificLogFile}"), json_encode($logEntry) . PHP_EOL);
@@ -264,11 +266,11 @@ class ProcessAssetImport implements ShouldQueue
     private function formatBytes($bytes, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
+
         return round($bytes, $precision) . ' ' . $units[$i];
     }
 }

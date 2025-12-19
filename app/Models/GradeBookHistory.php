@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GradeBookHistory extends Model
 {
-    use HasFactory,SerializeDateTrait, SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'branch_class_section_id',
@@ -35,6 +37,6 @@ class GradeBookHistory extends Model
 
     public function student_behaviour_skill()
     {
-        return $this->belongsTo(StudentBehaviourSkill::class,'student_behaviour_skill_id','id');
+        return $this->belongsTo(StudentBehaviourSkill::class, 'student_behaviour_skill_id', 'id');
     }
 }

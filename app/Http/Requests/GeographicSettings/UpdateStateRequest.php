@@ -22,7 +22,7 @@ class UpdateStateRequest extends FormRequest
     public function rules(): array
     {
         $stateId = $this->route('state')->id;
-        
+
         return [
             'state_name' => [
                 'required',
@@ -47,4 +47,3 @@ class UpdateStateRequest extends FormRequest
         ];
     }
 }
-

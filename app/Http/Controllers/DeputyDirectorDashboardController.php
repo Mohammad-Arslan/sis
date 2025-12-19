@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Models\City;
 use App\Models\Employee;
 use App\Models\FranchiseApplicationBdVisit;
@@ -154,8 +153,9 @@ class DeputyDirectorDashboardController extends Controller
         $franchise_application_id = $request->id;
         $details = FranchiseApplicationsAttachment::with(['user','attachment_type'])->where(['franchise_application_id' => $franchise_application_id]);
 
-        if (!auth()->user())
+        if (! auth()->user()) {
             $details = $details->whereNull('uploaded_by');
+        }
         $details = $details->get();
 
         $rows = view('employees.dashboard.document_list_modal', ['franchise_application_attachments' => $details])->render();
@@ -175,10 +175,8 @@ class DeputyDirectorDashboardController extends Controller
             $data1['on_roll'] = [];
             $data2['lefts'] = [];
             if ($request->academic_year_id_graph != null) {
-
                 foreach ($month as $key => $value) {
                     if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                         $region_id = get_state_id();
                         if ($region_id == 1) {
                             $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -198,7 +196,6 @@ class DeputyDirectorDashboardController extends Controller
                         $branch_id = get_NWABranchCode();
                         $data[] = Student::where([['status', 'registered'], ['admission_year_id', $request->academic_year_id_graph]])->where('branch_id', $branch_id)->where(DB::raw('MONTH(admission_wef)'), $value)->count();
                         $data['registered'] = $data;
-
                     } else {
                         $data[] = Student::where([['status', 'registered'], ['admission_year_id', $request->academic_year_id_graph]])->whereNotIn('branch_id', [1,2,3,22,23,24,27,28])->where(DB::raw('MONTH(admission_wef)'), $value)->count();
                         $data['registered'] = $data;
@@ -207,12 +204,11 @@ class DeputyDirectorDashboardController extends Controller
 
                 foreach ($month as $key => $value) {
                     if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                         $region_id = get_state_id();
                         if ($region_id == 1) {
                             $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
                             // foreach ($punjab_branches as $key => $branches) {
-                                $data1[] = Student::where([['status', 'on_roll'], ['admission_year_id', $request->academic_year_id_graph]])->whereIn('branch_id', $punjab_branches)->where(DB::raw('MONTH(admission_wef)'),$value )->count();
+                                $data1[] = Student::where([['status', 'on_roll'], ['admission_year_id', $request->academic_year_id_graph]])->whereIn('branch_id', $punjab_branches)->where(DB::raw('MONTH(admission_wef)'), $value)->count();
                                 $data1['on_roll'] = $data1;
                                 // print_r($data);
                             // }
@@ -237,14 +233,14 @@ class DeputyDirectorDashboardController extends Controller
                     //     $query->where([['status', 'left'],['academic_year_id', $request->academic_year_id_graph]])->where(DB::raw('MONTH(last_day_at)'), $value);
                     // }])->count();
                     if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                         $region_id = get_state_id();
                         if ($region_id == 1) {
                             $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
                             // foreach ($punjab_branches as $key => $branches) {
 
                                 $data2[] = StudentWithdrawal::whereHas(
-                                    'student' , function ($q) use ($punjab_branches) {
+                                    'student',
+                                    function ($q) use ($punjab_branches) {
                                         // Query the name field in status table
                                         $q->where('status', '=', 'left')->whereIn('branch_id', $punjab_branches); // '=' is optional
                                     }
@@ -259,7 +255,8 @@ class DeputyDirectorDashboardController extends Controller
                             // foreach ($sindh_branches as $key => $branches) {
 
                                 $data2[] = StudentWithdrawal::whereHas(
-                                    'student' , function ($q) use ($sindh_branches) {
+                                    'student',
+                                    function ($q) use ($sindh_branches) {
                                         $q->where('status', '=', 'left')->whereIn('branch_id', $sindh_branches); // '=' is optional
                                     }
                                 )
@@ -271,7 +268,8 @@ class DeputyDirectorDashboardController extends Controller
                     } else if (auth()->user()->hasRole('network_associate')) {
                         $branch_id = get_NWABranchCode();
                         $data2[] = StudentWithdrawal::whereHas(
-                            'student' , function ($q) use ($branch_id) {
+                            'student',
+                            function ($q) use ($branch_id) {
                                 // Query the name field in status table
                                 $q->where([['status', '=', 'left'], ['branch_id', '=' ,$branch_id]]); // '=' is optional
                             }
@@ -282,7 +280,8 @@ class DeputyDirectorDashboardController extends Controller
                         $data2['lefts'] = $data2;
                     } else {
                         $data2[] = StudentWithdrawal::whereHas(
-                            'student' , function ($q) {
+                            'student',
+                            function ($q) {
                                 // Query the name field in status table
                                 $q->where('status', '=', 'left')->whereNotIn('branch_id', [1,2,3,22,23,24,27,28]); // '=' is optional
                             }
@@ -291,12 +290,10 @@ class DeputyDirectorDashboardController extends Controller
                             ->count();
                         // $data2[] = Student::with(['student_withdrawals'])->where([['status', 'left'],['admission_year_id', $request->academic_year_id_graph]])->where(DB::raw('MONTH(last_day_at)'), $value)->count();
                         $data2['lefts'] = $data2;
-
                     }
                 }
 
                 if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                     $region_id = get_state_id();
                     if ($region_id == 1) {
                         $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -306,7 +303,8 @@ class DeputyDirectorDashboardController extends Controller
 
                             $data['onroll'] = Student::where([['status', 'on_roll'], ['admission_year_id', $request->academic_year_id_graph]])->whereIn('branch_id', $punjab_branches)->count();
                             $data['left'] = StudentWithdrawal::whereHas(
-                                'student' , function ($q) use ($punjab_branches) {
+                                'student',
+                                function ($q) use ($punjab_branches) {
                                     // Query the name field in status table
                                     $q->where('status', '=', 'left')->whereIn('branch_id', $punjab_branches); // '=' is optional
                                 }
@@ -322,7 +320,8 @@ class DeputyDirectorDashboardController extends Controller
 
                         $data['onroll'] = Student::where([['status', 'on_roll'], ['admission_year_id', $request->academic_year_id_graph]])->whereIn('branch_id', $sindh_branches)->count();
                             $data['left'] = StudentWithdrawal::whereHas(
-                                'student' , function ($q) use ($sindh_branches) {
+                                'student',
+                                function ($q) use ($sindh_branches) {
                                     // Query the name field in status table
                                     $q->where('status', '=', 'left')->whereIn('branch_id', $sindh_branches); // '=' is optional
                                 }
@@ -337,8 +336,9 @@ class DeputyDirectorDashboardController extends Controller
                     $data['processing'] = Student::where('status', null)->where('branch_id', $branch_id)->count();
 
                     $data['onroll'] = Student::where([['status', 'on_roll'], ['admission_year_id', $request->academic_year_id_graph]])->where('branch_id', $branch_id)->count();
-                    $data['left']= StudentWithdrawal::whereHas(
-                        'student' , function ($q) use ( $branch_id) {
+                    $data['left'] = StudentWithdrawal::whereHas(
+                        'student',
+                        function ($q) use ($branch_id) {
                             // Query the name field in status table
                             $q->where('status', '=', 'left')->where('branch_id', $branch_id); // '=' is optional
                         }
@@ -351,7 +351,8 @@ class DeputyDirectorDashboardController extends Controller
 
                     $data['onroll'] = Student::where([['status', 'on_roll'], ['admission_year_id', $request->academic_year_id_graph]])->whereNotIn('branch_id', [1,2,3,22,23,24,27,28])->count();
                     $data['left'] = StudentWithdrawal::whereHas(
-                        'student' , function ($q) {
+                        'student',
+                        function ($q) {
                             // Query the name field in status table
                             $q->where('status', '=', 'left')->whereNotIn('branch_id', [1,2,3,22,23,24,27,28]); // '=' is optional
                         }
@@ -359,13 +360,10 @@ class DeputyDirectorDashboardController extends Controller
                         ->where('academic_year_id', $request->academic_year_id_graph)
                         ->count();
                 }
-
             }
 
             if ($request->academic_year_id_graph == null) {
-
                 if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                     $region_id = get_state_id();
                     if ($region_id == 1) {
                         $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -381,12 +379,10 @@ class DeputyDirectorDashboardController extends Controller
                 } else if (auth()->user()->hasRole('network_associate')) {
                     $branch_id = get_NWABranchCode();
                     $data['onroll'] = Student::where([['status', 'on_roll']])->where('branch_id', $branch_id)->count();
-
                 } else {
                     $data['onroll'] = Student::where([['status', 'on_roll']])->whereNotIn('branch_id', [1,2,3,22,23,24,27,28])->count();
                 }
                 if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                     $region_id = get_state_id();
                     if ($region_id == 1) {
                         $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -402,12 +398,10 @@ class DeputyDirectorDashboardController extends Controller
                 } else if (auth()->user()->hasRole('network_associate')) {
                     $branch_id = get_NWABranchCode();
                     $data['processing'] = Student::where('status', null)->where('branch_id', $branch_id)->count();
-
                 } else {
                     $data['processing'] = Student::where('status', null)->whereNotIn('branch_id', [1,2,3,22,23,24,27,28])->count();
                 }
                 if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                     $region_id = get_state_id();
                     if ($region_id == 1) {
                         $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -423,20 +417,19 @@ class DeputyDirectorDashboardController extends Controller
                 } else if (auth()->user()->hasRole('network_associate')) {
                     $branch_id = get_NWABranchCode();
                     $data['register'] = Student::where([['status', 'registered']])->where('branch_id', $branch_id)->count();
-
                 } else {
                     $data['register'] = Student::where([['status', 'registered']])->whereNotIn('branch_id', [1,2,3,22,23,24,27,28])->count();
                 }
 
                 if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                     $region_id = get_state_id();
                     if ($region_id == 1) {
                         $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
                         // foreach ($punjab_branches as $key => $branches) {
 
                             $data['left'] = StudentWithdrawal::whereHas(
-                                'student', function ($q) use ( $punjab_branches) {
+                                'student',
+                                function ($q) use ($punjab_branches) {
                                     // Query the name field in status table
                                     $q->where('status', '=', 'left')->whereIn('branch_id', $punjab_branches); // '=' is optional
                                 }
@@ -449,7 +442,8 @@ class DeputyDirectorDashboardController extends Controller
                         // foreach ($sindh_branches as $key => $branches) {
 
                             $data['left'] = StudentWithdrawal::whereHas(
-                                'student' ,function ($q) use ($sindh_branches) {
+                                'student',
+                                function ($q) use ($sindh_branches) {
                                     $q->where('status', '=', 'left')->whereIn('branch_id', $sindh_branches); // '=' is optional
                                 }
                             )
@@ -459,26 +453,24 @@ class DeputyDirectorDashboardController extends Controller
                     }
                 } else if (auth()->user()->hasRole('network_associate')) {
                     $branch_id = get_NWABranchCode();
-                    $data['left']= StudentWithdrawal::whereHas(
-                        'student', function ($q) use ($request, $branch_id) {
+                    $data['left'] = StudentWithdrawal::whereHas(
+                        'student',
+                        function ($q) use ($request, $branch_id) {
                             // Query the name field in status table
                             $q->where('status', '=', 'left')->where('branch_id', $branch_id); // '=' is optional
                         }
                     )
                         ->count();
-
-
                 } else {
                     $data['left'] = StudentWithdrawal::whereHas(
-                        'student' , function ($q) {
+                        'student',
+                        function ($q) {
                             // Query the name field in status table
                             $q->where('status', '=', 'left')->whereNotIn('branch_id', [1,2,3,22,23,24,27,28]); // '=' is optional
                         }
                     )
                         ->count();
                     // $data2[] = Student::with(['student_withdrawals'])->where([['status', 'left'],['admission_year_id', $request->academic_year_id_graph]])->where(DB::raw('MONTH(last_day_at)'), $value)->count();
-
-
                 }
 
 
@@ -500,7 +492,6 @@ class DeputyDirectorDashboardController extends Controller
 
 
                     if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                         $region_id = get_state_id();
                         if ($region_id == 1) {
                             $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -525,7 +516,6 @@ class DeputyDirectorDashboardController extends Controller
                     }
 
                     if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                         $region_id = get_state_id();
                         if ($region_id == 1) {
                             $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
@@ -550,14 +540,14 @@ class DeputyDirectorDashboardController extends Controller
                     }
 
                     if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
-
                         $region_id = get_state_id();
                         if ($region_id == 1) {
                             $punjab_branches = Branch::where('region_id', 1)->whereNotIn('id', [1,2,3,22,23,24,27,28])->pluck('id');
                             // foreach ($punjab_branches as $key => $branches) {
 
                                 $data2[] = StudentWithdrawal::whereHas(
-                                    'student' , function ($q) use ($punjab_branches) {
+                                    'student',
+                                    function ($q) use ($punjab_branches) {
                                         // Query the name field in status table
                                         $q->where('status', '=', 'left')->whereIn('branch_id', $punjab_branches); // '=' is optional
                                     }
@@ -572,7 +562,8 @@ class DeputyDirectorDashboardController extends Controller
                             // foreach ($sindh_branches as $key => $branches) {
 
                                 $data2[] = StudentWithdrawal::whereHas(
-                                    'student' , function ($q) use ( $sindh_branches) {
+                                    'student',
+                                    function ($q) use ($sindh_branches) {
                                         $q->where('status', '=', 'left')->whereIn('branch_id', $sindh_branches); // '=' is optional
                                     }
                                 )
@@ -584,7 +575,8 @@ class DeputyDirectorDashboardController extends Controller
                     } else if (auth()->user()->hasRole('network_associate')) {
                         $branch_id = get_NWABranchCode();
                         $data2[] = StudentWithdrawal::whereHas(
-                            'student' , function ($q) use ($request, $branch_id) {
+                            'student',
+                            function ($q) use ($request, $branch_id) {
                                 // Query the name field in status table
                                 $q->where('status', '=', 'left')->where('branch_id', $branch_id); // '=' is optional
                             }
@@ -593,10 +585,10 @@ class DeputyDirectorDashboardController extends Controller
                             ->count();
                         // $data2[] = Student::with(['student_withdrawals'])->where([['status', 'left'],['admission_year_id', $request->academic_year_id_graph]])->where(DB::raw('MONTH(last_day_at)'), $value)->count();
                         $data2['lefts'] = $data2;
-
                     } else {
                         $data2[] = StudentWithdrawal::whereHas(
-                            'student' , function ($q) use ($request, $value) {
+                            'student',
+                            function ($q) use ($request, $value) {
                                 // Query the name field in status table
                                 $q->where('status', '=', 'left')->whereNotIn('branch_id', [1,2,3,22,23,24,27,28]); // '=' is optional
                             }
@@ -605,7 +597,6 @@ class DeputyDirectorDashboardController extends Controller
                             ->count();
                         // $data2[] = Student::with(['student_withdrawals'])->where([['status', 'left'],['admission_year_id', $request->academic_year_id_graph]])->where(DB::raw('MONTH(last_day_at)'), $value)->count();
                         $data2['lefts'] = $data2;
-
                     }
                 }
             }
@@ -613,32 +604,30 @@ class DeputyDirectorDashboardController extends Controller
             return [$data, $data1, $data2];
         }
         return;
-
     }
 
     public function student_details_card(Request $request)
     {
         if ($request->ajax()) {
-            if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')){
+            if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
                 $region_id = get_state_id();
-                        if ($region_id) {
-            $data = Branch::where('region_id', $region_id)->whereNotIn('id', [1,2,3,22,23,24,27,28])->with([
-                'employee' => function ($query) {
-                    $query->select('branch_id', 'status', 'admission_year_id', 'admission_wef');
-                }
-            ])->with([
-                        'employee' => function ($query) {
-                            $query->select('branch_id', 'user_id');
-                        }
+                if ($region_id) {
+                    $data = Branch::where('region_id', $region_id)->whereNotIn('id', [1,2,3,22,23,24,27,28])->with([
+                    'employee' => function ($query) {
+                        $query->select('branch_id', 'status', 'admission_year_id', 'admission_wef');
+                    }
+                    ])->with([
+                    'employee' => function ($query) {
+                        $query->select('branch_id', 'user_id');
+                    }
                     ]);
                 }
-            }
-            else{
-            $data = Branch::whereNotIn('id', [1,2,3,22,23,24,27,28])->with([
+            } else {
+                $data = Branch::whereNotIn('id', [1,2,3,22,23,24,27,28])->with([
                 'employee' => function ($query) {
                     $query->select('branch_id', 'status', 'admission_year_id', 'admission_wef');
                 }
-            ])->with([
+                ])->with([
                         'employee' => function ($query) {
                             $query->select('branch_id', 'user_id');
                         }
@@ -654,18 +643,15 @@ class DeputyDirectorDashboardController extends Controller
             if ($request->region_id) {
                 // $data = $data->where('admission_year_id', $request->admission_year_id);
                 $data = $data->where('region_id', $request->region_id);
-
             }
             // if ($request->audience) {
             //     $data = $data->where('audience', $request->audience);
             // }
             if ($request->branch_id) {
                 $data = $data->where('id', $request->branch_id);
-
             }
             if ($request->state_id) {
                 $data = $data->where('state_id', $request->state_id);
-
             }
 
             if ($request->start_date && $request->end_date) {
@@ -714,19 +700,14 @@ class DeputyDirectorDashboardController extends Controller
     public function on_boarding_list(Request $request)
     {
 
-        if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')){
+        if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
             $region_id = get_state_id();
-            if($region_id == 1)
-            {
+            if ($region_id == 1) {
                 $states = State::where('id', 1)->get();
-
-            }
-            else if($region_id == 3){
+            } else if ($region_id == 3) {
                 $states = State::where('id', 2)->get();
             }
-        }
-        else{
-
+        } else {
             $states = State::all();
         }
         $cities = City::all();
@@ -739,20 +720,14 @@ class DeputyDirectorDashboardController extends Controller
             'attachment_types' => $attachmentTypes,
         ];
         if ($request->ajax()) {
-            if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')){
+            if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
                 $region_id = get_state_id();
-                if($region_id == 1)
-                {
+                if ($region_id == 1) {
                     $query = FranchiseApplication::with(['states', 'cities', 'source', 'other_informations', 'franchise_application_qa', 'franchise_application_bd', 'franchise_application_tor', 'franchise_application_legal', 'franchise_application_dd'])->where('state_id', 1);
-
-                }
-                else if($region_id ==3){
+                } else if ($region_id == 3) {
                     $query = FranchiseApplication::with(['states', 'cities', 'source', 'other_informations', 'franchise_application_qa', 'franchise_application_bd', 'franchise_application_tor', 'franchise_application_legal', 'franchise_application_dd'])->where('state_id', 2);
-
                 }
-            }
-            else{
-
+            } else {
                 $query = FranchiseApplication::with(['states', 'cities', 'source', 'other_informations', 'franchise_application_qa', 'franchise_application_bd', 'franchise_application_tor', 'franchise_application_legal', 'franchise_application_dd']);
             }
 
@@ -765,23 +740,17 @@ class DeputyDirectorDashboardController extends Controller
                 $query->where('city_id', $request->city_id);
             }
 
-            if($request->school_type && $request->school_type)
-            {
-
+            if ($request->school_type && $request->school_type) {
                 $query->whereHas('franchise_application_bd', function ($q) use ($request) {
                     $q->where('school_type', $request->school_type);
                 });
-
-
             }
-            if($request->status && $request->status)
-            {
+            if ($request->status && $request->status) {
                 $query->whereHas('franchise_application_dd', function ($q) use ($request) {
-                    $q->where('status', $request->status );
+                    $q->where('status', $request->status);
                 });
             }
             if ($request->searchTerm && $request->searchTerm != null) {
-
                 $query->orWhere('appl_name', 'like', '%' . $request->searchTerm . '%');
             }
 
@@ -831,10 +800,10 @@ class DeputyDirectorDashboardController extends Controller
 
 
             ->addColumn('action', function ($row) {
-                    if(auth()->user()->hasRole('deputy-director') || auth()->user()->hasRole('super_admin') ){
+                if (auth()->user()->hasRole('deputy-director') || auth()->user()->hasRole('super_admin')) {
                     return view('employees.dashboard.action', ['row' => $row]);
-                    }
-                })
+                }
+            })
                 ->addColumn('reports_action', function ($row) {
                     return view('employees.dashboard.reports-action', ['row' => $row]);
                 })
@@ -848,7 +817,6 @@ class DeputyDirectorDashboardController extends Controller
                     'reports_action'
                 ])
                 ->make(true);
-
         }
         return view('employees.dashboard.dd-dashboard', $data);
     }
@@ -857,21 +825,19 @@ class DeputyDirectorDashboardController extends Controller
         $states = State::all();
         $cities = City::all();
         // $fee_structure_records_popup = FeeStructureDetail::all();
-        if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')){
-
-        $fee_structure_records = NewSchoolFeeStructure::with([
-            'new_fee_structure_details' => function ($query) {
-                $query->whereIn('fee_status_by_dd',['Approved', 'Pending', 'Rejected']);
-            }
-        ])
-        ->where('status_approval_date', '!=', null)->get();
-        }
-        else{
-        $fee_structure_records = NewSchoolFeeStructure::with([
+        if (auth()->user()->hasRole('head_of_bd') || auth()->user()->hasRole('bd_sales')) {
+            $fee_structure_records = NewSchoolFeeStructure::with([
             'new_fee_structure_details' => function ($query) {
                 $query->whereIn('fee_status_by_dd', ['Approved', 'Pending', 'Rejected']);
             }
-        ])->get();
+            ])
+            ->where('status_approval_date', '!=', null)->get();
+        } else {
+            $fee_structure_records = NewSchoolFeeStructure::with([
+            'new_fee_structure_details' => function ($query) {
+                $query->whereIn('fee_status_by_dd', ['Approved', 'Pending', 'Rejected']);
+            }
+            ])->get();
         }
         $academic_years = AcademicYear::all();
         return compact('fee_structure_records', 'academic_years', 'states', 'cities');
@@ -906,82 +872,82 @@ class DeputyDirectorDashboardController extends Controller
         return response()->json($filteredData); */
     }
     public function dd_visit_request(Request $request)
-    { {
-            if ($request->ajax()) {
-                $data = VisitDetail::where('approved_by', auth()->user()->id)->with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
+    {
+        {
+        if ($request->ajax()) {
+            $data = VisitDetail::where('approved_by', auth()->user()->id)->with('branch', 'user', 'campus', 'fromCity', 'toCity', 'approvedBy');
 
 
-                if ($request->branch_id && $request->branch_id > 0) {
-                    $data = $data->where('branch_id', $request->branch_id);
-                }
-                if ($request->from_city_id && $request->from_city_id > 0) {
-                    $data = $data->where('from_city_id', $request->from_city_id);
-                }
-                if ($request->to_city_id && $request->to_city_id > 0) {
-                    $data = $data->where('to_city_id', $request->to_city_id);
-                }
-                if ($request->total_duration && $request->total_duration > 0) {
-                    $data = $data->where('total_duration', $request->total_duration);
-                }
-                if ($request->campus_office_id && $request->campus_office_id > 0) {
-                    $data = $data->where('campus_office_id', $request->campus_office_id);
-                }
-                if ($request->user_id && $request->user_id > 0) {
-                    $data = $data->where('user_id', $request->user_id);
-                }
-                if ($request->approval_status && $request->approval_status != '') {
-                    $data = $data->where('approval_status', $request->approval_status);
-                }
-
-                //dd($data->get()->toArray());
-                return Datatables::of($data)
-                    ->addIndexColumn()
-                    ->addColumn('full_name', function ($row) {
-                        $fullName = $row->user->first_name . ' ' . $row->user->last_name;
-                        return $fullName;
-                    })
-                    ->addColumn('department', function ($row) {
-                        $Department = Employee::where('user_id', $row->user->id)->with('department')->first();
-                        return $Department->department->department_name;
-                    })
-                    ->addColumn('campus_office', function ($row) {
-                        return $row->campus->type;
-                    })
-                    ->addColumn('branch_name', function ($row) {
-                        return $row->branch->br_name;
-                    })
-                    ->addColumn('city_from', function ($row) {
-                        return $row->fromCity->city_name;
-                    })
-                    ->addColumn('city_to', function ($row) {
-                        return $row->toCity->city_name;
-                    })
-                    ->addColumn('travel_on', function ($row) {
-                        return Carbon::parse($row->travel_on)->format('d-m-Y');
-                    })
-                    ->addColumn('return_on', function ($row) {
-                        return Carbon::parse($row->return_on)->format('d-m-Y');
-                    })
-                    ->addColumn('approval_auth', function ($row) {
-                        $fullName = $row->approvedBy->first_name . ' ' . $row->approvedBy->last_name;
-                        return $fullName;
-                    })
-                    ->addColumn('action', function ($row) {
-                        return view('Visitors.actions', ['row' => $row]);
-                    })
-                    ->rawColumns(['action'])
-                    ->make(true);
+            if ($request->branch_id && $request->branch_id > 0) {
+                $data = $data->where('branch_id', $request->branch_id);
             }
+            if ($request->from_city_id && $request->from_city_id > 0) {
+                $data = $data->where('from_city_id', $request->from_city_id);
+            }
+            if ($request->to_city_id && $request->to_city_id > 0) {
+                $data = $data->where('to_city_id', $request->to_city_id);
+            }
+            if ($request->total_duration && $request->total_duration > 0) {
+                $data = $data->where('total_duration', $request->total_duration);
+            }
+            if ($request->campus_office_id && $request->campus_office_id > 0) {
+                $data = $data->where('campus_office_id', $request->campus_office_id);
+            }
+            if ($request->user_id && $request->user_id > 0) {
+                $data = $data->where('user_id', $request->user_id);
+            }
+            if ($request->approval_status && $request->approval_status != '') {
+                $data = $data->where('approval_status', $request->approval_status);
+            }
+
+            //dd($data->get()->toArray());
+            return Datatables::of($data)
+                ->addIndexColumn()
+                ->addColumn('full_name', function ($row) {
+                    $fullName = $row->user->first_name . ' ' . $row->user->last_name;
+                    return $fullName;
+                })
+                ->addColumn('department', function ($row) {
+                    $Department = Employee::where('user_id', $row->user->id)->with('department')->first();
+                    return $Department->department->department_name;
+                })
+                ->addColumn('campus_office', function ($row) {
+                    return $row->campus->type;
+                })
+                ->addColumn('branch_name', function ($row) {
+                    return $row->branch->br_name;
+                })
+                ->addColumn('city_from', function ($row) {
+                    return $row->fromCity->city_name;
+                })
+                ->addColumn('city_to', function ($row) {
+                    return $row->toCity->city_name;
+                })
+                ->addColumn('travel_on', function ($row) {
+                    return Carbon::parse($row->travel_on)->format('d-m-Y');
+                })
+                ->addColumn('return_on', function ($row) {
+                    return Carbon::parse($row->return_on)->format('d-m-Y');
+                })
+                ->addColumn('approval_auth', function ($row) {
+                    $fullName = $row->approvedBy->first_name . ' ' . $row->approvedBy->last_name;
+                    return $fullName;
+                })
+                ->addColumn('action', function ($row) {
+                    return view('Visitors.actions', ['row' => $row]);
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
             $branches = Branch::all();
             $cities = City::all();
             $campus_types = CampusOfficeType::all();
-            if (isSuperAdmin()) {
-                $employees = Employee::where('branch_id', 2)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
-            } else {
-                $employees = Employee::where('branch_id', 2)->where('reporting_to', auth()->user()->id)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
-            }
+        if (isSuperAdmin()) {
+            $employees = Employee::where('branch_id', 2)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
+        } else {
+            $employees = Employee::where('branch_id', 2)->where('reporting_to', auth()->user()->id)->whereNull('left_date')->with('user', 'department')->orderBy('preferred_name')->get();
+        }
             return view('employees.dashboard.dd-dashboard', compact(['branches', 'cities', 'campus_types', 'employees']));
         }
-
     }
 }

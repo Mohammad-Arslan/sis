@@ -17,7 +17,6 @@ class CompanyController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Company::get();
             return DataTables::of($data)
                 ->addIndexColumn()

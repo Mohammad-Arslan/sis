@@ -20,7 +20,6 @@ class DesignationController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Designation::with(['company','designation_types'])->get();
             return Datatables::of($data)
                 ->addIndexColumn()

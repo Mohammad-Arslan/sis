@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClassGroupClass extends Model
 {
-    use HasFactory,SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
-    protected $fillable=[
+    protected $fillable = [
         'class_group_id',
         'class_id',
         'status'
@@ -23,12 +25,13 @@ class ClassGroupClass extends Model
         'updated_at',
     ];
 
-    public function com_class(){
-        return $this->belongsTo(ComClass::class,'class_id','id');
+    public function com_class()
+    {
+        return $this->belongsTo(ComClass::class, 'class_id', 'id');
     }
 
-    public function class_group(){
-        return $this->belongsTo(ClassGroup::class,'class_group_id','id');
+    public function class_group()
+    {
+        return $this->belongsTo(ClassGroup::class, 'class_group_id', 'id');
     }
-
 }

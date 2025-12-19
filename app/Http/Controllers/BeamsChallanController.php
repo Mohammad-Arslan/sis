@@ -27,16 +27,13 @@ class BeamsChallanController extends Controller
      */
     public function index(Request $request)
     {
-        if($request->ajax())
-        {
-
-            if(Auth::user()->hasRole('super_admin|finance-manager'))
-            {
+        if ($request->ajax()) {
+            if (Auth::user()->hasRole('super_admin|finance-manager')) {
                 $data = BeamsChallan::with(['branch','academic_year','branch_class_id','class_section_id']);
-            }else{
+            } else {
                 //for network_associate
                 $branch_id = get_branch_id();
-                $data = BeamsChallan::where('branch_id','=',$branch_id)->with(['branch','academic_year','branch_class_id','class_section_id']);
+                $data = BeamsChallan::where('branch_id', '=', $branch_id)->with(['branch','academic_year','branch_class_id','class_section_id']);
             }
 
 
@@ -47,8 +44,7 @@ class BeamsChallanController extends Controller
 
             if ($request->filter_academic_year_id && $request->filter_academic_year_id > 0) {
                 $data = $data->where('academic_year_id', $request->filter_academic_year_id);
-            }
-            else{
+            } else {
                 $data = $data->whereHas('academic_year', function ($query) use ($request) {
                     $query->where('active', 1);
                 });
@@ -80,7 +76,6 @@ class BeamsChallanController extends Controller
                     // $query->orWhereHas('class_section_id', function ($query) use ($request) {
                     //     $query->where('section_name', 'like', '%' . $request->searchName . '%');
                     // });
-
                 });
             }
             //dd($data->get()->toArray());
@@ -115,19 +110,15 @@ class BeamsChallanController extends Controller
         $academic_years = AcademicYear::all();
         $branches = Branch::all();
         if (Auth::user()->hasRole('super_admin|finance-manager')) {
-
             $classes = ComClass::all();
             $sections = Section::all();
-        }
-        else
-        {
+        } else {
             $branch_id = get_branch_id();
             $branch_classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
-             for($i=0;$i<count($branch_classes); $i++)
-             {
-                 $classes[$i]['id']=$branch_classes[$i]['com_classes']['id'];
-                 $classes[$i]['class_name']= $branch_classes[$i]['com_classes']['class_name'];
-             }
+            for ($i = 0; $i < count($branch_classes); $i++) {
+                $classes[$i]['id'] = $branch_classes[$i]['com_classes']['id'];
+                $classes[$i]['class_name'] = $branch_classes[$i]['com_classes']['class_name'];
+            }
              $sections = Section::all();
             //$sections = BranchClassSection::where('branch_id' , $branch_id)->with(['sections'])->get();
         }
@@ -169,7 +160,7 @@ class BeamsChallanController extends Controller
         $input = $request->all();
         if ($request->hasfile('challan_pdf')) {
             $path = public_path() . '/uploads/beamschallans/';
-            if (!File::exists($path)) {
+            if (! File::exists($path)) {
                 File::makeDirectory($path, $mode = 0777, true, true);
             }
             $destination_path = public_path('/uploads/beamschallans');
@@ -181,8 +172,7 @@ class BeamsChallanController extends Controller
             \DB::commit();
 
             return redirect(route('beams-challans.index'))->with('success', 'Beams challan has been successfully saved.');
-        }
-        else{
+        } else {
             return redirect(route('beams-challans.index'))->with('error', 'Beams challan not uploaded, PDF attachment is missing.');
         }
     }
@@ -217,7 +207,6 @@ class BeamsChallanController extends Controller
             'sections'          => $sections,
             'beamsChallan'      => $beamsChallan,
         ]);
-
     }
 
     /**
@@ -241,7 +230,7 @@ class BeamsChallanController extends Controller
         $input = $request->all();
         if ($request->hasfile('challan_pdf')) {
             $path = public_path() . '/uploads/beamschallans/';
-            if (!File::exists($path)) {
+            if (! File::exists($path)) {
                 File::makeDirectory($path, $mode = 0777, true, true);
             }
             $destination_path = public_path('/uploads/beamschallans');
@@ -254,10 +243,9 @@ class BeamsChallanController extends Controller
         } else {
            //
         }
-        if($beam_challan_record->update($input)){
+        if ($beam_challan_record->update($input)) {
             return redirect(route('beams-challans.index'))->with('success', 'Beams challan has been successfully updated.');
-        }
-        else{
+        } else {
             return redirect(route('beams-challans.index'))->with('error', 'Beams challan not updated, Please try again later!');
         }
     }

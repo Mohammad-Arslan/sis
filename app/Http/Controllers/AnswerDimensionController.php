@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\AnswerDimension;
 use Illuminate\Http\Request;
 use App\Models\QuestionDimension;
-
 
 class AnswerDimensionController extends Controller
 {
@@ -39,10 +39,10 @@ class AnswerDimensionController extends Controller
     }
 
     public function edit(AnswerDimension $answerDimension)
-{
-    $questionDimensions = QuestionDimension::all();
-    return view('answer-dimensions.edit', compact('answerDimension', 'questionDimensions'));
-}
+    {
+        $questionDimensions = QuestionDimension::all();
+        return view('answer-dimensions.edit', compact('answerDimension', 'questionDimensions'));
+    }
 
 
     public function update(Request $request, AnswerDimension $answerDimension)

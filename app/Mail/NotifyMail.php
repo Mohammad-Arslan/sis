@@ -9,14 +9,16 @@ use Illuminate\Queue\SerializesModels;
 
 class NotifyMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
+
     public $subject, $receiver_name, $fromEmail, $message;
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($subject, $receiver_name,$message)
+    public function __construct($subject, $receiver_name, $message)
     {
         $this->subject = $subject;
         $this->message = $message;

@@ -11,7 +11,8 @@ class LogApiRequest
 {
     public function __construct(
         private readonly ActivityLoggerService $logger
-    ) {}
+    ) {
+    }
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -28,4 +29,3 @@ class LogApiRequest
         return $response;
     }
 }
-

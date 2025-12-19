@@ -38,12 +38,14 @@ class RelationSeeder extends Seeder
         if (isset($relations)) {
             foreach ($relations as $relation) {
                 $checkStatus = Relation::where('relation_name', $relation['relation_name'])->first();
-                if (empty($checkStatus))
+                if (empty($checkStatus)) {
                     $dataToInsert[] = $relation;
+                }
             }
 
-            if (sizeof($dataToInsert))
+            if (sizeof($dataToInsert)) {
                 Relation::insert($dataToInsert);
+            }
         }
     }
 }

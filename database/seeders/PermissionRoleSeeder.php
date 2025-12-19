@@ -12,13 +12,13 @@ class PermissionRoleSeeder extends Seeder
    *
    * @return void
    */
-  public function run()
-  {
-    // Clear existing permission_role entries for role_id 1 to avoid duplicates
-    DB::table('permission_role')->where('role_id', 1)->delete();
-    DB::table('permission_role')->where('role_id', 2)->delete();
-    
-    DB::insert("INSERT INTO `permission_role` (`permission_id`, `role_id`) VALUES
+    public function run()
+    {
+      // Clear existing permission_role entries for role_id 1 to avoid duplicates
+        DB::table('permission_role')->where('role_id', 1)->delete();
+        DB::table('permission_role')->where('role_id', 2)->delete();
+
+        DB::insert("INSERT INTO `permission_role` (`permission_id`, `role_id`) VALUES
     (5, 1),
     (6, 1),
     (7, 1),
@@ -168,5 +168,5 @@ class PermissionRoleSeeder extends Seeder
     (149, 1),
     (150, 1),
     (151, 1);");
-  }
+    }
 }

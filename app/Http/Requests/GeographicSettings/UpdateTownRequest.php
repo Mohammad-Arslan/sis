@@ -22,7 +22,7 @@ class UpdateTownRequest extends FormRequest
     public function rules(): array
     {
         $townId = $this->route('town')->id;
-        
+
         return [
             'town_name' => [
                 'required',
@@ -47,4 +47,3 @@ class UpdateTownRequest extends FormRequest
         ];
     }
 }
-

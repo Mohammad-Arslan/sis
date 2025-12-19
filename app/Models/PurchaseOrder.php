@@ -98,14 +98,14 @@ class PurchaseOrder extends Model
         $prefix = 'PO-';
         $date = now()->format('Ymd');
         $lastPO = self::where('po_number', 'like', $prefix . $date . '%')->latest()->first();
-        
+
         if ($lastPO) {
             $lastNumber = intval(substr($lastPO->po_number, -4));
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        
+
         return $prefix . $date . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

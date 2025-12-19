@@ -29,7 +29,7 @@ class TimetableController extends Controller
     public function index()
     {
         $userId = Auth::user()->id;
-        
+
         // Debug: Log user information
         Log::info('TimetableController::index - User info', [
             'user_id' => $userId,
@@ -86,7 +86,7 @@ class TimetableController extends Controller
         // Debug: Log the final timetables count
         Log::info('Final timetables count', ['count' => $timetables->count()]);
 
-        if (!isset($timetables) || $timetables->isEmpty()) {
+        if (! isset($timetables) || $timetables->isEmpty()) {
             // If there are no timetables, set $events to an empty array and set a message
             $events = [];
             $message = 'No timetables available.';
@@ -208,7 +208,7 @@ class TimetableController extends Controller
             'subjects' => $subjects,
         ]);
     }
-  public function getEmployeesByBranch($branchId)
+    public function getEmployeesByBranch($branchId)
     {
         $employees = Employee::where('branch_id', $branchId)->get();
         return response()->json($employees);
@@ -327,30 +327,30 @@ class TimetableController extends Controller
     // }
 
     public function edit($id)
-{
-    $timetable = Timetable::findOrFail($id);
+    {
+        $timetable = Timetable::findOrFail($id);
 
     // Retrieve the branch directly from the timetable's branch_id
-    $selectedBranch = Branch::find($timetable->branch_id);
+        $selectedBranch = Branch::find($timetable->branch_id);
 
     // Check if the authenticated user is a coordinator
-    if (Auth::user()->hasRole('subject_coordinator|school-coordinator|super_admin')) {
-        // Proceed with fetching other data since we have the selected branch now
-        $employees = Employee::where('branch_id', $selectedBranch->id)
+        if (Auth::user()->hasRole('subject_coordinator|school-coordinator|super_admin')) {
+            // Proceed with fetching other data since we have the selected branch now
+            $employees = Employee::where('branch_id', $selectedBranch->id)
             ->whereNotNull('preferred_name')
             ->get();
 
-        $classes = $timetable->class;
-        $sections = $timetable->section;
-        $subjects = $timetable->subject;
+            $classes = $timetable->class;
+            $sections = $timetable->section;
+            $subjects = $timetable->subject;
 
-        $branches = Branch::all();
+            $branches = Branch::all();
 
-        return view('timetables.edit', compact('timetable', 'branches', 'employees', 'selectedBranch', 'classes', 'sections', 'subjects'));
-    } else {
-        return redirect()->back()->with('error', 'You are not authorized to edit timetables.');
+            return view('timetables.edit', compact('timetable', 'branches', 'employees', 'selectedBranch', 'classes', 'sections', 'subjects'));
+        } else {
+            return redirect()->back()->with('error', 'You are not authorized to edit timetables.');
+        }
     }
-}
 
 
     public function update(Request $request, $id)
@@ -401,6 +401,4 @@ class TimetableController extends Controller
             return response()->json(['error' => 'You are not authorized to delete this timetable entry.'], 403);
         }
     }
-
-
 }

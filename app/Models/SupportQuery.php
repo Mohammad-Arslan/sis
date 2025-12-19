@@ -11,7 +11,10 @@ class SupportQuery extends Model
 {
     use HasFactory;
 
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'raised_by',
         'branch_id',
@@ -25,11 +28,13 @@ class SupportQuery extends Model
         'updated_at',
     ];
 
-    public function user(){
-        return $this->belongsTo(User::class,'raised_by','id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'raised_by', 'id');
     }
 
-    public function branch(){
-        return $this->belongsTo(Branch::class,'branch_id','id');
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 }

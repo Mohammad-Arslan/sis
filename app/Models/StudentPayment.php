@@ -33,4 +33,4 @@ class StudentPayment extends Model
     {
         return $this->hasMany(StudentArrearsHistory::class, 'cleared_by_payment_id', 'id');
     }
-} 
+}

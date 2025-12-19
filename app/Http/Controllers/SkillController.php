@@ -22,31 +22,34 @@ class SkillController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $query = Skill::with(['term', 'subject', 'parent', 'com_class']);
 
-            if (isset($request->class_id))
+            if (isset($request->class_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('class_id', $request->class_id);
                     $q->orWhereNull('class_id');
                 });
+            }
 
-            if (isset($request->subject_id))
+            if (isset($request->subject_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('subject_id', $request->subject_id);
                     $q->orWhereNull('subject_id');
                 });
+            }
 
-            if (isset($request->term_id))
+            if (isset($request->term_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('term_id', $request->term_id);
                     $q->orWhereNull('term_id');
                 });
+            }
 
-            if (isset($request->type))
+            if (isset($request->type)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('type', $request->type);
                 });
+            }
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -112,8 +115,9 @@ class SkillController extends Controller
             'status.in' => 'The status must be either active or inactive.',
         ]);
 
-        if (empty($request->parent_id))
+        if (empty($request->parent_id)) {
             $request['parent_id'] = 0;
+        }
 
         Skill::create($request->all());
 
@@ -181,8 +185,9 @@ class SkillController extends Controller
             'status.in' => 'The status must be either active or inactive.',
         ]);
 
-        if (empty($request->parent_id))
+        if (empty($request->parent_id)) {
             $request['parent_id'] = 0;
+        }
 
         $skill->update($request->all());
 

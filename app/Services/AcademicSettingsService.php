@@ -96,7 +96,7 @@ class AcademicSettingsService
             if (isset($data['active']) && $data['active'] == 1) {
                 AcademicYear::where('active', 1)->update(['active' => 0]);
             }
-            
+
             $academicYear = AcademicYear::create($data);
             Cache::forget('academic.academic-years');
             return $academicYear;
@@ -113,7 +113,7 @@ class AcademicSettingsService
             if (isset($data['active']) && $data['active'] == 1) {
                 AcademicYear::where('active', 1)->where('id', '!=', $academicYear->id)->update(['active' => 0]);
             }
-            
+
             $academicYear->update($data);
             Cache::forget('academic.academic-years');
             return $academicYear->fresh();
@@ -231,4 +231,3 @@ class AcademicSettingsService
         }
     }
 }
-

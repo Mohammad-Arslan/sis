@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AdmissionQuery extends Model
 {
-    use HasFactory,SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'inquiry_number',
@@ -32,46 +34,51 @@ class AdmissionQuery extends Model
         'updated_at',
     ];
 
-    public function city(){
-        return $this->belongsTo(City::class,'city_id','id');
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'city_id', 'id');
     }
 
-    public function town(){
-        return $this->belongsTo(Town::class,'town_id','id');
+    public function town()
+    {
+        return $this->belongsTo(Town::class, 'town_id', 'id');
     }
 
-    public function branch(){
-        return $this->belongsTo(Branch::class,'branch_id','id');
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
-    public function com_class(){
-        return $this->belongsTo(ComClass::class,'class_id','id');
+    public function com_class()
+    {
+        return $this->belongsTo(ComClass::class, 'class_id', 'id');
     }
 
-    public function source(){
-        return $this->belongsTo(Source::class,'source_id','id');
+    public function source()
+    {
+        return $this->belongsTo(Source::class, 'source_id', 'id');
     }
     public function academic_year()
     {
-        return $this->belongsTo(AcademicYear::class,'academic_year_id','id');
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id', 'id');
     }
 
     public function inquiry_type()
     {
-        return $this->belongsTo(InquiriesType::class, 'inquiry_type_id','id');
+        return $this->belongsTo(InquiriesType::class, 'inquiry_type_id', 'id');
     }
 
-    public static function store_update_admission_query($request,$admissionQuery = null,$type = 'create'){
+    public static function store_update_admission_query($request, $admissionQuery = null, $type = 'create')
+    {
 
         if ($type == 'create') {
-            $academicYear = AcademicYear::where('active',1)->get('id')->toArray();
+            $academicYear = AcademicYear::where('active', 1)->get('id')->toArray();
             $input = $request;
             $input['inquiry_type_id'] = 1;
             $input['academic_year_id'] = $academicYear[0]['id'];
-            $input['inquiry_number'] = random_int(10000000,99999999);
+            $input['inquiry_number'] = random_int(10000000, 99999999);
             $response = self::create($input);
-        }
-        else if ($type == 'update'){
+        } else if ($type == 'update') {
             $admissionQuery->update($request);
             $response = $admissionQuery->refresh();
         }

@@ -64,11 +64,11 @@ class ClassTeacherController extends Controller
      */
     public function store(Request $request)
     {
-        if (empty($request->employee_id))
+        if (empty($request->employee_id)) {
             return redirect()->back()->with('error', 'No Teacher has been selected.');
-
-        else if (!isset($request->subject_id))
+        } else if (! isset($request->subject_id)) {
             return redirect()->back()->with('error', 'No Subjects has been selected.');
+        }
 
         if (isset($request->is_class_incharge)) {
             $teacher_type = TeacherType::where('abbreviation', 'class')->first();
@@ -76,10 +76,9 @@ class ClassTeacherController extends Controller
 
             //if class already has an incharge then teacher type would be of subject.
             //first remove precious class incharge then new class incharge would be assigned.
-            if (!empty($class_has_incharge)) {
+            if (! empty($class_has_incharge)) {
                 $teacher_type = TeacherType::where('abbreviation', 'subject')->first();
-            } else if (!isset($request->subject_id) && !empty($request->employee_id)) //if class has no incharge and no subjects has been selected then make this employee as class incharge
-            {
+            } else if (! isset($request->subject_id) && ! empty($request->employee_id)) { //if class has no incharge and no subjects has been selected then make this employee as class incharge
                 ClassTeacher::create([
                     'academic_year_id' => $request->academic_year_id,
                     'branch_class_section_id' => $request->branch_class_section_id,
@@ -94,7 +93,7 @@ class ClassTeacherController extends Controller
         if (isset($request->subject_id) && isset($request->employee_id)) {
             foreach ($request->subject_id as $subject_id) {
                 $subject = ClassTeacher::where([['employee_id',$request->employee_id],['branch_class_section_id', $request->branch_class_section_id], ['subject_id', $subject_id], ['is_valid', 1]])->count();
-                if ($subject < 1)
+                if ($subject < 1) {
                     ClassTeacher::create([
                         'academic_year_id' => $request->academic_year_id,
                         'branch_class_section_id' => $request->branch_class_section_id,
@@ -102,6 +101,7 @@ class ClassTeacherController extends Controller
                         'teacher_type_id' => $teacher_type->id,
                         'subject_id' => $subject_id,
                     ]);
+                }
             }
         }
 
@@ -206,7 +206,6 @@ class ClassTeacherController extends Controller
     public function class_section_teachers(Request $request)
     {
         if ($request->ajax()) {
-
             $data = ClassTeacher::where('branch_class_section_id', $request->branch_class_section_id)
                 ->with([
                     'subject',
@@ -219,10 +218,9 @@ class ClassTeacherController extends Controller
             //dd($data->toArray());
             return DataTables::of($data)
                 ->addColumn('employee_full_name', function ($data) {
-                    if(isset($data['employee']['user']['first_name'])) {
+                    if (isset($data['employee']['user']['first_name'])) {
                         return $data['employee']['user']['first_name'] . ' ' . $data['employee']['user']['middle_name'] . ' ' . $data['employee']['user']['last_name'];
-                    }
-                    else{
+                    } else {
                         return '';
                     }
                 })

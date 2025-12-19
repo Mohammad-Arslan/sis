@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentWithdrawalRequest extends Model
 {
-    use HasFactory, SerializeDateTrait, SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'student_id',
@@ -45,5 +47,4 @@ class StudentWithdrawalRequest extends Model
     {
         return $this->belongsTo(Guardian::class, 'beneficiary_id', 'id');
     }*/
-
 }

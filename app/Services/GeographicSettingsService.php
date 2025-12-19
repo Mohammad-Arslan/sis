@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 class GeographicSettingsService
 {
     use GeneratesActionButtons;
+
     /**
      * Get all countries with caching
      */
@@ -326,6 +327,4 @@ class GeographicSettingsService
     {
         return City::where('state_id', $stateId)->get();
     }
-
 }
-

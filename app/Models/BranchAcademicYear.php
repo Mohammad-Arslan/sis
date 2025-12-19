@@ -10,7 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BranchAcademicYear extends Model
 {
-    use HasFactory, SerializeDateTrait, SoftDeletes, LogsActivity;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
+    use LogsActivity;
 
     protected $fillable = [
         'start_date',

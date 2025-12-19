@@ -17,7 +17,6 @@ class SubjectGroupController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = SubjectGroup::get();
             return Datatables::of($data)
                 ->addIndexColumn()

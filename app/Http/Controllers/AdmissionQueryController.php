@@ -42,9 +42,8 @@ class AdmissionQueryController extends Controller
                     'academic_year',
                     'inquiry_type',
                 )->orderByDesc('created_at');
-            }
-            else{
-                $data = AdmissionQuery::where('branch_id',get_branch_id())->with(
+            } else {
+                $data = AdmissionQuery::where('branch_id', get_branch_id())->with(
                     'city',
                     'town',
                     'branch',
@@ -55,49 +54,58 @@ class AdmissionQueryController extends Controller
                 )->orderByDesc('created_at');
             }
 
-                if ($request->academic_year_id)
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('academic_year_id', $request->academic_year_id);
-                    });
+            if ($request->academic_year_id) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('academic_year_id', $request->academic_year_id);
+                });
+            }
 
-                if ($request->branch_id)
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('branch_id' , $request->branch_id);
-                    });
+            if ($request->branch_id) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('branch_id', $request->branch_id);
+                });
+            }
 
-                if ($request->source_id)
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('source_id', $request->source_id);
-                    });
+            if ($request->source_id) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('source_id', $request->source_id);
+                });
+            }
 
-                if ($request->inquiry_type_id)
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('inquiry_type_id', $request->inquiry_type_id);
-                    });
+            if ($request->inquiry_type_id) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('inquiry_type_id', $request->inquiry_type_id);
+                });
+            }
 
-                if (isset($request->class_id))
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('class_id' , $request->class_id);
-                        $query->orWhereNull('class_id');
-                    });
+            if (isset($request->class_id)) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('class_id', $request->class_id);
+                    $query->orWhereNull('class_id');
+                });
+            }
 
-                if (isset($request->city_id))
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('city_id' , $request->city_id);
-                        $query->orWhereNull('city_id');
-                    });
+            if (isset($request->city_id)) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('city_id', $request->city_id);
+                    $query->orWhereNull('city_id');
+                });
+            }
 
-                if (isset($request->town_id))
-                    $data = $data->where(function ($query) use ($request){
-                        $query->where('town_id' , $request->town_id);
-                        $query->orWhereNull('town_id');
-                    });
+            if (isset($request->town_id)) {
+                $data = $data->where(function ($query) use ($request) {
+                    $query->where('town_id', $request->town_id);
+                    $query->orWhereNull('town_id');
+                });
+            }
 
-                if (isset($request->from_date))
-                    $data = $data->whereDate('created_at' ,'>=', $request->from_date);
+            if (isset($request->from_date)) {
+                $data = $data->whereDate('created_at', '>=', $request->from_date);
+            }
 
-                if (isset($request->to_date))
-                    $data = $data->whereDate('created_at' ,'<=', $request->to_date);
+            if (isset($request->to_date)) {
+                $data = $data->whereDate('created_at', '<=', $request->to_date);
+            }
 
                 $data = $data->get();
             // }
@@ -145,23 +153,18 @@ class AdmissionQueryController extends Controller
             $data['towns'] = Town::all();
             $data['sources'] = Source::all();
             $data['inquirytypes'] = InquiriesType::all();
-        }
-        else
-        {
+        } else {
             $data['academic_years'] = AcademicYear::all();
             $branch_id = get_branch_id();
-            if(auth()->user()->hasRole('network_associate'))
-            {
+            if (auth()->user()->hasRole('network_associate')) {
                 $data['branches'] = Branch::where('id', $branch_id)->get();
                 $branch_class_ids = get_branch_class_ids($data['branches'][0]->id);
                 $data['classes'] = ComClass::whereIn('id', $branch_class_ids)->get();
                 $nwa = NetworkAssociate::where('user_id', auth()->user()->id)->get();
-                $nwa_info = ContactInformation::where('contact_informationable_id',$nwa[0]->id)->where('contact_informationable_type','App\Models\NetworkAssociate')->get();
+                $nwa_info = ContactInformation::where('contact_informationable_id', $nwa[0]->id)->where('contact_informationable_type', 'App\Models\NetworkAssociate')->get();
                 $data['cities'] = City::where('id', $nwa_info[0]->city_id)->get();
                 $data['towns'] = Town::where('city_id', $nwa_info[0]->city_id)->get();
-            }
-            else
-            {
+            } else {
                 $data['branches'] = Branch::where('id', $branch_id)->get();
                 $branch_class_ids = get_branch_class_ids($data['branches'][0]->id);
                 $data['classes'] = ComClass::whereIn('id', $branch_class_ids)->get();
@@ -173,7 +176,7 @@ class AdmissionQueryController extends Controller
             $data['inquirytypes'] = InquiriesType::all();
         }
 
-        return view('admission_queries.index',$data);
+        return view('admission_queries.index', $data);
     }
 
     /**
@@ -208,10 +211,10 @@ class AdmissionQueryController extends Controller
             'source_id' => 'required',
         ]);
 
-        $academicYear = AcademicYear::where('active',1)->get('id')->toArray();
+        $academicYear = AcademicYear::where('active', 1)->get('id')->toArray();
         $input = $request->all();
         $input['academic_year_id'] = $academicYear[0]['id'];
-        $input['inquiry_number'] = random_int(10000000,99999999);
+        $input['inquiry_number'] = random_int(10000000, 99999999);
 
         AdmissionQuery::create($input);
 
@@ -246,23 +249,18 @@ class AdmissionQueryController extends Controller
             $towns = Town::all();
             $sources = Source::all();
             $inquirytypes = InquiriesType::all();
-        }
-        else
-        {
+        } else {
             $academic_years = AcademicYear::all();
             $branch_id = get_branch_id();
-            if(auth()->user()->hasRole('network_associate'))
-            {
+            if (auth()->user()->hasRole('network_associate')) {
                 $branches = Branch::where('id', $branch_id)->get();
                 $branch_class_ids = get_branch_class_ids($branches[0]->id);
                 $classes = ComClass::whereIn('id', $branch_class_ids)->get();
                 $nwa = NetworkAssociate::where('user_id', auth()->user()->id)->get();
-                $nwa_info = ContactInformation::where('contact_informationable_id',$nwa[0]->id)->where('contact_informationable_type','App\Models\NetworkAssociate')->get();
+                $nwa_info = ContactInformation::where('contact_informationable_id', $nwa[0]->id)->where('contact_informationable_type', 'App\Models\NetworkAssociate')->get();
                 $cities = City::where('id', $nwa_info[0]->city_id)->get();
                 $towns = Town::where('city_id', $nwa_info[0]->city_id)->get();
-            }
-            else
-            {
+            } else {
                 $branches = Branch::where('id', $branch_id)->get();
                 $branch_class_ids = get_branch_class_ids($branches[0]->id);
                 $classes = ComClass::whereIn('id', $branch_class_ids)->get();
@@ -273,17 +271,19 @@ class AdmissionQueryController extends Controller
             $sources = Source::all();
             $inquirytypes = InquiriesType::all();
         }
-        return view('admission_queries.index',
-                    [
+        return view(
+            'admission_queries.index',
+            [
                         'admission_query' => $admission_query,
                         'academic_years' => $academic_years,
-                        'branches' =>$branches,
+                        'branches' => $branches,
                         'classes' => $classes,
                         'cities' => $cities,
                         'towns' => $towns,
                         'sources' => $sources,
                         'inquirytypes' => $inquirytypes,
-                ]);
+            ]
+        );
     }
 
     /**
@@ -312,7 +312,8 @@ class AdmissionQueryController extends Controller
         //
     }
 
-    public function exportAdmissionQueries(Request $request){
-        return Excel::download(new AdmissionQueryExport,'AdmissionQueries.xlsx');
+    public function exportAdmissionQueries(Request $request)
+    {
+        return Excel::download(new AdmissionQueryExport(), 'AdmissionQueries.xlsx');
     }
 }

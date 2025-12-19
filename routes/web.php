@@ -42,7 +42,7 @@ use App\Http\Controllers\CrmBoardController;
 use App\Http\Controllers\EmployeeController;
 // use App\Http\Controllers\LanguageController; // Moved to AcademicSettingsController
 use App\Http\Controllers\AcademicSettingsController;
-use \App\Http\Controllers\GuardianController;
+use App\Http\Controllers\GuardianController;
 use App\Http\Controllers\FeeChargeController;
 use App\Http\Controllers\FeePeriodController;
 use App\Http\Controllers\GradeBookController;
@@ -55,13 +55,13 @@ use App\Http\Controllers\FeePackageController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\UcsReportsController;
 use App\Http\Controllers\WorkingDayController;
-use \App\Http\Controllers\LessonPlanController;
+use App\Http\Controllers\LessonPlanController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\BeamsChalanController;
 use App\Http\Controllers\DesignationController;
 use App\Http\Controllers\ParentQueryController;
 use App\Http\Controllers\VisitDetailController;
-use \App\Http\Controllers\TeacherTypeController;
+use App\Http\Controllers\TeacherTypeController;
 // use App\Http\Controllers\AcademicYearController; // Moved to AcademicSettingsController
 use App\Http\Controllers\BeamsChallanController;
 use App\Http\Controllers\ClassSubjectController;
@@ -70,27 +70,27 @@ use App\Http\Controllers\SchemeOfWorkController;
 use App\Http\Controllers\SubjectGroupController;
 use App\Http\Controllers\SystemModuleController;
 use App\Http\Controllers\WorkingShiftController;
-use \App\Http\Controllers\ClassStudentController;
-use \App\Http\Controllers\ClassTeacherController;
-use \App\Http\Controllers\ConstituencyController;
-use \App\Http\Controllers\SupportQueryController;
+use App\Http\Controllers\ClassStudentController;
+use App\Http\Controllers\ClassTeacherController;
+use App\Http\Controllers\ConstituencyController;
+use App\Http\Controllers\SupportQueryController;
 use App\Http\Controllers\FeeConcessionController;
 use App\Http\Controllers\HomeWorkDiaryController;
 use App\Http\Controllers\InquiriesTypeController;
 use App\Http\Controllers\StudentLedgerController;
 use App\Http\Controllers\SubjectRemarkController;
-use \App\Http\Controllers\AcademicClassController;
-use \App\Http\Controllers\BranchRoyaltyController;
+use App\Http\Controllers\AcademicClassController;
+use App\Http\Controllers\BranchRoyaltyController;
 use App\Http\Controllers\BranchSecurityController;
 use App\Http\Controllers\FeeChargesTypeController;
 use App\Http\Controllers\StudentAddressController;
 use App\Http\Controllers\StudentInvoiceController;
-use \App\Http\Controllers\AdmissionQueryController;
+use App\Http\Controllers\AdmissionQueryController;
 use App\Http\Controllers\ApplicationTypeController;
 use App\Http\Controllers\AssessmentEntryController;
 use App\Http\Controllers\AssessmentLevelController;
 use App\Http\Controllers\GradingCriteriaController;
-use \App\Http\Controllers\GeneralDocumentController;
+use App\Http\Controllers\GeneralDocumentController;
 use App\Http\Controllers\CampusOfficeTypeController;
 use App\Http\Controllers\FranchiseInquiryController;
 use App\Http\Controllers\GeneralBehaviourController;
@@ -101,7 +101,7 @@ use App\Http\Controllers\OfficialLeaveDayController;
 use App\Http\Controllers\PromotionRequestController;
 use App\Http\Controllers\TeacherDashboardController;
 use App\Http\Controllers\WithdrawalReasonController;
-use \App\Http\Controllers\AcademicCalendarController;
+use App\Http\Controllers\AcademicCalendarController;
 use App\Http\Controllers\AdmissionFollowUpController;
 use App\Http\Controllers\EmployeeDependentController;
 use App\Http\Controllers\FamilyInformationController;
@@ -111,7 +111,7 @@ use App\Http\Controllers\StudentConcessionController;
 use App\Http\Controllers\StudentFeePackageController;
 use App\Http\Controllers\StudentWithdrawalController;
 use App\Http\Controllers\SubjectMarksSetupController;
-use \App\Http\Controllers\BrandingMarketingController;
+use App\Http\Controllers\BrandingMarketingController;
 // use App\Http\Controllers\BranchAcademicYearController; // Moved to AcademicSettingsController
 use App\Http\Controllers\BranchWorkingShiftController;
 use App\Http\Controllers\ContactInformationController;
@@ -121,7 +121,7 @@ use App\Http\Controllers\EmployeeWorkingDayController;
 use App\Http\Controllers\GuardianInfoUpdateController;
 use App\Http\Controllers\SiblingInformationController;
 use App\Http\Controllers\SystemNotificationController;
-use \App\Http\Controllers\BranchClassSectionController;
+use App\Http\Controllers\BranchClassSectionController;
 use App\Http\Controllers\AccountantDashboardController;
 use App\Http\Controllers\ClassStudentSubjectController;
 use App\Http\Controllers\FranchiseInquiryOldController;
@@ -143,17 +143,15 @@ use App\Http\Controllers\FranchiseApplicationBdVisitController;
 use App\Http\Controllers\WithdrawalCancellationReasonController;
 use App\Http\Controllers\FranchiseApplicationDdResponseController;
 use App\Http\Controllers\FranchiseApplicationLaResponseController;
-use \App\Http\Controllers\FranchiseApplicationTorsResponseController;
-use \App\Http\Controllers\TeacherObservationController;
-use \App\Http\Controllers\QuestionDimensionController;
-use \App\Http\Controllers\AnswerDimensionController;
+use App\Http\Controllers\FranchiseApplicationTorsResponseController;
+use App\Http\Controllers\TeacherObservationController;
+use App\Http\Controllers\QuestionDimensionController;
+use App\Http\Controllers\AnswerDimensionController;
 use App\Http\Controllers\TimetableController;
-
-use \App\Http\Controllers\ObservationDetailController;
+use App\Http\Controllers\ObservationDetailController;
 use App\Http\Controllers\LessonPlanGenerateController;
 use App\Http\Controllers\PayrollController;
 use Illuminate\Support\Facades\File;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -589,7 +587,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('generate-bulk-challan', [StudentInvoiceController::class, 'generateBulkChallans'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
         ->name('generate-bulk-challan');
-    
+
     // Enhanced bulk challan generation routes
     Route::post('generate-enhanced-bulk-challans', [StudentInvoiceController::class, 'generateEnhancedBulkChallans'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
@@ -597,7 +595,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('get-students-for-fee-package', [StudentInvoiceController::class, 'getStudentsForFeePackage'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
         ->name('get-students-for-fee-package');
-    
+
     // API endpoints for enhanced bulk challan generation
     Route::get('get-fee-packages', [StudentInvoiceController::class, 'getFeePackages'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
@@ -611,12 +609,12 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('get-sections-for-class', [StudentInvoiceController::class, 'getSectionsForClass'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
         ->name('get-sections-for-class');
-    
+
     // Enhanced bulk challan generation view
     Route::get('enhanced-bulk-challans', [StudentInvoiceController::class, 'enhancedBulkChallanView'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
         ->name('enhanced-bulk-challans');
-    
+
     // Simplified bulk challan generation routes
     Route::post('generate-simple-bulk-challans', [StudentInvoiceController::class, 'generateSimpleBulkChallans'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
@@ -624,7 +622,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('get-fee-package-charges', [StudentInvoiceController::class, 'getFeePackageCharges'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
         ->name('get-fee-package-charges');
-    
+
     // Bulk mark as paid routes
     Route::get('bulk-mark-as-paid', [StudentInvoiceController::class, 'bulkMarkAsPaidView'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
@@ -635,7 +633,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('bulk-mark-as-paid', [StudentInvoiceController::class, 'bulkMarkAsPaid'])
         ->middleware(['auth', 'role:super_admin|network_associate|finance-manager|accountant'])
         ->name('bulk-mark-as-paid-process');
-    
+
     Route::post('royalty-computation-export', [StudentInvoiceController::class, 'royaltyComputationExport'])->name('royalty-computation-export');
     Route::post('/update-selected-invoice', [StudentInvoiceController::class, 'updateUnpaidInvoices'])->name('update-selected-invoice');
     Route::post('/update-adjusted-invoice', [StudentInvoiceController::class, 'updateAdjustedInvoices'])->name('update-adjusted-invoice');
@@ -649,12 +647,12 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('reports/computation-report', [StudentInvoiceController::class, 'reportRoyaltyComputationReport'])->name('reports-computation-report');
     Route::get('reports/reimbursement', [StudentInvoiceController::class, 'reportRoyaltyReimbursement'])->name('reports-reimbursement');
     Route::get('reports/attendance', [StudentAttendanceController::class, 'attendanceReport'])->name('reports-attendance');
-    
+
     // Comprehensive Attendance Report Routes
     Route::get('reports/comprehensive-attendance', [AttendanceReportController::class, 'index'])->name('attendance-report.index');
     Route::get('reports/comprehensive-attendance/pdf', [AttendanceReportController::class, 'generatePDF'])->name('attendance-report.pdf');
     Route::get('reports/comprehensive-attendance/data', [AttendanceReportController::class, 'getReportData'])->name('attendance-report.data');
-    
+
     // Daily Operational Report
     Route::get('reports/daily-operational', [App\Http\Controllers\DailyOperationalReportController::class, 'index'])->name('daily-operational-report.index');
 
@@ -774,7 +772,8 @@ Route::group(['middleware' => ['auth']], function () {
         Route::post('designation/leave-quota/delete', [DesignationLeaveQuotaController::class, 'delete'])->name('designation-leave-quota.delete');
     });
 
-    Route::group(['middleware' => ['role:super_admin|network_associate|teacher|academic_head']], function () {});
+    Route::group(['middleware' => ['role:super_admin|network_associate|teacher|academic_head']], function () {
+    });
 
     Route::group(['middleware' => ['role:super_admin|network_associate|finance-manager|accountant']], function () {
         Route::resources(['beams-challans' => BeamsChallanController::class]);
@@ -818,42 +817,42 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('/towns/{town}', [App\Http\Controllers\GeographicSettingsController::class, 'getTown'])->name('get-town');
             Route::get('/regions/{region}', [App\Http\Controllers\GeographicSettingsController::class, 'getRegion'])->name('get-region');
             Route::get('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'getBuildingType'])->name('get-building-type');
-            
+
             Route::get('/countries-data', [App\Http\Controllers\GeographicSettingsController::class, 'getCountries'])->name('get-countries');
             Route::get('/states-data', [App\Http\Controllers\GeographicSettingsController::class, 'getStates'])->name('get-states');
             Route::get('/cities-data', [App\Http\Controllers\GeographicSettingsController::class, 'getCities'])->name('get-cities');
             Route::get('/towns-data', [App\Http\Controllers\GeographicSettingsController::class, 'getTowns'])->name('get-towns');
             Route::get('/regions-data', [App\Http\Controllers\GeographicSettingsController::class, 'getRegions'])->name('get-regions');
             Route::get('/building-types-data', [App\Http\Controllers\GeographicSettingsController::class, 'getBuildingTypes'])->name('get-building-types');
-            
+
             Route::get('/states-by-country', [App\Http\Controllers\GeographicSettingsController::class, 'getStatesByCountry'])->name('get-states-by-country');
             Route::get('/cities-by-state', [App\Http\Controllers\GeographicSettingsController::class, 'getCitiesByState'])->name('get-cities-by-state');
-            
+
             Route::post('/countries', [App\Http\Controllers\GeographicSettingsController::class, 'storeCountry'])->name('store-country');
             Route::put('/countries/{country}', [App\Http\Controllers\GeographicSettingsController::class, 'updateCountry'])->name('update-country');
             Route::delete('/countries/{country}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyCountry'])->name('destroy-country');
-            
+
             Route::post('/states', [App\Http\Controllers\GeographicSettingsController::class, 'storeState'])->name('store-state');
             Route::put('/states/{state}', [App\Http\Controllers\GeographicSettingsController::class, 'updateState'])->name('update-state');
             Route::delete('/states/{state}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyState'])->name('destroy-state');
-            
+
             Route::post('/cities', [App\Http\Controllers\GeographicSettingsController::class, 'storeCity'])->name('store-city');
             Route::put('/cities/{city}', [App\Http\Controllers\GeographicSettingsController::class, 'updateCity'])->name('update-city');
             Route::delete('/cities/{city}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyCity'])->name('destroy-city');
-            
+
             Route::post('/towns', [App\Http\Controllers\GeographicSettingsController::class, 'storeTown'])->name('store-town');
             Route::put('/towns/{town}', [App\Http\Controllers\GeographicSettingsController::class, 'updateTown'])->name('update-town');
             Route::delete('/towns/{town}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyTown'])->name('destroy-town');
-            
+
             Route::post('/regions', [App\Http\Controllers\GeographicSettingsController::class, 'storeRegion'])->name('store-region');
             Route::put('/regions/{region}', [App\Http\Controllers\GeographicSettingsController::class, 'updateRegion'])->name('update-region');
             Route::delete('/regions/{region}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyRegion'])->name('destroy-region');
-            
+
             Route::post('/building-types', [App\Http\Controllers\GeographicSettingsController::class, 'storeBuildingType'])->name('store-building-type');
             Route::put('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'updateBuildingType'])->name('update-building-type');
             Route::delete('/building-types/{buildingType}', [App\Http\Controllers\GeographicSettingsController::class, 'destroyBuildingType'])->name('destroy-building-type');
         });
-        
+
         // Unified Academic Settings Routes
         Route::prefix('academic-settings')->name('academic-settings.')->group(function () {
             Route::get('/', [App\Http\Controllers\AcademicSettingsController::class, 'index'])->name('index');
@@ -861,29 +860,29 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('/academic-years/{academicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'getAcademicYear'])->name('get-academic-year');
             Route::get('/branch-academic-years/{branchAcademicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'getBranchAcademicYear'])->name('get-branch-academic-year');
             Route::get('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'getStudentPreviousSchool'])->name('get-student-previous-school');
-            
+
             Route::get('/languages-data', [App\Http\Controllers\AcademicSettingsController::class, 'getLanguages'])->name('get-languages');
             Route::get('/academic-years-data', [App\Http\Controllers\AcademicSettingsController::class, 'getAcademicYears'])->name('get-academic-years');
             Route::get('/branch-academic-years-data', [App\Http\Controllers\AcademicSettingsController::class, 'getBranchAcademicYears'])->name('get-branch-academic-years');
             Route::get('/student-previous-schools-data', [App\Http\Controllers\AcademicSettingsController::class, 'getStudentPreviousSchools'])->name('get-student-previous-schools');
-            
+
             Route::post('/languages', [App\Http\Controllers\AcademicSettingsController::class, 'storeLanguage'])->name('store-language');
             Route::put('/languages/{language}', [App\Http\Controllers\AcademicSettingsController::class, 'updateLanguage'])->name('update-language');
             Route::delete('/languages/{language}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyLanguage'])->name('destroy-language');
-            
+
             Route::post('/academic-years', [App\Http\Controllers\AcademicSettingsController::class, 'storeAcademicYear'])->name('store-academic-year');
             Route::put('/academic-years/{academicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'updateAcademicYear'])->name('update-academic-year');
             Route::delete('/academic-years/{academicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyAcademicYear'])->name('destroy-academic-year');
-            
+
             Route::post('/branch-academic-years', [App\Http\Controllers\AcademicSettingsController::class, 'storeBranchAcademicYear'])->name('store-branch-academic-year');
             Route::put('/branch-academic-years/{branchAcademicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'updateBranchAcademicYear'])->name('update-branch-academic-year');
             Route::delete('/branch-academic-years/{branchAcademicYear}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyBranchAcademicYear'])->name('destroy-branch-academic-year');
-            
+
             Route::post('/student-previous-schools', [App\Http\Controllers\AcademicSettingsController::class, 'storeStudentPreviousSchool'])->name('store-student-previous-school');
             Route::put('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'updateStudentPreviousSchool'])->name('update-student-previous-school');
             Route::delete('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyStudentPreviousSchool'])->name('destroy-student-previous-school');
         });
-        
+
         Route::resources(['system-modules' => SystemModuleController::class]);
         Route::resources(['withdrawal-reason' => WithdrawalReasonController::class]);
         Route::resources(['withdrawal-cancellation-reason' => WithdrawalCancellationReasonController::class]);
@@ -892,19 +891,19 @@ Route::group(['middleware' => ['auth']], function () {
             Route::get('/', [App\Http\Controllers\TaxSettingsController::class, 'index'])->name('index');
             Route::get('/tax-types/{taxType}', [App\Http\Controllers\TaxSettingsController::class, 'getTaxType'])->name('get-tax-type');
             Route::get('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'getTax'])->name('get-tax');
-            
+
             Route::get('/tax-types-data', [App\Http\Controllers\TaxSettingsController::class, 'getTaxTypes'])->name('get-tax-types');
             Route::get('/taxes-data', [App\Http\Controllers\TaxSettingsController::class, 'getTaxes'])->name('get-taxes');
-            
+
             Route::post('/tax-types', [App\Http\Controllers\TaxSettingsController::class, 'storeTaxType'])->name('store-tax-type');
             Route::put('/tax-types/{taxType}', [App\Http\Controllers\TaxSettingsController::class, 'updateTaxType'])->name('update-tax-type');
             Route::delete('/tax-types/{taxType}', [App\Http\Controllers\TaxSettingsController::class, 'destroyTaxType'])->name('destroy-tax-type');
-            
+
             Route::post('/taxes', [App\Http\Controllers\TaxSettingsController::class, 'storeTax'])->name('store-tax');
             Route::put('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'updateTax'])->name('update-tax');
             Route::delete('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'destroyTax'])->name('destroy-tax');
         });
-        
+
         // Activity Logs Routes
         Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
             Route::get('/', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('index');
@@ -1080,7 +1079,7 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
     Route::get('purchase-requests/{id}/approve', [PurchaseRequestController::class, 'approve'])->name('purchase-requests.approve');
     Route::get('purchase-requests/{id}/reject', [PurchaseRequestController::class, 'reject'])->name('purchase-requests.reject');
     Route::get('get-branch-users', [PurchaseRequestController::class, 'getBranchUsers'])->name('get-branch-users');
-    
+
     // Purchase Order Routes
     Route::get('purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
     Route::get('purchase-orders/create', [PurchaseOrderController::class, 'create'])->name('purchase-orders.create');
@@ -1094,7 +1093,7 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
     Route::get('purchase-orders/{id}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase-orders.receive');
     Route::get('purchase-orders/{id}/print', [PurchaseOrderController::class, 'print'])->name('purchase-orders.print');
     Route::get('get-purchase-request-details', [PurchaseOrderController::class, 'getPurchaseRequestDetails'])->name('get-purchase-request-details');
-    
+
     // Goods Received Note (GRN) Routes
     Route::get('grn', [GoodsReceivedNoteController::class, 'index'])->name('grn.index');
     Route::get('grn/create', [GoodsReceivedNoteController::class, 'create'])->name('grn.create');
@@ -1107,16 +1106,16 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
     Route::post('grn/{id}/reject', [GoodsReceivedNoteController::class, 'reject'])->name('grn.reject');
     Route::get('grn/{id}/print', [GoodsReceivedNoteController::class, 'print'])->name('grn.print');
     Route::get('get-purchase-order-details', [GoodsReceivedNoteController::class, 'getPurchaseOrderDetails'])->name('get-purchase-order-details');
-    
+
     Route::get('categories', [AssetCategoryController::class, 'index'])->name('categories.index');
-    
+
     // Asset Categories Routes
     Route::get('categories/list', [AssetCategoryController::class, 'getCategories'])->name('categories.list');
     Route::get('categories/generate-code', [AssetCategoryController::class, 'generateCode'])->name('categories.generate-code');
     Route::post('categories', [AssetCategoryController::class, 'store'])->name('categories.store');
     Route::put('categories/{id}', [AssetCategoryController::class, 'update'])->name('categories.update');
     Route::delete('categories/{id}', [AssetCategoryController::class, 'destroy'])->name('categories.destroy');
-    
+
     // Suppliers Routes
     Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
     Route::get('suppliers/generate-code', [SupplierController::class, 'generateCode'])->name('suppliers.generate-code');
@@ -1124,7 +1123,7 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
     Route::post('suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
     Route::put('suppliers/{id}', [SupplierController::class, 'update'])->name('suppliers.update');
     Route::delete('suppliers/{id}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
-    
+
     // Assets Routes
                Route::get('assets', [AssetController::class, 'index'])->name('assets.index');
            Route::get('assets/create', [AssetController::class, 'create'])->name('assets.create');
@@ -1135,7 +1134,7 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
            Route::post('assets', [AssetController::class, 'store'])->name('assets.store');
     Route::put('assets/{id}', [AssetController::class, 'update'])->name('assets.update');
     Route::delete('assets/{id}', [AssetController::class, 'destroy'])->name('assets.destroy');
-    
+
     // Asset Import Routes
     Route::get('assets/import-modal', [AssetController::class, 'openImportModal'])->name('assets.import-modal');
     Route::post('assets/import', [AssetController::class, 'importAssets'])->name('assets.import');
@@ -1157,14 +1156,14 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
     Route::post('transfer-requests/{id}/receive', [TransferRequestController::class, 'receive'])->name('transfer-requests.receive');
     Route::get('get-branch-assets', [TransferRequestController::class, 'getBranchAssets'])->name('get-branch-assets');
     Route::get('get-branch-users', [TransferRequestController::class, 'getBranchUsers'])->name('get-branch-users');
-    
+
     // Stock Report Route
     Route::get('stock-reports', [StockReportController::class, 'index'])->name('stock-reports.index');
 });
 
 Route::get('/student-import-log', function () {
     $logPath = storage_path('logs/student_import.log');
-    if (!file_exists($logPath)) {
+    if (! file_exists($logPath)) {
         return response('Log file does not exist.', 404);
     }
     $content = File::get($logPath);
@@ -1182,13 +1181,13 @@ Route::middleware(['auth'])->group(function () {
         ->name('employment-letter-requests.approve');
     Route::get('employment-letter-requests/{employmentLetterRequest}/download', [EmploymentLetterRequestController::class, 'download'])
         ->name('employment-letter-requests.download');
-    
+
     // Resource routes come last
     Route::resource('employment-letter-requests', EmploymentLetterRequestController::class);
 });
 
 // Debug route for permissions - remove after testing
-Route::get('debug-permissions', function() {
+Route::get('debug-permissions', function () {
     $user = Auth::user();
     return [
         'user_id' => $user->id,
@@ -1213,7 +1212,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('exit-interview-feedbacks.review');
     Route::post('exit-interview-feedbacks/{exitInterviewFeedback}/mark-reviewed', [App\Http\Controllers\ExitInterviewFeedbackController::class, 'markReviewed'])
         ->name('exit-interview-feedbacks.mark-reviewed');
-    
+
     // Resource routes come last
     Route::resource('exit-interview-feedbacks', App\Http\Controllers\ExitInterviewFeedbackController::class);
 });

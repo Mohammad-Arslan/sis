@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class WithdrawalReason extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'withdrawal_reason',
         'description'

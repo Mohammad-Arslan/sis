@@ -101,7 +101,6 @@ class LessonPlanGenerateController extends Controller
      */
     public function show(LessonPlanGenerate $lessonPlan)
     {
-
     }
 
     /**
@@ -112,7 +111,6 @@ class LessonPlanGenerateController extends Controller
      */
     public function edit(LessonPlanGenerate $lessonPlan)
     {
-
     }
 
     /**
@@ -137,5 +135,4 @@ class LessonPlanGenerateController extends Controller
     {
         //
     }
-
 }

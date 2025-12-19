@@ -38,21 +38,18 @@ class FranchiseApplicationBdVisitController extends Controller
      */
     public function create(FranchiseApplication $franchise_application_id)
     {
-        $bd_reps = Employee::with('user')->where('department_id','=','5')->get();
-        $forward_to = Employee::with('user')->where('department_id','=','6')->get();
+        $bd_reps = Employee::with('user')->where('department_id', '=', '5')->get();
+        $forward_to = Employee::with('user')->where('department_id', '=', '6')->get();
         //$nwa_detail = FranchiseApplication::find($franchise_application_id);
-        if(isset($franchise_application_id->appl_name) && isset($franchise_application_id->appl_last_name))
-        {
-            $nwa_name = $franchise_application_id->appl_name.' '.$franchise_application_id->appl_last_name;
-        }
-        else{
+        if (isset($franchise_application_id->appl_name) && isset($franchise_application_id->appl_last_name)) {
+            $nwa_name = $franchise_application_id->appl_name . ' ' . $franchise_application_id->appl_last_name;
+        } else {
             $nwa_name = $franchise_application_id->appl_name;
         }
 
         $nwa_contact = $franchise_application_id->contact_no_1;
-        if(!empty($franchise_application_id->contact_no_2))
-        {
-            $nwa_contact = $nwa_contact.', '.$franchise_application_id->contact_no_2;
+        if (! empty($franchise_application_id->contact_no_2)) {
+            $nwa_contact = $nwa_contact . ', ' . $franchise_application_id->contact_no_2;
         }
         $class_groups = ClassGroup::all();
         return view('franchise_application.bd_visit', [
@@ -74,7 +71,7 @@ class FranchiseApplicationBdVisitController extends Controller
     public function store(Request $request)
     {
         //dd($request->all());
-        $school_configuration = ClassGroup::where('id','=', $request->school_type)->first('description')->toArray();
+        $school_configuration = ClassGroup::where('id', '=', $request->school_type)->first('description')->toArray();
         $request['school_configuration'] = $school_configuration['description'];
         //dd($request->all());
 
@@ -120,15 +117,14 @@ class FranchiseApplicationBdVisitController extends Controller
      */
     public function edit(FranchiseApplicationBdVisit $franchiseApplicationBd)
     {
-        $bd_reps = Employee::with('user')->where('department_id','=','5')->get();
-        $forward_to = Employee::with('user')->where('department_id','=','6')->get();
+        $bd_reps = Employee::with('user')->where('department_id', '=', '5')->get();
+        $forward_to = Employee::with('user')->where('department_id', '=', '6')->get();
         $nwa_detail = FranchiseApplication::find($franchiseApplicationBd->franchise_application_id);
         //dd($nwa_detail['appl_name']);
-        $nwa_name = $nwa_detail['appl_name'].' '.$nwa_detail['appl_last_name'];
+        $nwa_name = $nwa_detail['appl_name'] . ' ' . $nwa_detail['appl_last_name'];
         $nwa_contact = $nwa_detail['contact_no_1'];
-        if(!empty($nwa_detail['contact_no_2']))
-        {
-            $nwa_contact = $nwa_contact.', '.$nwa_detail['contact_no_2'];
+        if (! empty($nwa_detail['contact_no_2'])) {
+            $nwa_contact = $nwa_contact . ', ' . $nwa_detail['contact_no_2'];
         }
         $class_groups = ClassGroup::all();
         return view('franchise_application.bd_visit', [
@@ -151,11 +147,12 @@ class FranchiseApplicationBdVisitController extends Controller
      */
     public function update(Request $request, FranchiseApplicationBdVisit $franchiseApplicationBd)
     {
-        $school_configuration = ClassGroup::where('id','=', $request->school_type)->first('name')->toArray();
+        $school_configuration = ClassGroup::where('id', '=', $request->school_type)->first('name')->toArray();
         $request['school_configuration'] = $school_configuration['name'];
         //dd($request->all());
-        if($franchiseApplicationBd->update($request->all()))
+        if ($franchiseApplicationBd->update($request->all())) {
             return redirect()->back()->with(['success' => 'BD Visit updated successfully.']);
+        }
 
         return redirect()->back()->with(['error' => 'BD Visit not updated.']);
     }

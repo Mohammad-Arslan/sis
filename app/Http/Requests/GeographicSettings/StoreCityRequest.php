@@ -41,4 +41,3 @@ class StoreCityRequest extends FormRequest
         ];
     }
 }
-

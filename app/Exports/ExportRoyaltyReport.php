@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 
-class ExportRoyaltyReport implements FromCollection,ShouldAutoSize,WithStyles,WithHeadings
+class ExportRoyaltyReport implements FromCollection, ShouldAutoSize, WithStyles, WithHeadings
 {
     private $request;
     private $total_row_count;
@@ -36,22 +36,22 @@ class ExportRoyaltyReport implements FromCollection,ShouldAutoSize,WithStyles,Wi
         $this->total_row_count = count($return_data['students']);
 
         $royalty_array = array();
-        foreach($return_data['students'] as $key => $collection)
-        {
+        foreach ($return_data['students'] as $key => $collection) {
             $array_data['branch_code'] = isset($collection['student']['branch']['branch_code']) ? $collection['student']['branch']['branch_code'] : '';
             $array_data['branch_name'] = isset($collection['student']['branch']['br_name']) ? $collection['student']['branch']['br_name'] : '';
             $array_data['full_name'] = isset($collection['student']) ? $collection['student']['first_name'] . ' ' . $collection['student']['middle_name'] . ' ' . $collection['student']['last_name'] : '';
             $array_data['student_id'] = $collection['student']['registration_no'] ? $collection['student']['registration_no'] : $collection['student']['roll_no'];
             $array_data['invoice_no'] = isset($collection['invoice_no']) ? $collection['invoice_no'] : '';
             $array_data['fee_month'] = get_month_diff($collection['fee_period']['from_date'], $collection['fee_period']['to_date']) == 1 ? get_month_name($collection['fee_period']['from_date']) : get_month_name($collection['fee_period']['from_date']) . ' - ' . get_month_name($collection['fee_period']['to_date']);
-            $array_data['admission_wef'] = parse_date($collection['student']['admission_wef'],'d-m-Y');
-            $array_data['admission_wef_month'] = parse_date($collection['student']['admission_wef'],'M-y');
+            $array_data['admission_wef'] = parse_date($collection['student']['admission_wef'], 'd-m-Y');
+            $array_data['admission_wef_month'] = parse_date($collection['student']['admission_wef'], 'M-y');
             $array_data['class_name'] = '';
-            if(isset($collection['student']['active_class']['branch_class_sections']['com_classes']))
+            if (isset($collection['student']['active_class']['branch_class_sections']['com_classes'])) {
                 $array_data['class_name'] = $collection['student']['active_class']['branch_class_sections']['com_classes']['class_name'];
+            }
             $array_data['section_name'] = isset($collection['student_fee_package']['section']) ? $collection['student_fee_package']['section']['section_name'] : '';
             $array_data['is_paid'] = $collection['bank_payment_status'] == 'paid' ? 'Paid' : ($collection['bank_payment_status'] == 'unpaid' ? 'Unpaid' : ($collection['bank_payment_status'] == 'cancelled' ? 'Cancelled' : 'pending'));
-            $array_data['paid_date'] = isset($collection['paid_date']) ? date('d-m-Y',strtotime($collection['paid_date'])) : '';
+            $array_data['paid_date'] = isset($collection['paid_date']) ? date('d-m-Y', strtotime($collection['paid_date'])) : '';
 
             $cost = calculate_total_price_by_invoice($collection);
             $array_data['admission_fees'] = number_format($cost['invoices_charges']['AF']);
@@ -63,7 +63,7 @@ class ExportRoyaltyReport implements FromCollection,ShouldAutoSize,WithStyles,Wi
 
             $royalty_array[] = $array_data;
 
-            if ($key+1 == $this->total_row_count){
+            if ($key + 1 == $this->total_row_count) {
                 $array_data = array('','','','','','','','','','','','');
                 $total_fee_charges = $return_data['total_fee_charges'];
                 $array_data[12] = $total_fee_charges['admission'];
@@ -75,7 +75,6 @@ class ExportRoyaltyReport implements FromCollection,ShouldAutoSize,WithStyles,Wi
 
                 $royalty_array[] = $array_data;
             }
-
         }
         return collect($royalty_array);
     }

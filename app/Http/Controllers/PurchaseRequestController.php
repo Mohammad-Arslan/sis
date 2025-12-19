@@ -44,7 +44,7 @@ class PurchaseRequestController extends Controller
         $branches = Branch::orderBy('br_name')->get();
         $departments = Department::orderBy('department_name')->get();
         $categories = AssetCategory::where('is_active', true)->orderBy('name')->get();
-        
+
         return view('fixed-assets.purchase-requests.create', compact('suppliers', 'branches', 'departments', 'categories'));
     }
 
@@ -96,7 +96,7 @@ class PurchaseRequestController extends Controller
             ]);
 
             DB::commit();
-            
+
             session()->flash('success', 'Purchase request created successfully.');
             return redirect()->route('fixed-assets.purchase-requests.index');
         } catch (\Exception $e) {
@@ -122,7 +122,7 @@ class PurchaseRequestController extends Controller
             'approvedBy',
             'rejectedBy'
         ])->findOrFail($id);
-        
+
         $categories = AssetCategory::all();
 
         return view('fixed-assets.purchase-requests.show', compact('purchaseRequest', 'categories'));
@@ -141,7 +141,7 @@ class PurchaseRequestController extends Controller
         $branches = Branch::orderBy('br_name')->get();
         $departments = Department::orderBy('department_name')->get();
         $categories = AssetCategory::where('is_active', true)->orderBy('name')->get();
-        
+
         return view('fixed-assets.purchase-requests.edit', compact('purchaseRequest', 'suppliers', 'branches', 'departments', 'categories'));
     }
 
@@ -198,7 +198,7 @@ class PurchaseRequestController extends Controller
             ]);
 
             DB::commit();
-            
+
             return redirect()->route('fixed-assets.purchase-requests.index')
                 ->with('success', 'Purchase request updated successfully.');
         } catch (\Exception $e) {
@@ -291,31 +291,31 @@ class PurchaseRequestController extends Controller
     public function getBranchUsers(Request $request)
     {
         $users = Employee::where('branch_id', $request->branch_id)
-            ->when($request->department_id, function($query) use ($request) {
+            ->when($request->department_id, function ($query) use ($request) {
                 $query->where('department_id', $request->department_id);
             })
             ->get()
-            ->map(function($employee) {
+            ->map(function ($employee) {
                 // If preferred_name exists, use it
-                if (!empty($employee->preferred_name)) {
+                if (! empty($employee->preferred_name)) {
                     return [
                         'id' => $employee->user_id,
                         'name' => $employee->preferred_name
                     ];
                 }
-                
+
                 // Otherwise concatenate first, middle, last names with null safety
                 $nameParts = array_filter([
                     $employee->first_name,
                     $employee->middle_name,
                     $employee->last_name
-                ], function($part) {
-                    return !empty($part);
+                ], function ($part) {
+                    return ! empty($part);
                 });
-                
+
                 return [
                     'id' => $employee->user_id,
-                    'name' => !empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User'
+                    'name' => ! empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User'
                 ];
             });
 

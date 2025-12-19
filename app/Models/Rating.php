@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+
 class Rating extends Model
 {
     protected $fillable = ['observation_detail_id', 'question_dimension_id', 'answer_dimension_id', 'rating'];

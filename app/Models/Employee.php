@@ -8,9 +8,12 @@ use App\Traits\SerializeDateTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Carbon;
+
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'user_id',
@@ -200,7 +203,7 @@ class Employee extends Model
         }
 
         // If no current user record found, return empty events array
-        if (!$current_user) {
+        if (! $current_user) {
             return [];
         }
 
@@ -262,7 +265,7 @@ class Employee extends Model
                             $attendanceCheckInEvents['color'] = 'red';
                         }
                         $attendanceEvents[] = $attendanceCheckInEvents;
-                        if (!is_null($attendance->time_out)) {
+                        if (! is_null($attendance->time_out)) {
                             $attendanceCheckOutEvents = [
                                 'title' => 'Out ( ' . date('h:i', strtotime($attendance->time_out)) . ' )',
                                 'start' => $attendance->created_at->toDateString()
@@ -278,7 +281,7 @@ class Employee extends Model
                         //time in checks started.
                         if ($checkInTimeDiff > 10 && $current_user && $current_user->id == $this->id) {
                             $leave_applied = LeaveApplication::where('employee_id', '=', $current_user->id)->where('application_type_id', 4)->where('from_date', '=', $attendance->created_at->toDateString())->with('leaveApplicationType')->first();
-                            if (!is_null($leave_applied)) {
+                            if (! is_null($leave_applied)) {
                                 $is_leave_applied = 1;
                             }
                             if (isset($is_leave_applied)) {
@@ -295,7 +298,6 @@ class Employee extends Model
                                     'start' => $attendance->created_at->toDateString(),
                                     'color' => $color
                                 ];
-
                             } else {
                                 //if ($current_user->id == $this->id) {
                                 $attendanceEvents[] = [
@@ -308,11 +310,10 @@ class Employee extends Model
                             }
                         } elseif ($checkInTimeDiff > 10 && $current_user && isset($current_user->id) && $current_user->id != $this->id) {
                             $leave_applied = LeaveApplication::where('employee_id', '=', $this->id)->where('application_type_id', 4)->where('from_date', '=', $attendance->created_at->toDateString())->with('leaveApplicationType')->first();
-                            if (!is_null($leave_applied)) {
+                            if (! is_null($leave_applied)) {
                                 $is_leave_applied = 1;
                             }
                             if ($is_leave_applied) {
-
                                 if ($leave_applied->status == '0') {
                                     $leave_status = 'Pending';
                                     $color = 'orange';
@@ -329,10 +330,10 @@ class Employee extends Model
                             }
                         } else {
                             //timeout checks.
-                            if (!is_null($attendance->time_out)) {
+                            if (! is_null($attendance->time_out)) {
                                 if ($checkOutTimeDiff < -10 && $current_user && isset($current_user->id) && $current_user->id == $this->id) {
                                     $leave_applied = LeaveApplication::where('employee_id', '=', $current_user->id)->where('application_type_id', 5)->where('from_date', '=', $attendance->created_at->toDateString())->with('leaveApplicationType')->first();
-                                    if (!is_null($leave_applied)) {
+                                    if (! is_null($leave_applied)) {
                                         $is_leave_applied = 1;
                                     }
                                     if ($is_leave_applied) {
@@ -361,7 +362,7 @@ class Employee extends Model
                                     }
                                 } elseif ($checkOutTimeDiff < -10 && $current_user && isset($current_user->id) && $current_user->id != $this->id) {
                                     $leave_applied = LeaveApplication::where('employee_id', '=', $this->id)->where('application_type_id', 5)->where('from_date', '=', $attendance->created_at->toDateString())->with('leaveApplicationType')->first();
-                                    if (!is_null($leave_applied)) {
+                                    if (! is_null($leave_applied)) {
                                         $is_leave_applied = 1;
                                     }
                                     if ($is_leave_applied) {
@@ -477,15 +478,13 @@ class Employee extends Model
                     $start = $leaves['attendance_not_marked_date']->toDateString();
                     $end = '';
                 }
-                if (isset($leaves->leaveApplicationType->name) && ($leaves->leaveApplicationType->name == 'Leave' || $leaves->leaveApplicationType->name == 'Out Station')) //$leaves->leaveApplicationType->name == 'Late Arrival' || $leaves->leaveApplicationType->name == 'Early Leaving'
-                {
+                if (isset($leaves->leaveApplicationType->name) && ($leaves->leaveApplicationType->name == 'Leave' || $leaves->leaveApplicationType->name == 'Out Station')) { //$leaves->leaveApplicationType->name == 'Late Arrival' || $leaves->leaveApplicationType->name == 'Early Leaving'
                     $start = $leaves['from_date']->toDateString();
                     if (isset($leaves['end_date'])) {
                         $end = $leaves['end_date']->toDateString();
                     } else {
                         $end = '';
                     }
-
                 }
                 if (isset($leaves->leaveType->name)) {
                     $attendanceEvents[] = [
@@ -557,7 +556,7 @@ class Employee extends Model
         if ($preference && $preference->tax_slab_id) {
             return IncomeTaxSlab::find($preference->tax_slab_id);
         }
-        
+
         return IncomeTaxSlab::where('status', 1)
             ->where('min_salary', '<=', $grossSalary)
             ->where('max_salary', '>=', $grossSalary)

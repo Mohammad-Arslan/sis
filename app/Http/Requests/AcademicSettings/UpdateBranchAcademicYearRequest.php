@@ -45,4 +45,3 @@ class UpdateBranchAcademicYearRequest extends FormRequest
         ];
     }
 }
-

@@ -64,14 +64,14 @@ class StudentConcessionController extends Controller
      */
     public function store(Request $request)
     {
-        $data = StudentConcession::where('fee_charge_id',$request->fee_charge_id)->where('fee_concession_id',$request->fee_concession_id)->where('start_date',$request->start_date)->where('end_date',$request->end_date)->where('student_id',$request->student_id)->first();
-        if($data){
+        $data = StudentConcession::where('fee_charge_id', $request->fee_charge_id)->where('fee_concession_id', $request->fee_concession_id)->where('start_date', $request->start_date)->where('end_date', $request->end_date)->where('student_id', $request->student_id)->first();
+        if ($data) {
             return redirect(route('students.edit', $request->student_id) . '?tab=concession')->with('error', 'Duplicate Entries not allowed.');
         }
 
-       $validated = $request->validate([
+        $validated = $request->validate([
             "fee_charge_id" => "required",
-            "academic_year_id" => "required", 
+            "academic_year_id" => "required",
             "fee_concession_id" => "required",
             "start_date" => "required|date|after_or_equal:today",
             "end_date" => "required|date|after:start_date",
@@ -113,7 +113,7 @@ class StudentConcessionController extends Controller
     public function edit(StudentConcession $studentConcession)
     {
         $concession = $studentConcession->toArray();
-        return redirect(route('students.edit', $studentConcession->student_id). '?tab=concession&e='.$studentConcession->id)->with('concession',$concession);
+        return redirect(route('students.edit', $studentConcession->student_id) . '?tab=concession&e=' . $studentConcession->id)->with('concession', $concession);
     }
 
     /**

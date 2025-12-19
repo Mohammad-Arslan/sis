@@ -16,8 +16,7 @@ class BranchRoyaltyController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
-            $data = BranchRoyalty::with(['branch.nwa.user','employee.user'])->where('branch_id',$request->branch_id)->get();
+            $data = BranchRoyalty::with(['branch.nwa.user','employee.user'])->where('branch_id', $request->branch_id)->get();
 
             return DataTables::of($data)
                 ->addColumn('nwa_name', function ($row) {
@@ -62,7 +61,7 @@ class BranchRoyaltyController extends Controller
 
         BranchRoyalty::create($request->all());
 
-        return redirect()->back()->with('success','Royalty Created Successfully.');
+        return redirect()->back()->with('success', 'Royalty Created Successfully.');
     }
 
     /**
@@ -106,7 +105,7 @@ class BranchRoyaltyController extends Controller
 
         $branchRoyalty->update($request->all());
 
-        return redirect()->back()->with('success','Royalty Updated Successfully.');
+        return redirect()->back()->with('success', 'Royalty Updated Successfully.');
     }
 
     /**

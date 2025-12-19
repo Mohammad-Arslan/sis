@@ -46,12 +46,13 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\StudentBehaviourSkill;
 use App\Exports\ExportStudentRelation;
+
 use function PHPUnit\Framework\isNull;
+
 use App\Models\StudentPromotionRequest;
 use Illuminate\Database\QueryException;
 use App\Exports\ExportStudentPromortions;
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\StudentBehaviourSkillRemark;
 use App\Models\StudentArrearsHistory;
@@ -62,26 +63,26 @@ class UcsReportsController extends Controller
     {
         if ($request->ajax()) {
             try {
-            $data = StudentInvoice::paid_unpaid_invoices_report('unpaid');
-            $data = StudentInvoice::paid_unpaid_invoice_filteration($request, $data);
+                $data = StudentInvoice::paid_unpaid_invoices_report('unpaid');
+                $data = StudentInvoice::paid_unpaid_invoice_filteration($request, $data);
 
             // Exclude students with processing, registered, or empty status
-            $data = $data->whereHas('student', function ($query) {
-                $query->where(function ($q) {
-                    $q->where('status', '!=', 'processing')
-                      ->where('status', '!=', 'registered')
-                      ->where('status', '!=', '')
-                      ->whereNotNull('status');
+                $data = $data->whereHas('student', function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('status', '!=', 'processing')
+                          ->where('status', '!=', 'registered')
+                          ->where('status', '!=', '')
+                          ->whereNotNull('status');
+                    });
                 });
-            });
-            
+
             // Remove the arrears subquery to avoid duplicate column issues
-            
+
             // Order by student_id and due_date to group similar records together
-            $data = $data->orderBy('student_invoices.student_id')
+                $data = $data->orderBy('student_invoices.student_id')
                 ->orderBy('student_invoices.due_date');
 
-            return DataTables::of($data)
+                return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('state', function ($row) {
                     return isset($row['student']['state']['state_name']) ? $row['student']['state']['state_name'] : '';
@@ -119,15 +120,17 @@ class UcsReportsController extends Controller
                 })
                 ->addColumn('student_id', function ($row) {
                     $studentID = '';
-                    if (isset($row['student']))
+                    if (isset($row['student'])) {
                         $studentID = $row['student']['registration_no'] ? $row['student']['registration_no'] : $row['student']['roll_no'];
+                    }
 
                     return $studentID;
                 })
                 ->addColumn('class_name', function ($row) {
                     $className = '';
-                    if (isset($row['student']['active_class']['branch_class_sections']['com_classes']))
+                    if (isset($row['student']['active_class']['branch_class_sections']['com_classes'])) {
                         $className = $row['student']['active_class']['branch_class_sections']['com_classes']['class_name'];
+                    }
 
                     return $className;
                 })
@@ -186,7 +189,7 @@ class UcsReportsController extends Controller
                     'request' => $request->all(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                
+
                 return response()->json([
                     'error' => 'An error occurred while loading the report. Please try again.',
                     'details' => config('app.debug') ? $e->getMessage() : null
@@ -199,7 +202,7 @@ class UcsReportsController extends Controller
         $branches = Branch::all();
         $regions = Region::all();
         $states = State::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -220,23 +223,23 @@ class UcsReportsController extends Controller
 
     public function export_unpaid_student()
     {
-        return Excel::download(new ExportUnpaidStudent, 'unpaid_students_report.xlsx');
+        return Excel::download(new ExportUnpaidStudent(), 'unpaid_students_report.xlsx');
     }
 
     public function PaidStudentReport(Request $request)
     {
         try {
             session()->forget('paid_data');
-            
+
             if ($request->ajax()) {
                 // Increase memory and execution time for server
                 ini_set('memory_limit', '512M');
                 ini_set('max_execution_time', 300);
-                
+
                 // Get pagination parameters
                 $limit = $request->input('length', 10);
                 $start = $request->input('start', 0);
-                
+
                 // Build optimized query
                 $query = StudentInvoice::where('is_paid', 1)
                     ->where('bank_payment_status', 'paid')
@@ -257,7 +260,7 @@ class UcsReportsController extends Controller
                     ]);
 
                 // Apply branch filter for non-admin users
-                if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+                if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                     $branch_id = get_branch_id();
                     $query->whereHas('student', function ($q) use ($branch_id) {
                         $q->where('branch_id', $branch_id);
@@ -317,7 +320,7 @@ class UcsReportsController extends Controller
                 foreach ($invoices as $invoice) {
                     $student = $invoice->student;
                     $branch = $student?->branch;
-                    
+
                     $data[] = [
                         'state' => $branch?->state?->state_name ?? '',
                         'region' => $branch?->region?->region_name ?? '',
@@ -353,12 +356,12 @@ class UcsReportsController extends Controller
             $academic_years = AcademicYear::select('id', 'title', 'active')->get();
             $regions = Region::select('id', 'region_name')->get();
             $states = State::select('id', 'state_name')->get();
-            
+
             // Optimize branches loading based on user role
-            if (!Auth::user()->hasRole('super_admin') && !isHeadOfficeEmp()) {
+            if (! Auth::user()->hasRole('super_admin') && ! isHeadOfficeEmp()) {
                 $user = Auth::user();
                 $branch_id = get_branch_id();
-                
+
                 if (Auth::user()->hasRole('network_associate')) {
                     $employee = NetworkAssociate::where('user_id', $user->id)->with('branches:id,br_name,branch_code')->first();
                     $branches = $employee?->branches ?? collect();
@@ -366,7 +369,7 @@ class UcsReportsController extends Controller
                     $employee = Employee::where('user_id', $user->id)->with('branch:id,br_name,branch_code')->first();
                     $branches = $employee?->branch ? collect([$employee->branch]) : collect();
                 }
-                
+
                 $classes = BranchClass::where('branch_id', $branch_id)
                     ->with(['com_classes:id,class_name'])
                     ->get();
@@ -385,7 +388,6 @@ class UcsReportsController extends Controller
                 'states' => $states,
                 'academic_years' => $academic_years,
             ]);
-            
         } catch (Exception $e) {
             // Log the error for debugging
             Log::error('PaidStudentReport Error: ' . $e->getMessage(), [
@@ -393,7 +395,7 @@ class UcsReportsController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Return a proper error response
             if ($request->ajax()) {
                 return response()->json([
@@ -401,7 +403,7 @@ class UcsReportsController extends Controller
                     'message' => config('app.debug') ? $e->getMessage() : 'Server error'
                 ], 500);
             }
-            
+
             return redirect()->back()->with('error', 'An error occurred while loading the report.');
         }
     }
@@ -411,10 +413,10 @@ class UcsReportsController extends Controller
      */
     private function getFeeMonth($feePeriod)
     {
-        if (!$feePeriod || !$feePeriod->from_date) {
+        if (! $feePeriod || ! $feePeriod->from_date) {
             return 'N/A';
         }
-        
+
         try {
             if (function_exists('get_month_name') && function_exists('get_month_diff')) {
                 if (get_month_name($feePeriod->from_date) == 'February') {
@@ -462,15 +464,15 @@ class UcsReportsController extends Controller
     private function getStudentArrears($studentId)
     {
         try {
-            if (!$studentId) {
+            if (! $studentId) {
                 return 'N/A';
             }
-            
+
             $arrearsAmount = StudentArrearsHistory::where('student_id', $studentId)
                 ->whereNull('cleared_date')
                 ->where('amount', '>', 0)
                 ->sum('amount');
-                
+
             return $arrearsAmount > 0 ? number_format($arrearsAmount) : 'N/A';
         } catch (Exception $e) {
             return 'N/A';
@@ -479,7 +481,7 @@ class UcsReportsController extends Controller
 
     public function export_paid_student()
     {
-        return Excel::download(new ExportPaidStudent, 'paid_students_report.xlsx');
+        return Excel::download(new ExportPaidStudent(), 'paid_students_report.xlsx');
     }
 
     public function EmployeeReport(Request $request)
@@ -489,11 +491,11 @@ class UcsReportsController extends Controller
                 // Increase memory and execution time for server
                 ini_set('memory_limit', '512M');
                 ini_set('max_execution_time', 300);
-                
+
                 // Get pagination parameters
                 $limit = $request->input('length', 10);
                 $start = $request->input('start', 0);
-                
+
                 // Build optimized query
                 $query = Employee::with([
                     'user:id,name,email',
@@ -512,7 +514,7 @@ class UcsReportsController extends Controller
                 ]);
 
                 // Apply branch filter for non-admin users
-                if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+                if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                     $branch_id = get_branch_id();
                     $query->where('branch_id', $branch_id);
                 }
@@ -624,9 +626,9 @@ class UcsReportsController extends Controller
             $designation_types = DesignationType::select('id', 'type_name')->get();
             $nationalities = Nationality::select('id', 'nationality_name')->get();
             $religions = Religion::select('id', 'religion_name')->get();
-            
+
             // Optimize branches loading based on user role
-            if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+            if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                 $branch_id = get_branch_id();
                 $branches = Branch::where('id', $branch_id)->select('id', 'br_name', 'branch_code')->get();
             } else {
@@ -644,7 +646,6 @@ class UcsReportsController extends Controller
                 'nationalities' => $nationalities,
                 'religions' => $religions,
             ]);
-            
         } catch (\Exception $e) {
             // Log the error for debugging
             \Log::error('EmployeeReport Error: ' . $e->getMessage(), [
@@ -652,7 +653,7 @@ class UcsReportsController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Return a proper error response
             if ($request->ajax()) {
                 return response()->json([
@@ -660,7 +661,7 @@ class UcsReportsController extends Controller
                     'message' => config('app.debug') ? $e->getMessage() : 'Server error'
                 ], 500);
             }
-            
+
             return redirect()->back()->with('error', 'An error occurred while loading the report.');
         }
     }
@@ -687,55 +688,55 @@ class UcsReportsController extends Controller
     }
     public function export_student_concession()
     {
-        return Excel::download(new ExportStudentConcession, 'student_concession_report.xlsx');
+        return Excel::download(new ExportStudentConcession(), 'student_concession_report.xlsx');
     }
 
     public function export_employee()
     {
-        return Excel::download(new ExportEmployee, 'employee_report.xlsx');
+        return Excel::download(new ExportEmployee(), 'employee_report.xlsx');
     }
 
     public function StudentsRelationReport(Request $request)
     {
         if ($request->ajax()) {
             try {
-            $branch_id = 0;
-            if (!Auth::user()->hasRole('super_admin') && !isHeadOfficeEmp()) {
-                $branch_id = get_branch_id();
-            }
+                $branch_id = 0;
+                if (! Auth::user()->hasRole('super_admin') && ! isHeadOfficeEmp()) {
+                    $branch_id = get_branch_id();
+                }
 
                 // Build base query with optimized eager loading
                 $data = Student::query();
-                
+
                 // Apply branch filter first for better performance
-            if ($branch_id != 0) {
+                if ($branch_id != 0) {
                     $data = $data->where('branch_id', $branch_id);
                 }
 
                 // Apply additional filters
-            if ($request->branch_id && $request->branch_id > 0) {
-                $data = $data->where('branch_id', $request->branch_id);
-            }
+                if ($request->branch_id && $request->branch_id > 0) {
+                    $data = $data->where('branch_id', $request->branch_id);
+                }
 
-            if ($request->section_id && $request->section_id > 0) {
-                $data = $data->whereHas('std_fee_package', function ($query) use ($request) {
-                    $query->where('section_id', $request->section_id);
-                });
-            }
+                if ($request->section_id && $request->section_id > 0) {
+                    $data = $data->whereHas('std_fee_package', function ($query) use ($request) {
+                        $query->where('section_id', $request->section_id);
+                    });
+                }
 
-            if ($request->class_id && $request->class_id > 0) {
-                $data = $data->whereHas('active_class.branch_class_sections', function ($query) use ($request) {
-                    $query->where('class_id', $request->class_id);
-                });
-            }
+                if ($request->class_id && $request->class_id > 0) {
+                    $data = $data->whereHas('active_class.branch_class_sections', function ($query) use ($request) {
+                        $query->where('class_id', $request->class_id);
+                    });
+                }
 
-            if ($request->gender && $request->gender != '') {
-                $data = $data->where('gender', $request->gender);
-            }
+                if ($request->gender && $request->gender != '') {
+                    $data = $data->where('gender', $request->gender);
+                }
 
                 // Optimized search functionality
                 if ($request->searchName && strlen($request->searchName) > 2) {
-                $data = $data->where(function ($query) use ($request) {
+                    $data = $data->where(function ($query) use ($request) {
                         $query->where('first_name', 'like', '%' . $request->searchName . '%')
                               ->orWhere('middle_name', 'like', '%' . $request->searchName . '%')
                               ->orWhere('last_name', 'like', '%' . $request->searchName . '%')
@@ -759,7 +760,7 @@ class UcsReportsController extends Controller
                 ]);
 
                 // Use DataTables server-side processing instead of loading all data
-            return DataTables::of($data)
+                return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('branch_code', function ($row) {
                     return $row->branch->branch_code ?? '';
@@ -821,7 +822,7 @@ class UcsReportsController extends Controller
                     'request' => $request->all(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                
+
                 return response()->json([
                     'error' => 'An error occurred while loading the report. Please try again.',
                     'details' => config('app.debug') ? $e->getMessage() : null
@@ -830,7 +831,7 @@ class UcsReportsController extends Controller
         }
 
         $branches = Branch::all();
-        if (!Auth::user()->hasRole('super_admin') && !isHeadOfficeEmp()) {
+        if (! Auth::user()->hasRole('super_admin') && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -849,7 +850,7 @@ class UcsReportsController extends Controller
 
     public function export_student_relation()
     {
-        return Excel::download(new ExportStudentRelation, 'students_relation_report.xlsx');
+        return Excel::download(new ExportStudentRelation(), 'students_relation_report.xlsx');
     }
 
     public function sibling_report(Request $request)
@@ -891,7 +892,7 @@ class UcsReportsController extends Controller
                     ->leftJoin('guardians as g', 'fi.guardian_id', '=', 'g.id')
                     ->leftJoin('relations as r', 'g.relation_id', '=', 'r.id')
                     ->leftJoin('branches as b', 's.branch_id', '=', 'b.id')
-                    ->leftJoin('class_students as cs', function($join) {
+                    ->leftJoin('class_students as cs', function ($join) {
                         $join->on('s.id', '=', 'cs.student_id')
                              ->where('cs.is_valid', '=', 1);
                     })
@@ -926,7 +927,7 @@ class UcsReportsController extends Controller
                 // Apply search filter
                 if ($request->search_text) {
                     $searchText = $request->search_text;
-                    $query->where(function($q) use ($searchText) {
+                    $query->where(function ($q) use ($searchText) {
                         $q->where('g.guardian_name', 'like', '%' . $searchText . '%')
                           ->orWhere('g.mobile', 'like', '%' . $searchText . '%')
                           ->orWhere('g.CNIC', 'like', '%' . $searchText . '%')
@@ -939,18 +940,18 @@ class UcsReportsController extends Controller
 
                 // Get total count for DataTables
                 $totalRecords = $query->count();
-                
+
                 // Apply pagination
                 $start = $request->start ?? 0;
                 $length = $request->length ?? 25;
-                
+
                 $data = $query->offset($start)
                              ->limit($length)
                              ->orderBy('fi.id', 'asc')
                              ->get();
-                
+
                 // Convert stdClass objects to arrays for DataTables
-                $data = $data->map(function($item) {
+                $data = $data->map(function ($item) {
                     return (array) $item;
                 })->toArray();
 
@@ -961,13 +962,12 @@ class UcsReportsController extends Controller
                         'recordsFiltered' => $totalRecords
                     ])
                 ->make(true);
-                    
             } catch (\Exception $e) {
                 \Log::error('Sibling Report Error: ' . $e->getMessage(), [
                     'request' => $request->all(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                
+
                 return response()->json([
                     'error' => 'An error occurred while loading the report. Please try again.',
                     'details' => config('app.debug') ? $e->getMessage() : null
@@ -996,7 +996,7 @@ class UcsReportsController extends Controller
     {
         try {
             Log::info('Sibling Report Export Request', $request->all());
-            
+
             // Use the same optimized query as the main report
             $query = DB::table('family_information as fi')
                 ->join('sibling_information as si', 'fi.id', '=', 'si.family_information_id')
@@ -1004,7 +1004,7 @@ class UcsReportsController extends Controller
                 ->leftJoin('guardians as g', 'fi.guardian_id', '=', 'g.id')
                 ->leftJoin('relations as r', 'g.relation_id', '=', 'r.id')
                 ->leftJoin('branches as b', 's.branch_id', '=', 'b.id')
-                ->leftJoin('class_students as cs', function($join) {
+                ->leftJoin('class_students as cs', function ($join) {
                     $join->on('s.id', '=', 'cs.student_id')
                          ->where('cs.is_valid', '=', 1);
                 })
@@ -1039,7 +1039,7 @@ class UcsReportsController extends Controller
             // Apply search filter
             if ($request->search_text) {
                 $searchText = $request->search_text;
-                $query->where(function($q) use ($searchText) {
+                $query->where(function ($q) use ($searchText) {
                     $q->where('g.guardian_name', 'like', '%' . $searchText . '%')
                       ->orWhere('g.mobile', 'like', '%' . $searchText . '%')
                       ->orWhere('g.CNIC', 'like', '%' . $searchText . '%')
@@ -1051,12 +1051,12 @@ class UcsReportsController extends Controller
             }
 
             $data = $query->orderBy('fi.id', 'asc')->get();
-            
+
             // Convert stdClass objects to arrays for PDF view
-            $data = $data->map(function($item) {
+            $data = $data->map(function ($item) {
                 return (array) $item;
             })->toArray();
-            
+
             Log::info('Sibling Report Export Data Count', ['count' => count($data)]);
 
             // Get branch name for PDF
@@ -1072,21 +1072,20 @@ class UcsReportsController extends Controller
                 'branch_name' => $branchName,
                 'generated_at' => now()->format('d-M-Y H:i:s')
             ]);
-            
+
             $pdf->setPaper('A4', 'landscape');
-            
+
             $filename = 'sibling_report_' . date('Y-m-d_H-i-s') . '.pdf';
-            
+
             Log::info('Sibling Report Export Success', ['filename' => $filename]);
-            
+
             return $pdf->download($filename);
-            
         } catch (Exception $e) {
             Log::error('Sibling Report Export Error: ' . $e->getMessage(), [
                 'request' => $request->all(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Return a proper error response instead of redirect
             return response()->json([
                 'error' => 'Failed to generate PDF: ' . $e->getMessage()
@@ -1098,7 +1097,7 @@ class UcsReportsController extends Controller
     {
 
         if ($request->ajax()) {
-            if (!isHeadOfficeEmp() && !isSuperAdmin()) {
+            if (! isHeadOfficeEmp() && ! isSuperAdmin()) {
                 $data = Student::with(
                     [
                         'student_concession.fee_concession.child_concession_type',
@@ -1263,7 +1262,7 @@ class UcsReportsController extends Controller
                 ->make(true);
         }
         $academic_years = AcademicYear::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -1280,8 +1279,8 @@ class UcsReportsController extends Controller
         if ($request->ajax()) {
             // Optimized query with only necessary relationships and student count
             $query = Branch::with([
-                'class_group', 
-                'default_bank_account', 
+                'class_group',
+                'default_bank_account',
                 'contact_information.state'
             ])->withCount('students');
 
@@ -1322,7 +1321,7 @@ class UcsReportsController extends Controller
             // Apply pagination
             $limit = $request->input('length', 10);
             $start = $request->input('start', 0);
-            
+
             $branches = $query->offset($start)->limit($limit)->get();
 
             // Prepare data for DataTables
@@ -1394,9 +1393,9 @@ class UcsReportsController extends Controller
                     } else {
                         $fee_period_id = StudentInvoice::max_fee_period_id($Student['id']);
                         $date_range = FeePeriod::where('id', $fee_period_id)->get(['from_date', 'to_date'])->toArray();
-                        
+
                         // Check if date_range has data before accessing it
-                        if (!empty($date_range) && isset($date_range[0])) {
+                        if (! empty($date_range) && isset($date_range[0])) {
                             $from_dt = explode('-', $date_range[0]['from_date']);
                             $from_date = $from_dt[2] . '-' . $from_dt[1] . '-' . $from_dt[0];
                             $to_dt = explode('-', $date_range[0]['to_date']);
@@ -1457,9 +1456,9 @@ class UcsReportsController extends Controller
                         } else { //
                             $fee_period_id = StudentInvoice::max_fee_period_id($Student['id']);
                             $date_range = FeePeriod::where('id', $fee_period_id)->get(['from_date', 'to_date'])->toArray();
-                            
+
                             // Check if date_range has data before accessing it
-                            if (!empty($date_range) && isset($date_range[0])) {
+                            if (! empty($date_range) && isset($date_range[0])) {
                                 $from_dt = explode('-', $date_range[0]['from_date']);
                                 $from_date = $from_dt[2] . '-' . $from_dt[1] . '-' . $from_dt[0];
                                 $to_dt = explode('-', $date_range[0]['to_date']);
@@ -1529,7 +1528,6 @@ class UcsReportsController extends Controller
     public function TransferInOutReport(Request $request)
     {
         if ($request->ajax()) {
-
             $data = StudentTransferCase::with([
                 'student',
                 'reason',
@@ -1545,13 +1543,14 @@ class UcsReportsController extends Controller
 
             //Filter by student status
             if (isset($request->status)) {
-                if (in_array($request->status, ['APPROVED', 'PENDING', 'CANCELLED']))
+                if (in_array($request->status, ['APPROVED', 'PENDING', 'CANCELLED'])) {
                     $data->where('status', $request->status);
+                }
                 //else
                 //$query->whereNull('status');
             }
             //Filter by student name
-            if (!empty($request->searchName)) {
+            if (! empty($request->searchName)) {
                 $data->where('first_name', 'like', $request->searchName . '%')
                     ->orWhere('middle_name', 'like', $request->searchName . '%')
                     ->orWhere('last_name', 'like', $request->searchName . '%');
@@ -1565,8 +1564,7 @@ class UcsReportsController extends Controller
                 } else {
                     $data->where('from_branch', $request->branch_id)->orWhere('to_branch', $request->branch_id);
                 }
-
-            } elseif (!isHeadOfficeEmp() && !isSuperAdmin()) {
+            } elseif (! isHeadOfficeEmp() && ! isSuperAdmin()) {
                 if (isset($request->report_order) && $request->report_order == 'in') {
                     $data->where('to_branch', get_branch_id());
                 } elseif (isset($request->report_order) && $request->report_order == 'out') {
@@ -1599,7 +1597,6 @@ class UcsReportsController extends Controller
                 ->addColumn('student_name', function ($row) {
                     $studentInfo = Student::where('id', $row['student']['id'])->first();
                     return $studentInfo->first_name . ' ' . $studentInfo->middle_name . ' ' . $studentInfo->last_name;
-
                 })
                 ->addColumn('class_section', function ($row) {
                     return isset($row['student']['active_class']['branch_class_sections']['com_classes']['class_name']) ? $row['student']['active_class']['branch_class_sections']['com_classes']['class_name'] . '-' . $row['student']['active_class']['branch_class_sections']['sections']['section_name'] : '';
@@ -1625,7 +1622,7 @@ class UcsReportsController extends Controller
 
         $branches = Branch::all();
         $academic_years = AcademicYear::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -1646,7 +1643,7 @@ class UcsReportsController extends Controller
 
     public function export_transfer_in_out()
     {
-        return Excel::download(new ExportTransferInOut, 'transfer_in_out_report.xlsx');
+        return Excel::download(new ExportTransferInOut(), 'transfer_in_out_report.xlsx');
     }
 
     public function match_remarks_columns()
@@ -1672,7 +1669,7 @@ class UcsReportsController extends Controller
             ])
             ->whereHas('student_behaviour_skill', function ($q) use ($request) {
                 $q->where('term_id', 2);
-                
+
                 // Apply branch filter
                 if (isHeadOfficeEmp() || isSuperAdmin()) {
                     if ($request->filled('branch_id') && $request->branch_id > 0) {
@@ -1681,7 +1678,7 @@ class UcsReportsController extends Controller
                 } else {
                     $q->where('branch_id', get_branch_id());
                 }
-                
+
                 // Apply other filters
                 if ($request->filled('academic_year_id') && $request->academic_year_id > 0) {
                     $q->where('academic_year_id', $request->academic_year_id);
@@ -1704,7 +1701,7 @@ class UcsReportsController extends Controller
             // Get pagination parameters
             $limit = $request->input('length', 10);
             $start = $request->input('start', 0);
-            
+
             // Get total count
             $totalData = $query->count();
             $totalFiltered = $totalData;
@@ -1718,7 +1715,7 @@ class UcsReportsController extends Controller
                 if ($remark->student && $remark->student_behaviour_skill) {
                     $student = $remark->student;
                     $classSection = $remark->student_behaviour_skill;
-                    
+
                     $data[] = [
                         'branch' => $student->branch ? $student->branch->br_name . ' (' . $student->branch->branch_code . ')' : '',
                         'student_id' => $student->roll_no ?: $student->registration_no,
@@ -1740,7 +1737,7 @@ class UcsReportsController extends Controller
         }
 
         // Load filter data efficiently
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $branches = Branch::where('id', $branch_id)->select('id', 'br_name', 'branch_code')->get();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes:id,class_name'])->get();
@@ -1752,7 +1749,7 @@ class UcsReportsController extends Controller
             $sections = Section::select('id', 'section_name')->get();
             $academic_years = AcademicYear::select('id', 'title', 'active')->get();
         }
-        
+
         return view('reports.promotion_report', [
             'classes' => $classes,
             'sections' => $sections,
@@ -1764,7 +1761,7 @@ class UcsReportsController extends Controller
     public function StudentPromotionReport()
     {
         //$request->query('academic_year');
-        return Excel::download(new ExportStudentPromortions, 'student_promortions_report.xlsx');
+        return Excel::download(new ExportStudentPromortions(), 'student_promortions_report.xlsx');
     }
 
     // public function sibling_report(Request $request)
@@ -1831,19 +1828,19 @@ class UcsReportsController extends Controller
 
     /**
      * Calculate total service duration for an employee
-     * 
+     *
      * @param Employee $employee
      * @return string
      */
     private function calculateTotalService($employee)
     {
         try {
-            if (!$employee->hiring_date) {
+            if (! $employee->hiring_date) {
                 return '-';
             }
 
             $hiringDate = Carbon::parse($employee->hiring_date);
-            
+
             // If employee has left, calculate from hiring date to left date
             if ($employee->job_status === 'left' && $employee->left_date) {
                 $endDate = Carbon::parse($employee->left_date);
@@ -1854,28 +1851,27 @@ class UcsReportsController extends Controller
 
             // Calculate the difference
             $diff = $hiringDate->diff($endDate);
-            
+
             $years = $diff->y;
             $months = $diff->m;
             $days = $diff->d;
 
             // Format the result
             $result = [];
-            
+
             if ($years > 0) {
                 $result[] = $years . ' ' . ($years == 1 ? 'Year' : 'Years');
             }
-            
+
             if ($months > 0) {
                 $result[] = $months . ' ' . ($months == 1 ? 'Month' : 'Months');
             }
-            
+
             if ($days > 0 && $years == 0) {
                 $result[] = $days . ' ' . ($days == 1 ? 'Day' : 'Days');
             }
 
             return empty($result) ? 'Less than 1 day' : implode(', ', $result);
-            
         } catch (Exception $e) {
             Log::error('Error calculating total service for employee ID: ' . $employee->id . ' - ' . $e->getMessage());
             return '-';
@@ -1893,11 +1889,11 @@ class UcsReportsController extends Controller
                 // Increase memory and execution time for server
                 ini_set('memory_limit', '512M');
                 ini_set('max_execution_time', 300);
-                
+
                 // Get pagination parameters
                 $limit = $request->input('length', 25);
                 $start = $request->input('start', 0);
-                
+
                 // Get filter parameters
                 $fromDate = $request->filled('from_date') ? $request->from_date : null;
                 $toDate = $request->filled('to_date') ? $request->to_date : null;
@@ -1905,20 +1901,20 @@ class UcsReportsController extends Controller
                 $accountType = $request->filled('account_type') ? $request->account_type : null;
                 $transactionType = $request->filled('transaction_type') ? $request->transaction_type : null;
                 $searchTerm = $request->filled('searchTerm') ? $request->searchTerm : null;
-                
+
                 // Apply branch filter for non-admin users
-                if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+                if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                     $branchId = get_branch_id();
                 }
-                
+
                 // Collect all financial transactions
                 $transactions = collect();
-                
+
                 try {
                     // 1. Student Fee Revenue and Related Transactions
                     $studentInvoicesQuery = StudentInvoice::with(['student:id,first_name,last_name,branch_id', 'student.branch:id,br_name'])
                         ->whereNotNull('issue_date');
-                    
+
                     // Apply date filtering
                     if ($fromDate && $toDate) {
                         $studentInvoicesQuery->whereBetween('issue_date', [$fromDate, $toDate]);
@@ -1927,16 +1923,16 @@ class UcsReportsController extends Controller
                     } elseif ($toDate) {
                         $studentInvoicesQuery->where('issue_date', '<=', $toDate);
                     }
-                    
+
                     // Apply branch filter
                     if ($branchId) {
-                        $studentInvoicesQuery->whereHas('student', function($query) use ($branchId) {
+                        $studentInvoicesQuery->whereHas('student', function ($query) use ($branchId) {
                             $query->where('branch_id', $branchId);
                         });
                     }
-                    
+
                     $studentInvoices = $studentInvoicesQuery->get();
-                
+
                     foreach ($studentInvoices as $invoice) {
                         // Main fee revenue
                         if ($invoice->total_payable > 0) {
@@ -1952,7 +1948,7 @@ class UcsReportsController extends Controller
                                 'transaction_type' => 'Student Fee'
                             ]);
                         }
-                        
+
                         // Calculate Late Fee (2.5% of total_payable if due date passed)
                         if ($invoice->due_date && $invoice->due_date < now()->toDateString()) {
                             $lateFeeAmount = $invoice->total_payable * 0.025; // 2.5% of total payable
@@ -1971,12 +1967,11 @@ class UcsReportsController extends Controller
                             }
                         }
                     }
-                    
                 } catch (Exception $e) {
                     Log::error('Error in StudentInvoice query: ' . $e->getMessage());
                 }
-                
-                
+
+
                 try {
                     // 2.5. Arrears Fines from arrears_history table
                     $arrearsQuery = StudentArrearsHistory::with([
@@ -1984,7 +1979,7 @@ class UcsReportsController extends Controller
                         'student.branch:id,br_name',
                         'from_invoice:id,invoice_no'
                     ])->whereNull('cleared_date'); // Only uncleared arrears
-                    
+
                     // Apply date filtering
                     if ($fromDate && $toDate) {
                         $arrearsQuery->whereBetween('carried_date', [$fromDate, $toDate]);
@@ -1993,16 +1988,16 @@ class UcsReportsController extends Controller
                     } elseif ($toDate) {
                         $arrearsQuery->where('carried_date', '<=', $toDate);
                     }
-                    
+
                     // Apply branch filter
                     if ($branchId) {
-                        $arrearsQuery->whereHas('student', function($query) use ($branchId) {
+                        $arrearsQuery->whereHas('student', function ($query) use ($branchId) {
                             $query->where('branch_id', $branchId);
                         });
                     }
-                    
+
                     $arrears = $arrearsQuery->get();
-                    
+
                     foreach ($arrears as $arrear) {
                         $transactions->push([
                             'date' => $arrear->carried_date,
@@ -2016,18 +2011,17 @@ class UcsReportsController extends Controller
                             'transaction_type' => 'Arrears Fine'
                         ]);
                     }
-                    
                 } catch (Exception $e) {
                     Log::error('Error in StudentArrearsHistory query: ' . $e->getMessage());
                 }
-                
+
                 try {
                     // 3. Payroll Expenses
                     $payrollQuery = Payroll::with([
                         'employee:id,preferred_name,branch_id',
                         'employee.branch:id,br_name'
                     ]);
-                    
+
                     // Apply date filtering
                     if ($fromDate && $toDate) {
                         $payrollQuery->whereBetween('processed_at', [$fromDate, $toDate]);
@@ -2036,16 +2030,16 @@ class UcsReportsController extends Controller
                     } elseif ($toDate) {
                         $payrollQuery->where('processed_at', '<=', $toDate);
                     }
-                    
+
                     // Apply branch filter
                     if ($branchId) {
-                        $payrollQuery->whereHas('employee', function($query) use ($branchId) {
+                        $payrollQuery->whereHas('employee', function ($query) use ($branchId) {
                             $query->where('branch_id', $branchId);
                         });
                     }
-                    
+
                     $payrolls = $payrollQuery->get();
-                    
+
                     foreach ($payrolls as $payroll) {
                         $transactions->push([
                             'date' => $payroll->processed_at,
@@ -2059,18 +2053,17 @@ class UcsReportsController extends Controller
                             'transaction_type' => 'Payroll'
                         ]);
                     }
-                    
                 } catch (Exception $e) {
                     Log::error('Error in Payroll query: ' . $e->getMessage());
                 }
-                
+
                 try {
                     // 4. Asset Purchases
                     $assetQuery = Asset::with([
                         'currentBranch:id,br_name',
                         'category:id,name'
                     ]);
-                    
+
                     // Apply date filtering
                     if ($fromDate && $toDate) {
                         $assetQuery->whereBetween('purchase_date', [$fromDate, $toDate]);
@@ -2079,14 +2072,14 @@ class UcsReportsController extends Controller
                     } elseif ($toDate) {
                         $assetQuery->where('purchase_date', '<=', $toDate);
                     }
-                    
+
                     // Apply branch filter
                     if ($branchId) {
                         $assetQuery->where('current_branch_id', $branchId);
                     }
-                    
+
                     $assets = $assetQuery->get();
-                    
+
                     foreach ($assets as $asset) {
                         // Asset purchase as expense (business expense)
                         $transactions->push([
@@ -2101,48 +2094,47 @@ class UcsReportsController extends Controller
                             'transaction_type' => 'Asset Purchase'
                         ]);
                     }
-                    
                 } catch (Exception $e) {
                     Log::error('Error in Asset query: ' . $e->getMessage());
                 }
-                
+
                 // Log transaction counts for debugging
                 Log::info('General Ledger Transactions Count: ' . $transactions->count());
                 Log::info('Account Types: ' . $transactions->pluck('account_type')->unique()->implode(', '));
                 Log::info('Transaction Types: ' . $transactions->pluck('transaction_type')->unique()->implode(', '));
-                
+
                 // Apply additional filters
                 if ($accountType) {
-                    $transactions = $transactions->filter(function($transaction) use ($accountType) {
+                    $transactions = $transactions->filter(function ($transaction) use ($accountType) {
                         return $transaction['account_type'] === $accountType;
                     });
                 }
-                
+
                 if ($transactionType) {
-                    $transactions = $transactions->filter(function($transaction) use ($transactionType) {
+                    $transactions = $transactions->filter(function ($transaction) use ($transactionType) {
                         return $transaction['transaction_type'] === $transactionType;
                     });
                 }
-                
+
                 if ($searchTerm) {
                     $searchTerm = strtolower($searchTerm);
-                    $transactions = $transactions->filter(function($transaction) use ($searchTerm) {
+                    $transactions = $transactions->filter(function ($transaction) use ($searchTerm) {
                         return strpos(strtolower($transaction['account']), $searchTerm) !== false ||
                                strpos(strtolower($transaction['description']), $searchTerm) !== false ||
                                strpos(strtolower($transaction['reference']), $searchTerm) !== false;
                     });
                 }
-                
+
                 // Sort transactions by date (newest first)
                 $transactions = $transactions->sortByDesc('date');
-                
+
                 // Get totals
                 $totalData = $transactions->count();
                 $totalFiltered = $totalData;
-                
+
                 // Paginate results
                 $paginatedTransactions = $transactions->slice($start, $limit)->values();
-                
+
                 // Prepare data for DataTables
                 $data = [];
                 foreach ($paginatedTransactions as $transaction) {
@@ -2158,7 +2150,7 @@ class UcsReportsController extends Controller
                         'transaction_type' => $transaction['transaction_type'],
                     ];
                 }
-                
+
                 return response()->json([
                     "draw" => intval($request->input('draw')),
                     "recordsTotal" => $totalData,
@@ -2166,14 +2158,13 @@ class UcsReportsController extends Controller
                     "data" => $data
                 ]);
             }
-            
+
             // Load filter data
             $branches = Branch::select('id', 'br_name', 'branch_code')->get();
-            
+
             return view('reports.general_ledger_report', [
                 'branches' => $branches,
             ]);
-            
         } catch (Exception $e) {
             Log::error('Error in GeneralLedgerReport: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
@@ -2196,12 +2187,10 @@ class UcsReportsController extends Controller
         $accountType = $request->filled('account_type') ? $request->account_type : null;
         $transactionType = $request->filled('transaction_type') ? $request->transaction_type : null;
         $searchTerm = $request->filled('searchTerm') ? $request->searchTerm : null;
-        
+
         return Excel::download(
-            new ExportGeneralLedger($fromDate, $toDate, $branchId, $accountType, $transactionType, $searchTerm), 
+            new ExportGeneralLedger($fromDate, $toDate, $branchId, $accountType, $transactionType, $searchTerm),
             'general_ledger_report.xlsx'
         );
     }
-
-
 }

@@ -23,94 +23,90 @@ class HomeWorkDiaryController extends Controller
      */
     public function index(Request $request)
     {
-    if($request->ajax()) {
-        if(isHeadOfficeEmp() || isSuperAdmin()) {
-            $data = HomeWorkDiary::with('state', 'branch', 'com_class', 'section', 'academic_year', 'createdBy', 'updatedBy');
-        } else {
-            $data = HomeWorkDiary::where('branch_id', get_branch_id())->with('state', 'branch', 'com_class', 'section', 'academic_year', 'createdBy', 'updatedBy');
-        }
-        //dd($data->get()->toArray());
+        if ($request->ajax()) {
+            if (isHeadOfficeEmp() || isSuperAdmin()) {
+                $data = HomeWorkDiary::with('state', 'branch', 'com_class', 'section', 'academic_year', 'createdBy', 'updatedBy');
+            } else {
+                $data = HomeWorkDiary::where('branch_id', get_branch_id())->with('state', 'branch', 'com_class', 'section', 'academic_year', 'createdBy', 'updatedBy');
+            }
+            //dd($data->get()->toArray());
 
-        if ($request->academic_year_id && $request->academic_year_id > 0) {
-            $data = $data->where('academic_year_id', $request->academic_year_id);
-        }
-        if ($request->state_id && $request->state_id > 0) {
-            $data = $data->where('state_id', $request->state_id);
-        }
-        if ($request->branch_id && $request->branch_id > 0) {
-            $data = $data->where('branch_id', $request->branch_id);
-        }
-        if ($request->class_id && $request->class_id > 0) {
-            $data = $data->where('class_id', $request->class_id);
-        }
-        if ($request->section_id && $request->section_id > 0) {
-            $data = $data->where('section_id', $request->section_id);
-        }
-        if ($request->homework_date && $request->homework_date != '') {
-            $data = $data->where('homework_date', $request->homework_date);
-        }
+            if ($request->academic_year_id && $request->academic_year_id > 0) {
+                $data = $data->where('academic_year_id', $request->academic_year_id);
+            }
+            if ($request->state_id && $request->state_id > 0) {
+                $data = $data->where('state_id', $request->state_id);
+            }
+            if ($request->branch_id && $request->branch_id > 0) {
+                $data = $data->where('branch_id', $request->branch_id);
+            }
+            if ($request->class_id && $request->class_id > 0) {
+                $data = $data->where('class_id', $request->class_id);
+            }
+            if ($request->section_id && $request->section_id > 0) {
+                $data = $data->where('section_id', $request->section_id);
+            }
+            if ($request->homework_date && $request->homework_date != '') {
+                $data = $data->where('homework_date', $request->homework_date);
+            }
 
-        return Datatables::of($data)
+            return Datatables::of($data)
             ->addIndexColumn()
             ->addColumn('ay', function ($row) {
                 return $row->academic_year->title;
             })
-            ->addColumn('province', function ($row) {
-                return $row->state->state_name;
-            })
-            ->addColumn('branch_name', function ($row) {
-                return $row->branch->br_name.'['.$row->branch->branch_code.']';
-            })
-            ->addColumn('class', function ($row) {
-                return $row->com_class->class_name;
-            })
-            ->addColumn('section', function ($row) {
-                return $row->section ? $row->section->section_name : 'All sections';
-            })
-            ->addColumn('date', function ($row) {
-                return  Carbon::parse($row->homework_date)->format('d-m-Y');
-            })
-            ->addColumn('remarks', function ($row) {
-                return  $row->remarks;
-            })
-            ->addColumn('createdby', function ($row) {
-                $fullName = $row->createdBy->first_name . ' ' . $row->createdBy->last_name;
-                return $fullName;
-            })
-            ->addColumn('created_on', function ($row) {
-                return  Carbon::parse($row->created_at)->format('d-m-Y');
-            })
-            ->addColumn('action', function ($row) {
-                return view('homeworkdiary.listing_actions', ['row' => $row]);
-            })
-            ->rawColumns(['action'])
-            ->make(true);
-    }
-    if(isHeadOfficeEmp() || isSuperAdmin())
-    {
-        $branches = Branch::all();
-        $states = State::all();
-        $comclasses = ComClass::all();
-        $sections = Section::all();
-        $academic_years = AcademicYear::all();
-    }
-    else
-    {
-        $branches = Branch::where('branch_id',get_branch_id());
-        $states = State::all();
-        $classdata = BranchClass::where('branch_id', get_branch_id())->with(['com_classes'])->get();
-        $i=0;
-        foreach ($classdata as $class){
-            $comclasses[$i]['id'] = $class->class_id;
-            $comclasses[$i]['class_name'] = $class->com_classes->class_name;
-            $i++;
+                ->addColumn('province', function ($row) {
+                    return $row->state->state_name;
+                })
+                ->addColumn('branch_name', function ($row) {
+                    return $row->branch->br_name . '[' . $row->branch->branch_code . ']';
+                })
+                ->addColumn('class', function ($row) {
+                    return $row->com_class->class_name;
+                })
+                ->addColumn('section', function ($row) {
+                    return $row->section ? $row->section->section_name : 'All sections';
+                })
+                ->addColumn('date', function ($row) {
+                    return  Carbon::parse($row->homework_date)->format('d-m-Y');
+                })
+                ->addColumn('remarks', function ($row) {
+                    return  $row->remarks;
+                })
+                ->addColumn('createdby', function ($row) {
+                    $fullName = $row->createdBy->first_name . ' ' . $row->createdBy->last_name;
+                    return $fullName;
+                })
+                ->addColumn('created_on', function ($row) {
+                    return  Carbon::parse($row->created_at)->format('d-m-Y');
+                })
+                ->addColumn('action', function ($row) {
+                    return view('homeworkdiary.listing_actions', ['row' => $row]);
+                })
+                ->rawColumns(['action'])
+                ->make(true);
         }
-        $sections = Section::all();
-        $academic_years = AcademicYear::all();
-    }
+        if (isHeadOfficeEmp() || isSuperAdmin()) {
+            $branches = Branch::all();
+            $states = State::all();
+            $comclasses = ComClass::all();
+            $sections = Section::all();
+            $academic_years = AcademicYear::all();
+        } else {
+            $branches = Branch::where('branch_id', get_branch_id());
+            $states = State::all();
+            $classdata = BranchClass::where('branch_id', get_branch_id())->with(['com_classes'])->get();
+            $i = 0;
+            foreach ($classdata as $class) {
+                $comclasses[$i]['id'] = $class->class_id;
+                $comclasses[$i]['class_name'] = $class->com_classes->class_name;
+                $i++;
+            }
+            $sections = Section::all();
+            $academic_years = AcademicYear::all();
+        }
 // dd($states);
         return view('homeworkdiary.index', compact(['academic_years', 'states', 'branches', 'comclasses', 'sections']));
-
     }
 
     /**
@@ -141,16 +137,12 @@ class HomeWorkDiaryController extends Controller
             //'remarks' => 'required',
             'created_by' => 'required',
         ]);
-        if(isset($request->section_id) && $request->section_id > 0)
-        {
-            $homework = HomeWorkDiary::where('state_id',$request->state_id)->where('branch_id',$request->branch_id)->where('class_id',$request->class_id)->where('academic_year_id',$request->academic_year_id)->where('section_id',$request->section_id)->where('homework_date',$request->homework_date)->get();
+        if (isset($request->section_id) && $request->section_id > 0) {
+            $homework = HomeWorkDiary::where('state_id', $request->state_id)->where('branch_id', $request->branch_id)->where('class_id', $request->class_id)->where('academic_year_id', $request->academic_year_id)->where('section_id', $request->section_id)->where('homework_date', $request->homework_date)->get();
+        } else {
+            $homework = HomeWorkDiary::where('state_id', $request->state_id)->where('branch_id', $request->branch_id)->where('class_id', $request->class_id)->where('academic_year_id', $request->academic_year_id)->where('homework_date', $request->homework_date)->get();
         }
-        else
-        {
-            $homework = HomeWorkDiary::where('state_id',$request->state_id)->where('branch_id',$request->branch_id)->where('class_id',$request->class_id)->where('academic_year_id',$request->academic_year_id)->where('homework_date',$request->homework_date)->get();
-        }
-        if(isset($homework[0]))
-        {
+        if (isset($homework[0])) {
             return redirect()->route('homeWorkDiary.index')->with('error', 'Duplicate entries not allowed.');
         }
         $input = $request->all();
@@ -178,29 +170,26 @@ class HomeWorkDiaryController extends Controller
      */
     public function edit(HomeWorkDiary $homeWorkDiary)
     {
-        if(isHeadOfficeEmp() || isSuperAdmin())
-    {
-        $branches = Branch::all();
-        $states = State::all();
-        $comclasses = ComClass::all();
-        $sections = Section::all();
-        $academic_years = AcademicYear::all();
-    }
-    else
-    {
-        $branches = Branch::where('branch_id',get_branch_id());
-        $states = State::all();
-        $classdata = BranchClass::where('branch_id', get_branch_id())->with(['com_classes'])->get();
-        $i=0;
-        foreach ($classdata as $class){
-            $comclasses[$i]['id'] = $class->class_id;
-            $comclasses[$i]['class_name'] = $class->com_classes->class_name;
-            $i++;
+        if (isHeadOfficeEmp() || isSuperAdmin()) {
+            $branches = Branch::all();
+            $states = State::all();
+            $comclasses = ComClass::all();
+            $sections = Section::all();
+            $academic_years = AcademicYear::all();
+        } else {
+            $branches = Branch::where('branch_id', get_branch_id());
+            $states = State::all();
+            $classdata = BranchClass::where('branch_id', get_branch_id())->with(['com_classes'])->get();
+            $i = 0;
+            foreach ($classdata as $class) {
+                $comclasses[$i]['id'] = $class->class_id;
+                $comclasses[$i]['class_name'] = $class->com_classes->class_name;
+                $i++;
+            }
+            $sections = Section::all();
+            $academic_years = AcademicYear::all();
         }
-        $sections = Section::all();
-        $academic_years = AcademicYear::all();
-    }
-        return view('homeworkdiary.index',compact(['academic_years','states','branches','comclasses','sections','homeWorkDiary']));
+        return view('homeworkdiary.index', compact(['academic_years','states','branches','comclasses','sections','homeWorkDiary']));
     }
 
     /**
@@ -225,7 +214,6 @@ class HomeWorkDiaryController extends Controller
         $homeWorkDiary->update($request->all());
 
         return redirect()->route('homeWorkDiary.index')->with('success', 'Record has been updated successfully.');
-
     }
 
     /**

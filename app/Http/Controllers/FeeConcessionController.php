@@ -42,8 +42,7 @@ class FeeConcessionController extends Controller
             }
 
             if ($request->searchName && $request->searchName != null) {
-
-                $data = $data->where(function($query) use ($request){
+                $data = $data->where(function ($query) use ($request) {
                     $query->orWhere('concession_percentage', 'like', '%' . $request->searchName . '%');
                     $query->orWhere('created_at', 'like', '%' . $request->searchName . '%');
                 });

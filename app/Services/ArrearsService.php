@@ -17,7 +17,7 @@ class ArrearsService
     public static function checkAndCreateArrears()
     {
         $studentsWithInvoices = StudentInvoice::distinct('student_id')->pluck('student_id');
-        
+
         foreach ($studentsWithInvoices as $studentId) {
             self::processStudentArrears($studentId);
         }
@@ -54,7 +54,7 @@ class ArrearsService
 
         // Calculate outstanding amount
         $outstandingAmount = self::calculateOutstandingAmount($invoice);
-        
+
         if ($existingArrears) {
             if ($outstandingAmount <= 0) {
                 // No outstanding amount, mark as cleared
@@ -89,7 +89,7 @@ class ArrearsService
                 'cleared_by_payment_id' => null,
                 'cleared_date' => null,
             ]);
-            
+
             //\Log::info("ArrearsService: Created arrears record #{$arrears->id} for Invoice #{$invoice->id} with amount ₹{$outstandingAmount}");
             return $arrears;
         } catch (\Exception $e) {
@@ -110,7 +110,7 @@ class ArrearsService
     {
         $totalPayable = $invoice->total_payable ?? 0;
         $totalPaid = $invoice->payments()->sum('amount');
-        
+
         return max(0, $totalPayable - $totalPaid);
     }
 
@@ -150,7 +150,7 @@ class ArrearsService
     public static function clearArrearsWithPayment(StudentPayment $payment)
     {
         $invoice = $payment->invoice;
-        if (!$invoice) {
+        if (! $invoice) {
             return false;
         }
 
@@ -170,7 +170,7 @@ class ArrearsService
             }
 
             $amountToClear = min($remainingAmount, $arrears->amount);
-            
+
             if ($amountToClear >= $arrears->amount) {
                 // Clear entire arrears record
                 $arrears->update([
@@ -180,7 +180,7 @@ class ArrearsService
             } else {
                 // Partial clearance - create new arrears record for remaining amount
                 $remainingArrears = $arrears->amount - $amountToClear;
-                
+
                 $arrears->update([
                     'amount' => $amountToClear,
                     'cleared_by_payment_id' => $payment->id,
@@ -246,7 +246,7 @@ class ArrearsService
     {
         // Base outstanding for this invoice
         $baseOutstanding = self::calculateOutstandingAmount($invoice);
-        
+
         // Add carried arrears from previous invoices
         $carriedArrears = StudentArrearsHistory::where('to_invoice_id', $invoice->id)
             ->whereNull('cleared_date')
@@ -262,7 +262,7 @@ class ArrearsService
     public static function handleOverpayment(StudentPayment $payment)
     {
         $invoice = $payment->invoice;
-        if (!$invoice) {
+        if (! $invoice) {
             return false;
         }
 
@@ -297,7 +297,7 @@ class ArrearsService
             }
 
             $amountToClear = min($remainingAdvance, $arrears->amount);
-            
+
             if ($amountToClear >= $arrears->amount) {
                 // Clear entire arrears record
                 $arrears->update([
@@ -315,7 +315,7 @@ class ArrearsService
                 ]);
 
                 // Create new record for remaining amount
-              $arrears =  StudentArrearsHistory::create([
+                $arrears =  StudentArrearsHistory::create([
                     'student_id' => $arrears->student_id,
                     'from_invoice_id' => $arrears->from_invoice_id,
                     'to_invoice_id' => $arrears->to_invoice_id,
@@ -346,7 +346,7 @@ class ArrearsService
             ->whereNull('to_invoice_id') // Only count advances not yet applied to invoices
             ->where('amount', '<', 0) // Advance records have negative amounts
             ->sum('amount'));
-        
+
         return $totalAdvance;
     }
 
@@ -382,7 +382,7 @@ class ArrearsService
             } else {
                 // Use partial advance record
                 $remainingAdvance = $advanceAmount - $amountToUse;
-                
+
                 // Update existing record with remaining amount
                 $advance->update([
                     'amount' => -$remainingAdvance, // Keep negative for advance
@@ -405,4 +405,4 @@ class ArrearsService
 
         return $amountToApply - $remainingAmountToApply; // Return actual amount applied
     }
-} 
+}

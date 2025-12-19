@@ -20,7 +20,6 @@ class SectionController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Section::get();
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -122,12 +121,12 @@ class SectionController extends Controller
 
     public function importSection(Request $request)
     {
-        Excel::import(new ImportSection, $request->file('file')->store('files'));
+        Excel::import(new ImportSection(), $request->file('file')->store('files'));
         return redirect()->back();
     }
 
     public function exportSection(Request $request)
     {
-        return Excel::download(new ExportSection, 'sections.xlsx');
+        return Excel::download(new ExportSection(), 'sections.xlsx');
     }
 }

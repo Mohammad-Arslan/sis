@@ -9,7 +9,10 @@ use App\Traits\SerializeDateTrait;
 
 class NetworkAssociateBranch extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'nwa_id',
         'branch_id'

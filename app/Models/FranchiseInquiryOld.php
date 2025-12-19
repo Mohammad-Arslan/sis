@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FranchiseInquiryOld extends Model
 {
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
-    use HasFactory, SoftDeletes,SerializeDateTrait;
     protected $fillable = [
        'appl_name',
        'appl_last_name',
@@ -66,7 +68,7 @@ class FranchiseInquiryOld extends Model
        'approved_date',
        'forwarded_by',
        'forwarded_date'
-   ];
+    ];
     public function cities()
     {
         return $this->belongsTo(City::class, 'city_id', 'id');
@@ -88,5 +90,4 @@ class FranchiseInquiryOld extends Model
     {
         return $this->belongsTo(FranchiseOtherInformation::class, 'id', 'inquiry_id');
     }
-
 }

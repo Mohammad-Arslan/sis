@@ -18,7 +18,7 @@ class ImportRegion implements ToModel
             'region_name' => $row[0],
             'description' => $row[2],
             'abbreviation' => $row[1],
-            'created_at'=>$row[3]
+            'created_at' => $row[3]
         ]);
     }
 }

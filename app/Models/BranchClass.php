@@ -9,7 +9,10 @@ use App\Traits\SerializeDateTrait;
 
 class BranchClass extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'branch_id',
         'class_id'

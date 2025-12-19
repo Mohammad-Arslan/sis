@@ -21,14 +21,15 @@ class BooklistController extends Controller
     public function index(Request $request)
     {
 
-        if ($request->ajax()){
-
+        if ($request->ajax()) {
             $booklists = GeneralDocument::whereHas(
-                'attachment_type' , function($q){
-                $q->where('slug','booklist');
-            })->where('status','active');
+                'attachment_type',
+                function ($q) {
+                    $q->where('slug', 'booklist');
+                }
+            )->where('status', 'active');
 
-            $booklists = GeneralDocument::filteration($request,$booklists);
+            $booklists = GeneralDocument::filteration($request, $booklists);
 
             $booklists = $booklists->get();
 
@@ -61,7 +62,7 @@ class BooklistController extends Controller
 
         $data = GeneralDocument::filterationDropdownData();
 
-        return view('booklist.index',$data);
+        return view('booklist.index', $data);
     }
 
     /**

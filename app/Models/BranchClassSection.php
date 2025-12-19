@@ -9,7 +9,10 @@ use App\Traits\SerializeDateTrait;
 
 class BranchClassSection extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'branch_id',
         'class_id',
@@ -33,16 +36,16 @@ class BranchClassSection extends Model
 
     public function class_students()
     {
-        return $this->hasMany( ClassStudent::class, 'branch_class_section_id' ,'id');
+        return $this->hasMany(ClassStudent::class, 'branch_class_section_id', 'id');
     }
 
     public function class_teachers()
     {
-        return $this->hasMany(ClassTeacher::class,'branch_class_section_id','id');
+        return $this->hasMany(ClassTeacher::class, 'branch_class_section_id', 'id');
     }
 
     public function class_teacher()
     {
-        return $this->hasOne(ClassTeacher::class,'branch_class_section_id','id');
+        return $this->hasOne(ClassTeacher::class, 'branch_class_section_id', 'id');
     }
 }

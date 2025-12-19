@@ -19,7 +19,6 @@ class ClassGroupController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = ClassGroup::get();
             return Datatables::of($data)
                 ->addIndexColumn()

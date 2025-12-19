@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class GradingCriteria extends Model
 {
-    use HasFactory, SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $table = 'grading_criteria';
     protected $fillable = [

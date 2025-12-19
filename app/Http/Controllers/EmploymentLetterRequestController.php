@@ -22,7 +22,7 @@ class EmploymentLetterRequestController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
@@ -48,7 +48,7 @@ class EmploymentLetterRequestController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
@@ -76,18 +76,20 @@ class EmploymentLetterRequestController extends Controller
     public function show(EmploymentLetterRequest $employmentLetterRequest)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         // Ensure user can only view their own requests or has approval permission
-        if ($employmentLetterRequest->employee_id !== $user->employee->id && 
-            !$user->hasPermission('employment-letter-approval')) {
+        if (
+            $employmentLetterRequest->employee_id !== $user->employee->id &&
+            ! $user->hasPermission('employment-letter-approval')
+        ) {
             abort(403, 'Unauthorized access.');
         }
 
         $employmentLetterRequest->load(['employee.user', 'employee.designation', 'approvedBy']);
-        
+
         return view('employment-letter-requests.show', compact('employmentLetterRequest'));
     }
 
@@ -97,13 +99,15 @@ class EmploymentLetterRequestController extends Controller
     public function edit(EmploymentLetterRequest $employmentLetterRequest)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         // Only allow editing if pending and user owns the request
-        if ($employmentLetterRequest->employee_id !== $user->employee->id || 
-            $employmentLetterRequest->status !== 'pending') {
+        if (
+            $employmentLetterRequest->employee_id !== $user->employee->id ||
+            $employmentLetterRequest->status !== 'pending'
+        ) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -116,13 +120,15 @@ class EmploymentLetterRequestController extends Controller
     public function update(Request $request, EmploymentLetterRequest $employmentLetterRequest)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         // Only allow updating if pending and user owns the request
-        if ($employmentLetterRequest->employee_id !== $user->employee->id || 
-            $employmentLetterRequest->status !== 'pending') {
+        if (
+            $employmentLetterRequest->employee_id !== $user->employee->id ||
+            $employmentLetterRequest->status !== 'pending'
+        ) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -144,13 +150,15 @@ class EmploymentLetterRequestController extends Controller
     public function destroy(EmploymentLetterRequest $employmentLetterRequest)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         // Only allow deletion if pending and user owns the request
-        if ($employmentLetterRequest->employee_id !== $user->employee->id || 
-            $employmentLetterRequest->status !== 'pending') {
+        if (
+            $employmentLetterRequest->employee_id !== $user->employee->id ||
+            $employmentLetterRequest->status !== 'pending'
+        ) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -196,7 +204,7 @@ class EmploymentLetterRequestController extends Controller
         if ($request->action === 'approve') {
             // Load the necessary relationships before generating letter content
             $employmentLetterRequest->load(['employee.user', 'employee.designation']);
-            
+
             $employmentLetterRequest->update([
                 'status' => 'approved',
                 'approved_by' => Auth::id(),
@@ -227,17 +235,19 @@ class EmploymentLetterRequestController extends Controller
     public function download(EmploymentLetterRequest $employmentLetterRequest)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         // Ensure user can only download their own approved letters or has approval permission
-        if ($employmentLetterRequest->employee_id !== $user->employee->id && 
-            !$user->hasPermission('employment-letter-approval')) {
+        if (
+            $employmentLetterRequest->employee_id !== $user->employee->id &&
+            ! $user->hasPermission('employment-letter-approval')
+        ) {
             abort(403, 'Unauthorized access.');
         }
 
-        if ($employmentLetterRequest->status !== 'approved' || !$employmentLetterRequest->letter_file_path) {
+        if ($employmentLetterRequest->status !== 'approved' || ! $employmentLetterRequest->letter_file_path) {
             abort(404, 'Letter not available.');
         }
 
@@ -250,17 +260,17 @@ class EmploymentLetterRequestController extends Controller
     private function generateLetterContent(EmploymentLetterRequest $request)
     {
         $employee = $request->employee;
-        
-        if (!$employee) {
+
+        if (! $employee) {
             throw new \Exception('Employee record not found for this request.');
         }
-        
+
         // Get employee name with prefix
         $prefix = $employee->prefix ?? '';
         $preferredName = $employee->preferred_name ?? '';
         $fullName = $preferredName ? $preferredName : (($employee->first_name ?? '') . ' ' . ($employee->last_name ?? ''));
         $displayName = $prefix ? $prefix . ' ' . $fullName : $fullName;
-        
+
         // Get father name with gender-appropriate terminology
         $fatherName = $employee->father_name ?? '';
         $fatherNameText = '';
@@ -283,17 +293,17 @@ class EmploymentLetterRequestController extends Controller
                 }
             }
         }
-        
+
         // Get CNIC from user table
         $cnic = $employee->user->CNIC ?? '';
         $cnicText = $cnic ? "CNIC: {$cnic}" : "Employee ID: {$employee->id}";
-        
+
         // Get designation
         $designation = 'Employee'; // Default fallback
         if ($employee->designation) {
             $designation = $employee->designation->designation_name ?? 'Employee';
         }
-        
+
         // Debug: Log designation info
         \Log::info('Designation Debug', [
             'employee_id' => $employee->id,
@@ -302,26 +312,26 @@ class EmploymentLetterRequestController extends Controller
             'designation_name' => $employee->designation->designation_name ?? 'null',
             'final_designation' => $designation
         ]);
-        
+
         // Get employment start date
         $startDate = $employee->created_at ? $employee->created_at->format('F d, Y') : 'Unknown';
-        
+
         // Get employment end date based on letter type and employee status
         $endDate = 'present';
         if ($request->request_type === 'experience_letter' && $employee->left_date) {
             $endDate = $employee->left_date->format('F d, Y');
         }
-        
+
         // Get the logo path and convert to base64 for PDF compatibility
         $logoPath = public_path('assets/img/1x/ucs_logo.png');
         $logoExists = file_exists($logoPath);
         $logoBase64 = '';
-        
+
         if ($logoExists) {
             $logoData = file_get_contents($logoPath);
             $logoBase64 = 'data:image/png;base64,' . base64_encode($logoData);
         }
-        
+
         $content = "
         <div style='font-family: Arial, sans-serif; line-height: 1.8; max-width: 800px; margin: 0 auto; padding: 40px; position: relative;'>
             " . ($logoExists ? "
@@ -415,16 +425,16 @@ class EmploymentLetterRequestController extends Controller
      */
     private function generateLetterPDF(EmploymentLetterRequest $request)
     {
-        if (!$request->letter_content) {
+        if (! $request->letter_content) {
             throw new \Exception('Letter content is required to generate PDF.');
         }
-        
+
         $pdf = Pdf::loadHTML($request->letter_content);
         $filename = 'employment_letter_' . ($request->id ?? 'unknown') . '_' . time() . '.pdf';
         $path = 'employment-letters/' . $filename;
-        
+
         Storage::put($path, $pdf->output());
-        
+
         return $path;
     }
 }

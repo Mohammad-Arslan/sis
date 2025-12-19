@@ -13,14 +13,14 @@ class Payroll extends Model
         'employee_id',
         'month',
         'year',
-        
+
         // Salary Breakdown
         'basic_salary',
         'permanent_allowances_total',
         'temporary_allowances_total',
         'taxable_gross_salary',
         'gross_salary',
-        
+
         // Deductions Breakdown
         'total_deductions',
         'absent_deduction',
@@ -29,7 +29,7 @@ class Payroll extends Model
         'provident_fund_employer',
         'income_tax',
         'other_deductions_total',
-        
+
         // Attendance Data
         'present_days',
         'absent_days',
@@ -37,11 +37,11 @@ class Payroll extends Model
         'extra_minutes',
         'approved_leaves',
         'total_working_days',
-        
+
         // Tax Information
         'tax_slab_applied',
         'tax_exemption_applied',
-        
+
         // Additional
         'notes',
         'net_salary',
@@ -64,4 +64,4 @@ class Payroll extends Model
     {
         return $this->hasMany(PayrollDetail::class);
     }
-} 
+}

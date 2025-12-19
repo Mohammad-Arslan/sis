@@ -11,7 +11,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Student extends Model
 {
-    use HasFactory, SerializeDateTrait, SoftDeletes, LogsActivity;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
+    use LogsActivity;
 
     protected $fillable = [
         'first_name',
@@ -66,7 +69,7 @@ class Student extends Model
     public function getStudentProfileImgAttribute()
     {
         $image = asset('theme/src/assets/images/users/user-dummy-img.jpg');
-        if (!empty($this->student_image) && get_file_from_s3('images/' . $this->student_image, $this->student_image)) {
+        if (! empty($this->student_image) && get_file_from_s3('images/' . $this->student_image, $this->student_image)) {
             $image = get_file_from_s3('images/' . $this->student_image, $this->student_image);
         }
         // dd($image);
@@ -77,8 +80,9 @@ class Student extends Model
     public static function update_student_id($student_id)
     {
         $student = self::find($student_id);
-        if (isset($student->system_id))
+        if (isset($student->system_id)) {
             return;
+        }
 
         $branch = Branch::find($student->branch_id);
 
@@ -93,8 +97,9 @@ class Student extends Model
     public static function update_roll_no($student_id)
     {
         $student = self::find($student_id);
-        if (isset($student->roll_no))
+        if (isset($student->roll_no)) {
             return;
+        }
 
         $branch = Branch::find($student->branch_id);
 
@@ -339,7 +344,7 @@ class Student extends Model
             'religion',
             'guardian',
             'student_address',
-                        'active_class.branch_class_sections.com_classes', 
+                        'active_class.branch_class_sections.com_classes',
             'active_class.branch_class_sections.sections',
             'student_previous_school',
             'class_students.academic_years',
@@ -347,12 +352,14 @@ class Student extends Model
             'student_fee_package'
         ];
 
-        if (count($with) > 0)
+        if (count($with) > 0) {
             $relations = array_merge($relations, $with);
+        }
         $data = Student::with($relations);
 
-        if (count($whereIn) > 0)
+        if (count($whereIn) > 0) {
             $data->whereIn('students.id', $whereIn);
+        }
 
         if (auth()->user()->hasRole('network_associate')) {
             $data = $data->where('branch_id', get_set_NWABranchId());
@@ -380,8 +387,7 @@ class Student extends Model
 
             $data = $data->where('branch_id', $request->branch_id);
             // }
-
-        } elseif (!isSuperAdmin() && !isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
+        } elseif (! isSuperAdmin() && ! isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
             $data = $data->where('branch_id', get_branch_id());
         }
 
@@ -389,13 +395,13 @@ class Student extends Model
             $data = $data->whereHas('class_students', function ($query) use ($request) {
                 $query->whereHas('branch_class_sections', function ($subQuery) use ($request) {
                     $subQuery->where('section_id', $request->section_id);
-                    
+
                     // If class_id is provided, also filter by class
                     if ($request->class_id && $request->class_id > 0) {
                         $subQuery->where('class_id', $request->class_id);
                     }
                 });
-                
+
                 // If academic year is provided, filter by it
                 if ($request->academic_year_id && $request->academic_year_id != '') {
                     $query->where('academic_year_id', $request->academic_year_id);
@@ -414,12 +420,13 @@ class Student extends Model
         }
 
         if ($request->status && $request->status != 'all') {
-            if (in_array($request->status, ['on_roll', 'registered', 'left', 'pass-out', 'processing']))
+            if (in_array($request->status, ['on_roll', 'registered', 'left', 'pass-out', 'processing'])) {
                 $data = $data->where('status', $request->status);
-            elseif (in_array($request->status, ['transferred'])) {
+            } elseif (in_array($request->status, ['transferred'])) {
                 $data = $data->where('from_branch', '!=', null);
-            } else
+            } else {
                 $data = $data->whereNull('status');
+            }
         }
 
         if ($request->searchName && $request->searchName != null) {

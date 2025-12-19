@@ -52,8 +52,9 @@ class LessonPlanController extends Controller
                 'state',
             ])->OrderBy('term_id')->OrderBy('week_id');
 
-            if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('approve-lesson-plan'))
+            if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('approve-lesson-plan')) {
                 $terms = $terms->whereNotNull('approval_status');
+            }
 
 
             $terms = $this->filteration($request, $terms, 'index');
@@ -87,31 +88,37 @@ class LessonPlanController extends Controller
                 }
 
 
-                if (in_array('pending_for_approval', $week['statuses']))
+                if (in_array('pending_for_approval', $week['statuses'])) {
                     $week['approval_status'] = 'pending_for_approval';
-                elseif (in_array('approved', $week['statuses']) && !in_array(null, $week['statuses']))
+                } elseif (in_array('approved', $week['statuses']) && ! in_array(null, $week['statuses'])) {
                     $week['approval_status'] = 'approved';
-                elseif (in_array('publish', $week['statuses']) && !in_array(null, $week['statuses']))
+                } elseif (in_array('publish', $week['statuses']) && ! in_array(null, $week['statuses'])) {
                     $week['approval_status'] = 'publish';
+                }
 
-                if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('approve-lesson-plan'))
+                if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('approve-lesson-plan')) {
                     $week['day_count'] = $week['day_count']->whereNotNull('approval_status');
+                }
 
-                if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('add-lessonplan-taughtdate'))
+                if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) {
                     $week['day_count'] = $week['day_count']->where('approval_status', 'approved');
+                }
 
-                if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('add-lessonplan-taughtdate'))
+                if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) {
                     $week['day_count'] = $week['day_count']->where('approval_status', 'publish');
+                }
 
-                if (auth()->user()->hasRole('network_associate'))
+                if (auth()->user()->hasRole('network_associate')) {
                     $week['day_count'] = $week['day_count']->where('approval_status', 'publish');
+                }
 
-                if ($week['approval_status'] == 'pending_for_approval')
+                if ($week['approval_status'] == 'pending_for_approval') {
                     $week['approved_count'] = count(array_keys($week['statuses'], "approved"));
-                elseif ($week['approval_status'] == 'approved')
+                } elseif ($week['approval_status'] == 'approved') {
                     $week['approved_count'] = count(array_keys($week['statuses'], "approved"));
-                elseif ($week['approval_status'] == 'publish')
+                } elseif ($week['approval_status'] == 'publish') {
                     $week['approved_count'] = count(array_keys($week['statuses'], "publish"));
+                }
 
                 $week['day_count'] = $week['day_count']->count();
                 $lesson_plans[] = $week;
@@ -128,7 +135,6 @@ class LessonPlanController extends Controller
                 ->rawColumns(['action'])
                 ->make(true);
         } else {
-
             $data = $this->filterationDropdownData();
 
             return view('lesson_plan.index', $data);
@@ -143,12 +149,13 @@ class LessonPlanController extends Controller
     public function create()
     {
         $user = auth()->user();
-        if (auth()->user()->hasRole('network_associate'))
+        if (auth()->user()->hasRole('network_associate')) {
             $data['branches'] = Branch::whereIn('id', auth()->user()['networkAssociates']['branches']->pluck('id')->toArray())->get();
-        elseif (!auth()->user()->hasRole('super_admin') && auth()->user()->hasPermission('add-lessonplan-taughtdate'))
+        } elseif (! auth()->user()->hasRole('super_admin') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) {
             $data['branches'] = Branch::where('id', auth()->user()['employee']['branch_id'])->get();
-        else
+        } else {
             $data['branches'] = Branch::all();
+        }
 
         $data['academic_years'] = AcademicYear::all();
         $data['classes'] = get_teacher_classes()->isNotEmpty() ? get_teacher_classes() : ComClass::all();
@@ -228,8 +235,9 @@ class LessonPlanController extends Controller
         $lessonPlan->load(['student_learning_outcomes.student_activities']);
         $data['lessonPlan'] = $lessonPlan;
 
-        if ($lessonPlan['language'] == 'urdu')
+        if ($lessonPlan['language'] == 'urdu') {
             app()->setLocale('ur');
+        }
 
         return view('lesson_plan.view', $data);
     }
@@ -244,12 +252,13 @@ class LessonPlanController extends Controller
     {
         $lessonPlan->load(['term', 'attachments', 'student_learning_outcomes.student_activities']);
         $user = auth()->user();
-        if (auth()->user()->hasRole('network_associate'))
+        if (auth()->user()->hasRole('network_associate')) {
             $data['branches'] = Branch::whereIn('id', auth()->user()['networkAssociates']['branches']->pluck('id')->toArray())->get();
-        elseif (!auth()->user()->hasRole('super_admin') && auth()->user()->hasPermission('add-lessonplan-taughtdate'))
+        } elseif (! auth()->user()->hasRole('super_admin') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) {
             $data['branches'] = Branch::where('id', auth()->user()['employee']['branch_id'])->get();
-        else
+        } else {
             $data['branches'] = Branch::all();
+        }
 
         $data['academic_years'] = AcademicYear::all();
         $data['classes'] = ComClass::all();
@@ -285,11 +294,11 @@ class LessonPlanController extends Controller
             $data['states'] = State::where('id',$state_id)->get();
         }*/
 
-        if ($lessonPlan['language'] == 'urdu')
+        if ($lessonPlan['language'] == 'urdu') {
             app()->setLocale('ur');
+        }
 
         return view('lesson_plan.create', $data);
-
     }
 
     /**
@@ -302,7 +311,6 @@ class LessonPlanController extends Controller
     public function update(Request $request, LessonPlan $lessonPlan)
     {
         if ($request->ajax()) {
-
             DB::beginTransaction();
             //Student Learning Outcome
             $slo_input = $request->all();
@@ -310,10 +318,11 @@ class LessonPlanController extends Controller
             $slo_input[$request->column_name] = $request->editorData;
 
             $student_learning_outcome = StudentLearningOutcome::find($request->student_learning_outcome_id);
-            if (empty($student_learning_outcome))
+            if (empty($student_learning_outcome)) {
                 $student_learning_outcome = StudentLearningOutcome::create($slo_input);
-            else
+            } else {
                 $student_learning_outcome->update($slo_input);
+            }
 
             //Student Activity
             $data['student_activity_id'] = $request->student_activity_id;
@@ -321,16 +330,18 @@ class LessonPlanController extends Controller
                 $student_activity = StudentActivity::find($request->student_activity_id);
                 $activity_input['student_learning_outcome_id'] = $student_learning_outcome->id;
                 $activity_input[$request->column_name] = $request->editorData;
-                if (empty($student_activity))
+                if (empty($student_activity)) {
                     $student_activity = StudentActivity::create($activity_input);
-                else
+                } else {
                     $student_activity->update($activity_input);
+                }
 
                 $data['student_activity_id'] = $student_activity->id;
             }
 
-            if ($lessonPlan->approval_status == 'approved')
+            if ($lessonPlan->approval_status == 'approved') {
                 $lessonPlan->update(['approval_status' => 'pending_for_approval']);
+            }
 
             DB::commit();
 
@@ -357,12 +368,11 @@ class LessonPlanController extends Controller
                         'file_name' => $input['file_name'],
                         'file_type' => $request->attachment_type,
                         'user_id' => auth()->user()->id,
-                        'remarks' => !empty($request->attachment_remarks) ? $request->attachment_remarks : null,
+                        'remarks' => ! empty($request->attachment_remarks) ? $request->attachment_remarks : null,
                     ]);
                 }
                 DB::commit();
             } else {
-
                 if (isset($request['taught_date_to'])) {
                     $request->validate([
                         'taught_date_from' => 'required',
@@ -371,8 +381,9 @@ class LessonPlanController extends Controller
                 }
 
                 $input = $request->all();
-                if (isset($request->class_id))
+                if (isset($request->class_id)) {
                     $input['com_class_id'] = $request->class_id;
+                }
 
                 $lessonPlan->update($input);
 
@@ -406,7 +417,6 @@ class LessonPlanController extends Controller
             }
             $lesson_plan->forceDelete();
             DB::commit();*/
-
         } catch (QueryException $e) {
             print_r($e->errorInfo);
         }
@@ -432,7 +442,6 @@ class LessonPlanController extends Controller
     public function remove_attachment(Attachment $attachment)
     {
         try {
-
             $attachment->delete();
             if (Storage::disk('s3')->exists('images/' . $attachment['file_name'])) {
                 Storage::disk('s3')->delete('images/' . $attachment['file_name']);
@@ -476,14 +485,17 @@ class LessonPlanController extends Controller
                 ['state_id', $lessonPlan->state_id]
             ]);
 
-            if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('approve-lesson-plan'))
+            if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('approve-lesson-plan')) {
                 $data['daily_lesson_plans'] = $data['daily_lesson_plans']->whereNotNull('approval_status');
+            }
 
-            if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('add-lessonplan-taughtdate'))
+            if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasRole('network_associate') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) {
                 $data['daily_lesson_plans'] = $data['daily_lesson_plans']->where('approval_status', 'publish');
+            }
 
-            if (auth()->user()->hasRole('network_associate'))
+            if (auth()->user()->hasRole('network_associate')) {
                 $data['daily_lesson_plans'] = $data['daily_lesson_plans']->where('approval_status', 'publish');
+            }
 
             $data['daily_lesson_plans'] = $data['daily_lesson_plans']->OrderBy('day')->get();
             //dd($data['daily_lesson_plans']->toArray());
@@ -498,11 +510,9 @@ class LessonPlanController extends Controller
     public function update_status(Request $request)
     {
         try {
-
             $lesson_plan = LessonPlan::find($request->lesson_plan_id);
 
             if ($request->approval_for == 'week') {
-
                 $update_status = LessonPlan::where([
                     ['branch_id', $lesson_plan->branch_id],
                     ['academic_year_id', $lesson_plan->academic_year_id],
@@ -524,22 +534,22 @@ class LessonPlanController extends Controller
                     $update_status->where('approval_status', 'approved');
                     $update_status->update(['approval_status' => $request->status, 'approved_by' => auth()->user()->id]);
                 }
-
             } else if ($request->approval_for == 'day') {
-                if ($request->status == 'approved')
+                if ($request->status == 'approved') {
                     $lesson_plan->update(['approval_status' => $request->status, 'approved_by' => auth()->user()->id]);
-                else if ($request->status == 'publish')
+                } else if ($request->status == 'publish') {
                     $lesson_plan->update(['approval_status' => $request->status, 'approved_by' => auth()->user()->id]);
-                else if ($request->status == 'pending_for_approval')
+                } else if ($request->status == 'pending_for_approval') {
                     $lesson_plan->update(['approval_status' => $request->status]);
+                }
             }
 
 
-            if ($request->ajax())
+            if ($request->ajax()) {
                 return response()->json(['code' => 200, 'status' => 'success', 'message' => 'Data Sent Successfully', 'data' => new \stdClass()]);
-            else
+            } else {
                 return redirect()->back()->with('success', 'Status updated successfully');
-
+            }
         } catch (QueryException $e) {
             return redirect()->back()->with('success', 'Something went wrong');
         }
@@ -586,7 +596,6 @@ class LessonPlanController extends Controller
     {
 
         if ($request->ajax()) {
-
             $data['events'] = array();
             $lesson_plans = LessonPlan::with([
                 'term',
@@ -606,7 +615,7 @@ class LessonPlanController extends Controller
                 $event = array();
                 $sections = $lesson_plan->sections()->pluck('section_name')->toArray();
                 $event['title'] = $lesson_plan->topic . ' - ' . $lesson_plan['com_class']['class_name'] . ' - ' . $lesson_plan['subject']['subject_name'];
-                $event['title'] = !empty($sections) ? $event['title'] . ' - (' . implode('/', $sections) . ')' : $event['title'];
+                $event['title'] = ! empty($sections) ? $event['title'] . ' - (' . implode('/', $sections) . ')' : $event['title'];
                 $event['title'] = isset($lesson_plan['state']) ? $event['title'] . ' - ' . $lesson_plan['state']['state_name'] : $event['title'];
                 $event['start'] = Carbon::parse($lesson_plan->taught_date_from)->format('Y-m-d');
                 $event['end'] = Carbon::parse($lesson_plan->taught_date_to)->addDay()->format('Y-m-d');
@@ -655,7 +664,6 @@ class LessonPlanController extends Controller
         $file_names = Attachment::pluck('file_name')->unique()->toArray();
 
         foreach ($lesson_plan['attachments'] as $attachment) {
-
             $filename_data['filename'] = pathinfo($attachment['file_name'], PATHINFO_FILENAME);
             $filename_data['extension'] = pathinfo($attachment['file_name'], PATHINFO_EXTENSION);
             $filename_data['filenames_arr'] = $file_names;
@@ -738,12 +746,13 @@ class LessonPlanController extends Controller
         $user = auth()->user();
 
         $data['academic_years'] = AcademicYear::all();
-        if (auth()->user()->hasRole('network_associate'))
+        if (auth()->user()->hasRole('network_associate')) {
             $data['branches'] = Branch::whereIn('id', auth()->user()['networkAssociates']['branches']->pluck('id')->toArray())->get();
-        elseif (!auth()->user()->hasRole('super_admin') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) //assuming, The user who has this permission would be TEACHER
+        } elseif (! auth()->user()->hasRole('super_admin') && auth()->user()->hasPermission('add-lessonplan-taughtdate')) { //assuming, The user who has this permission would be TEACHER
             $data['branches'] = Branch::where('id', auth()->user()['employee']['branch_id'])->get();
-        else
+        } else {
             $data['branches'] = Branch::all();
+        }
 
         $data['classes'] = get_teacher_classes()->isNotEmpty() ? get_teacher_classes() : ComClass::all();
         $data['subjects'] = get_teacher_subjects()->isNotEmpty() ? get_teacher_subjects() : Subject::all();
@@ -753,13 +762,14 @@ class LessonPlanController extends Controller
             ->whereHas('designation', function ($query) {
                 $query->whereIn('designation_name', ['Teacher']);
             });
-        if (auth()->user()->hasRole('network_associate'))
+        if (auth()->user()->hasRole('network_associate')) {
             $data['teachers'] = $data['teachers']->where('branch_id', get_set_NWABranchId());
+        }
 
         $data['teachers'] = $data['teachers']->get();
 
         $data['states'] = State::all();
-        if (!auth()->user()->hasRole('super_admin') && !auth()->user()->hasPermission('approve-lesson-plan') && !auth()->user()->hasRole('subject_coordinator')) {
+        if (! auth()->user()->hasRole('super_admin') && ! auth()->user()->hasPermission('approve-lesson-plan') && ! auth()->user()->hasRole('subject_coordinator')) {
             $branch_id = get_branch_id();
             $branch = Branch::with(['contact_information'])->where('id', $branch_id)->first();
             $state_id = isset($branch['contact_information']) ? $branch['contact_information']['state_id'] : 0;
@@ -775,45 +785,59 @@ class LessonPlanController extends Controller
 
         $user = auth()->user();
 
-        if (get_teacher_classes()->isNotEmpty())
+        if (get_teacher_classes()->isNotEmpty()) {
             $query = $query->whereIn('com_class_id', get_teacher_classes()->pluck('id')->toArray());
-        if (get_teacher_subjects()->isNotEmpty())
+        }
+        if (get_teacher_subjects()->isNotEmpty()) {
             $query = $query->whereIn('subject_id', get_teacher_subjects()->pluck('id')->toArray());
+        }
 
-        if (isset($request->academic_year_id))
+        if (isset($request->academic_year_id)) {
             $query = $query->where('academic_year_id', $request->academic_year_id);
-        if (isset($request->branch_id))
+        }
+        if (isset($request->branch_id)) {
             $query = $query->where(function ($query1) use ($request, $calling_from, $user) {
                 $query1->where('branch_id', $request->branch_id);
                 $query1->orWhereNull('branch_id');
                 // if ($calling_from == 'index' && (auth()->user()->hasPermission('add-lessonplan-taughtdate') || $user->hasRole('network_associate')))
-                if ($calling_from == 'index' && !auth()->user()->hasPermission('approve-lesson-plan') && !$user->hasRole('subject_coordinator') && !$user->hasRole('super_admin'))
+                if ($calling_from == 'index' && ! auth()->user()->hasPermission('approve-lesson-plan') && ! $user->hasRole('subject_coordinator') && ! $user->hasRole('super_admin')) {
                     $query1->where('approval_status', 'publish');
+                }
             });
-        elseif ($calling_from == 'index' && !auth()->user()->hasPermission('approve-lesson-plan') && !$user->hasRole('subject_coordinator') && !$user->hasRole('super_admin'))
+        } elseif ($calling_from == 'index' && ! auth()->user()->hasPermission('approve-lesson-plan') && ! $user->hasRole('subject_coordinator') && ! $user->hasRole('super_admin')) {
             $query->where('approval_status', 'publish');
+        }
 
-        if (isset($request->term_id))
+        if (isset($request->term_id)) {
             $query = $query->where('term_id', $request->term_id);
-        if (isset($request->com_class_id))
+        }
+        if (isset($request->com_class_id)) {
             $query = $query->where('com_class_id', $request->com_class_id);
-        if (isset($request->subject_id))
+        }
+        if (isset($request->subject_id)) {
             $query = $query->where('subject_id', $request->subject_id);
-        if (isset($request->topic))
+        }
+        if (isset($request->topic)) {
             $query = $query->where('topic', 'like', '%' . $request->topic . '%');
-        if (isset($request->state_id))
+        }
+        if (isset($request->state_id)) {
             $query = $query->where(function ($query1) use ($request) {
                 $query1->where('state_id', $request->state_id);
                 $query1->orWhereNull('state_id');
             });
-        if (isset($request->week_id))
+        }
+        if (isset($request->week_id)) {
             $query = $query->where('week_id', $request->week_id);
-        if (isset($request->created_date))
+        }
+        if (isset($request->created_date)) {
             $query = $query->whereDate('created_at', $request->created_date);
-        if (isset($request->from_date))
+        }
+        if (isset($request->from_date)) {
             $query = $query->where('taught_date_from', '>=', $request->from_date);
-        if (isset($request->to_date))
+        }
+        if (isset($request->to_date)) {
             $query = $query->where('taught_date_to', '<=', $request->to_date);
+        }
 
         //Filteration for State
         /*if (!auth()->user()->hasRole('super_admin')){
@@ -850,15 +874,14 @@ class LessonPlanController extends Controller
         //return view('email_templates.generic_email',$data);
 
         try {
-
-            if ($queueable)
+            if ($queueable) {
                 SendEmail::dispatch($data);
-            else
+            } else {
                 \Mail::send($data['template'], ['data' => $data], function ($message) {
                     $message->to('muzammilnaeem1993@gmail.com');
                     $message->subject('Testing Email');
                 });
-
+            }
         } catch (\Exception $e) {
             return $e->getMessage();
         }
@@ -893,7 +916,9 @@ class LessonPlanController extends Controller
 
         foreach ($teachers as $classTeacher) {
             $teacher = $classTeacher->employee;
-            if (!$teacher) continue;
+            if (! $teacher) {
+                continue;
+            }
 
             // Check for approved leave applications
             $leaveApplications = LeaveApplication::where('employee_id', $teacher->id)

@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Cache;
 
 class ProcessStudentImport implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public $timeout = 1800; // 30 minutes
     public $tries = 1;
@@ -34,12 +37,12 @@ class ProcessStudentImport implements ShouldQueue
     {
         try {
             Log::info('Starting student import job', ['file' => $this->filePath]);
-            
+
             $import = new ImportStudent();
             Excel::import($import, $this->filePath);
-            
+
             $stats = $import->getImportStats();
-            
+
             Log::info('Student import completed', [
                 'imported' => $stats['imported_count'],
                 'skipped' => $stats['skipped_count'],
@@ -50,7 +53,6 @@ class ProcessStudentImport implements ShouldQueue
             if (Storage::exists($this->filePath)) {
                 Storage::delete($this->filePath);
             }
-
         } catch (\Exception $e) {
             Log::error('Student import job failed', [
                 'file' => $this->filePath,
@@ -79,4 +81,4 @@ class ProcessStudentImport implements ShouldQueue
             Storage::delete($this->filePath);
         }
     }
-} 
+}

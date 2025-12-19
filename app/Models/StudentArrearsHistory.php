@@ -39,4 +39,4 @@ class StudentArrearsHistory extends Model
     {
         return $this->belongsTo(StudentPayment::class, 'cleared_by_payment_id', 'id');
     }
-} 
+}

@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class Section extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'section_name',
@@ -34,6 +36,6 @@ class Section extends Model
 
     public function lesson_plans()
     {
-        return $this->belongsToMany(LessonPlan::class, 'lesson_plan_sections','section_id','lesson_plan_id');
+        return $this->belongsToMany(LessonPlan::class, 'lesson_plan_sections', 'section_id', 'lesson_plan_id');
     }
 }

@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class BankAccount extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'bank_name',

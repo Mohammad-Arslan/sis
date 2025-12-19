@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SystemModule extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'name',
@@ -26,7 +28,7 @@ class SystemModule extends Model
 
     public function parent()
     {
-        return $this->belongsTo(SystemModule::class,$this->parentColumn);
+        return $this->belongsTo(SystemModule::class, $this->parentColumn);
     }
 
     public function children()
@@ -41,6 +43,6 @@ class SystemModule extends Model
 
     public function modules_permission()
     {
-        return $this->hasMany(Permission::class, 'system_module_id','id');
+        return $this->hasMany(Permission::class, 'system_module_id', 'id');
     }
 }

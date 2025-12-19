@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\Cache;
 
 class GenerateGradeBookPdfJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * The number of times the job may be attempted.
@@ -62,7 +65,7 @@ class GenerateGradeBookPdfJob implements ShouldQueue
         $this->studentId = $studentId;
         $this->studentBehaviourSkillId = $studentBehaviourSkillId;
         $this->cacheKey = "gradebook_pdf_{$studentId}_{$studentBehaviourSkillId}";
-        
+
         // Set the queue to use
         $this->onQueue('pdf-generation');
     }
@@ -100,7 +103,7 @@ class GenerateGradeBookPdfJob implements ShouldQueue
             } else {
                 // Mark as failed
                 Cache::put($this->cacheKey . '_status', 'failed', now()->addMinutes(10));
-                
+
                 Log::error('PDF generation failed - no data returned', [
                     'student_id' => $this->studentId,
                     'student_behaviour_skill_id' => $this->studentBehaviourSkillId
@@ -109,7 +112,7 @@ class GenerateGradeBookPdfJob implements ShouldQueue
         } catch (\Exception $e) {
             // Mark as failed
             Cache::put($this->cacheKey . '_status', 'failed', now()->addMinutes(10));
-            
+
             Log::error('PDF generation job failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -132,7 +135,7 @@ class GenerateGradeBookPdfJob implements ShouldQueue
     {
         // Mark as failed in cache
         Cache::put($this->cacheKey . '_status', 'failed', now()->addMinutes(10));
-        
+
         Log::error('PDF generation job permanently failed after retries', [
             'error' => $exception->getMessage(),
             'student_id' => $this->studentId,

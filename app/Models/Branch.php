@@ -11,7 +11,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Branch extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait, BranchCodeTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+    use BranchCodeTrait;
+
     protected $fillable = [
         'br_name',
         'abbreviation',
@@ -160,7 +164,7 @@ class Branch extends Model
     {
         return $this->belongsTo(State::class, 'state_id', 'id');
     }
-    
+
     /**
      * Get assets assigned to this branch
      */

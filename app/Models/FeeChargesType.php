@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class FeeChargesType extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'name',
         'abbreviation',

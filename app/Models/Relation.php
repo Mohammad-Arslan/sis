@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class Relation extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     public function guardians()
     {

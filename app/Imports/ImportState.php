@@ -17,7 +17,7 @@ class ImportState implements ToModel
         return new State([
             'state_name' => $row[0],
             'country_id' => $row[2],
-            'created_at'=>$row[3]
+            'created_at' => $row[3]
         ]);
     }
 }

@@ -26,24 +26,23 @@ class FranchiseApplicationLaResponseController extends Controller
         $data['franchise_application_id'] = $request->franchise_application_id;
 
         if ($request->ajax()) {
-
-            $query = FranchiseApplicationLaResponse::with(['user','forwarded_user'])->where('franchise_application_id',$data['franchise_application_id'])->get();
+            $query = FranchiseApplicationLaResponse::with(['user','forwarded_user'])->where('franchise_application_id', $data['franchise_application_id'])->get();
             //dd($query->toArray());
             return Datatables::of($query)
                 ->addIndexColumn()
-                ->addColumn('review_by', function($row){
+                ->addColumn('review_by', function ($row) {
                     return $row['user']['name'];
                 })
-                ->addColumn('forwarded', function($row){
+                ->addColumn('forwarded', function ($row) {
                     return $row['forwarded_user']['name'];
                 })
-                ->addColumn('forwarded_date', function($row){
+                ->addColumn('forwarded_date', function ($row) {
                     return $row['forwarded_date'] ? Carbon::parse($row['forwarded_date'])->format('d-m-Y') : '';
                 })
-                ->addColumn('status', function($row){
+                ->addColumn('status', function ($row) {
                     return ucwords(str_replace('_', ' ', $row['status']));
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return view('franchise_application.legal_response_action', ['row' => $row]);
                 })
                 ->rawColumns(['action'])
@@ -52,7 +51,7 @@ class FranchiseApplicationLaResponseController extends Controller
 
 
 
-        return view('franchise_application.franchise_application_legal_response' ,$data);
+        return view('franchise_application.franchise_application_legal_response', $data);
     }
 
 
@@ -65,11 +64,11 @@ class FranchiseApplicationLaResponseController extends Controller
     {
         $data['franchise_application_id'] = $franchise_application_id;
         $data['franchise_application'] = FranchiseApplication::find($data['franchise_application_id']);
-        $data['users'] = Employee::with('user')->where('branch_id',2)->where('department_id',8)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
-        $data['forwarded_to'] = Employee::with('user')->where('branch_id',2)->whereIn('department_id',[6,5,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['users'] = Employee::with('user')->where('branch_id', 2)->where('department_id', 8)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['forwarded_to'] = Employee::with('user')->where('branch_id', 2)->whereIn('department_id', [6,5,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
         $data['attachment_types'] = FranchiseApplicationAttachmentType::all();
         $data['departments'] = Department::all();
-        return view('franchise_application.franchise_application_legal_response',$data);
+        return view('franchise_application.franchise_application_legal_response', $data);
     }
 
     /**
@@ -84,8 +83,8 @@ class FranchiseApplicationLaResponseController extends Controller
 
         if ($request->ajax()) {
             return $franchise_application_la;
-        }else{
-            return redirect()->back()->with('success','Application/Form submitted successfully');
+        } else {
+            return redirect()->back()->with('success', 'Application/Form submitted successfully');
         }
     }
 
@@ -110,12 +109,12 @@ class FranchiseApplicationLaResponseController extends Controller
     {
         $data['franchise_application_id'] = $franchiseApplicationLa->franchise_application_id;
         $data['franchise_application'] = FranchiseApplication::find($data['franchise_application_id']);
-        $data['users'] = Employee::with('user')->where('branch_id',2)->where('department_id',8)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
-        $data['forwarded_to'] = Employee::with('user')->where('branch_id',2)->whereIn('department_id',[6,5,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['users'] = Employee::with('user')->where('branch_id', 2)->where('department_id', 8)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['forwarded_to'] = Employee::with('user')->where('branch_id', 2)->whereIn('department_id', [6,5,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
         $data['franchiseApplicationLa'] = $franchiseApplicationLa;
         $data['attachment_types'] = FranchiseApplicationAttachmentType::all();
         $data['departments'] = Department::all();
-        return view('franchise_application.franchise_application_legal_response',$data);
+        return view('franchise_application.franchise_application_legal_response', $data);
     }
 
     /**
@@ -131,8 +130,8 @@ class FranchiseApplicationLaResponseController extends Controller
 
         if ($request->ajax()) {
             return $franchiseApplicationLa;
-        }else{
-            return redirect()->route('franchise-application-la.create',$franchiseApplicationLa->franchise_application_id)->with('success','Application/Form Updated successfully');
+        } else {
+            return redirect()->route('franchise-application-la.create', $franchiseApplicationLa->franchise_application_id)->with('success', 'Application/Form Updated successfully');
         }
     }
 
@@ -141,54 +140,52 @@ class FranchiseApplicationLaResponseController extends Controller
 
         $data['franchise_application_id'] = $request->franchise_application_id;
         //dd($data['franchise_application_id']);
-        if($request->ajax())
-        {
+        if ($request->ajax()) {
             $id = $data['franchise_application_id'];
             $details = FranchiseApplicationsAttachment::with(['user.employee','attachment_type'])->where(['franchise_application_id' => $data['franchise_application_id']]);
             //dd($details->get()->toArray());
-            if (!auth()->user())
+            if (! auth()->user()) {
                 $details = $details->whereNull('uploaded_by');
+            }
 
-                if(isset($request->attachment_type_id) && $request->attachment_type_id > 0)
-                {
-                    $details = $details->where('attachment_type_id', $request->attachment_type_id);
-                }
+            if (isset($request->attachment_type_id) && $request->attachment_type_id > 0) {
+                $details = $details->where('attachment_type_id', $request->attachment_type_id);
+            }
 
-                if(isset($request->department_id) && $request->department_id > 0)
-                {
-                    $details = $details->whereHas('user', function ($query) use ($request) {
-                        $query->whereHas('employee', function ($query) use ($request) {
-                            $query->where('department_id', $request->department_id);
-                        });
+            if (isset($request->department_id) && $request->department_id > 0) {
+                $details = $details->whereHas('user', function ($query) use ($request) {
+                    $query->whereHas('employee', function ($query) use ($request) {
+                        $query->where('department_id', $request->department_id);
                     });
-                }
+                });
+            }
             $data = $details->get();
             return Datatables::of($data)
                     ->addIndexColumn()
-                    ->addColumn('file_name', function($row) use ($request) {
+                    ->addColumn('file_name', function ($row) use ($request) {
                         return view('franchise_application.document_path', ['row' => $row,'id' => $request->franchise_application_id]);
                     })
-                    ->addColumn('document_type', function($row){
+                    ->addColumn('document_type', function ($row) {
                         return $row['attachment_type']['name'];
                     })
-                    ->addColumn('department', function($row){
-                        $department = Employee::where('user_id',$row['user']['id'])->first('department_id');
-                        $dept_name = Department::where('id',$department->department_id)->first('department_name');
+                    ->addColumn('department', function ($row) {
+                        $department = Employee::where('user_id', $row['user']['id'])->first('department_id');
+                        $dept_name = Department::where('id', $department->department_id)->first('department_name');
                         return $row['user'] ? $dept_name->department_name : '-';
                     })
-                    ->addColumn('uploaded_by', function($row){
+                    ->addColumn('uploaded_by', function ($row) {
                         return $row['user'] ? $row['user']['name'] : '-';
                     })
-                    ->addColumn('uploaded_date', function($row){
+                    ->addColumn('uploaded_date', function ($row) {
                         return  $row['uploaded_date'] ? Carbon::parse($row['uploaded_date'])->format('d-m-Y') : '-';
                     })
-                    ->addColumn('details', function($row){
+                    ->addColumn('details', function ($row) {
                         return $row['details'];
                     })
                     ->make(true);
         }
 
-        return view('franchise_application.franchise_application_documents' ,compact('data'));
+        return view('franchise_application.franchise_application_documents', compact('data'));
     }
 
     /**

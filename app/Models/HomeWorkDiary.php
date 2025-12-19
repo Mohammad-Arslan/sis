@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class HomeWorkDiary extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'state_id',
@@ -29,33 +31,38 @@ class HomeWorkDiary extends Model
         'updated_at',
     ];
 
-    public function state(){
-        return $this->belongsTo(State::class,'state_id','id');
+    public function state()
+    {
+        return $this->belongsTo(State::class, 'state_id', 'id');
     }
 
-    public function branch(){
-        return $this->belongsTo(Branch::class,'branch_id','id');
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
-    public function com_class(){
-        return $this->belongsTo(ComClass::class,'class_id','id');
+    public function com_class()
+    {
+        return $this->belongsTo(ComClass::class, 'class_id', 'id');
     }
 
-    public function section(){
-        return $this->belongsTo(Section::class,'section_id','id');
+    public function section()
+    {
+        return $this->belongsTo(Section::class, 'section_id', 'id');
     }
 
-    public function academic_year(){
-        return $this->belongsTo(AcademicYear::class,'academic_year_id','id');
+    public function academic_year()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id', 'id');
     }
 
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by','id');
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
 
     public function updatedBy()
     {
-        return $this->belongsTo(User::class, 'updated_by','id');
+        return $this->belongsTo(User::class, 'updated_by', 'id');
     }
 }

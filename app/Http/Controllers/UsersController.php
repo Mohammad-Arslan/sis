@@ -26,23 +26,22 @@ class UsersController extends Controller
             $data = User::with(['roles','permissions','employee'])->get();
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($row){
-                    if(isset($row->employee->id)){
-                    $actionBtn = '
-                        <button type="button" class="btn btn-sm btn-info btn-icon waves-effect waves-light show-modal" data-url="'.route("employees.show", $row->employee->id).'" data-target="#profileEmpModal"><i class="mdi mdi-account"></i></button>
+                ->addColumn('action', function ($row) {
+                    if (isset($row->employee->id)) {
+                        $actionBtn = '
+                        <button type="button" class="btn btn-sm btn-info btn-icon waves-effect waves-light show-modal" data-url="' . route("employees.show", $row->employee->id) . '" data-target="#profileEmpModal"><i class="mdi mdi-account"></i></button>
                     ';
-                    }else
-                    {
+                    } else {
                         $actionBtn = '';
                     }
 
                     return $actionBtn;
                 })
-                ->addColumn('roles', function($row){
+                ->addColumn('roles', function ($row) {
                     $count = ($row->roles->count());
                     return $count;
                 })
-                ->addColumn('permissions', function($row){
+                ->addColumn('permissions', function ($row) {
                     $count = ($row->permissions->count());
                     return $count;
                 })
@@ -52,7 +51,8 @@ class UsersController extends Controller
         return view('employees.index');
     }
     // roles permissions assignments
-    public function userRolesPermissionList(Request $request){
+    public function userRolesPermissionList(Request $request)
+    {
 
         $modelsKeys = array_keys(Config::get('laratrust.user_models'));
         $modelKey = $request->get('model') ?? $modelsKeys[0] ?? null;
@@ -61,18 +61,18 @@ class UsersController extends Controller
             $data = User::with(['roles','permissions'])->get();
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     $actionBtn = '
-                        <a class="btn btn-sm btn-success btn-icon waves-effect waves-light" href="'.route("edit-with-role-permissions", ['id' => $row->id]).'"><i class="mdi mdi-lead-pencil"></i></a>
+                        <a class="btn btn-sm btn-success btn-icon waves-effect waves-light" href="' . route("edit-with-role-permissions", ['id' => $row->id]) . '"><i class="mdi mdi-lead-pencil"></i></a>
                     ';
 
                     return $actionBtn;
                 })
-                ->addColumn('roles', function($row){
+                ->addColumn('roles', function ($row) {
                     $count = ($row->roles->count());
                     return $count;
                 })
-                ->addColumn('permissions', function($row){
+                ->addColumn('permissions', function ($row) {
                     $count = ($row->permissions->count());
                     return $count;
                 })
@@ -80,13 +80,14 @@ class UsersController extends Controller
                 ->make(true);
         }
 
-        return view('role_permissions_assignment.index',[
+        return view('role_permissions_assignment.index', [
             'models' => $modelsKeys,
             'modelKey' => $modelKey,
         ]);
     }
 
-    public function editUserRolesPermissions(Request $request, $id){
+    public function editUserRolesPermissions(Request $request, $id)
+    {
 
         $user = User::query()
             ->with(['roles:id,name', 'permissions:id,name'])
@@ -117,7 +118,6 @@ class UsersController extends Controller
         ->get();
 
         foreach ($system_modules as $key => $system_module) {
-
             $system_module->modules_permission->map(function ($permission) use ($user) {
                 $permission->assigned = $user->permissions->pluck('id')->contains($permission->id);
                 return $permission;
@@ -142,7 +142,7 @@ class UsersController extends Controller
         $modelKey = 'users';
         $userModel = Config::get('laratrust.user_models')[$modelKey] ?? null;
 
-        if (!$userModel) {
+        if (! $userModel) {
         //'Model was not specified in the request';
         //return redirect()->back()->with('error','Unfortunately not able to update the role assignment');
         }
@@ -156,7 +156,7 @@ class UsersController extends Controller
 
     public function editUserPassword($id)
     {
-        if($id != null){
+        if ($id != null) {
             $user_id = $id;
         }
         // $user_record = null;
@@ -196,17 +196,14 @@ class UsersController extends Controller
         //dd($request->all());
         $request_data = $request->All();
         $validator = $this->credential_rules($request_data);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json(array('error' => $validator->getMessageBag()->toArray()), 400);
-        }else{
+        } else {
             $obj_user = User::find($request->id);
             $obj_user->password = Hash::make($request_data['password']);
             $obj_user->save();
             return response()->json(['success' => "User password have been successfully updated!"], 200);
         }
-
-
     }
 
 
@@ -230,7 +227,7 @@ class UsersController extends Controller
             'confirm_password' => 'required|same:new_password',
         ], $messages);
 
-    return $validator;
+        return $validator;
     }
 
     public function changeUserPassword(Request $request)
@@ -238,21 +235,17 @@ class UsersController extends Controller
         //dd($request->all());
         $request_data = $request->All();
         $validator = $this->credential_validation_rules($request_data);
-        if($validator->fails())
-        {
+        if ($validator->fails()) {
             return response()->json(array('error' => $validator->getMessageBag()->toArray()), 400);
-        }else{
+        } else {
             $current_password = Auth::User()->password;
-            if(Hash::check($request_data['current_password'], $current_password))
-            {
+            if (Hash::check($request_data['current_password'], $current_password)) {
                 $user_id = Auth::User()->id;
                 $obj_user = User::find($user_id);
                 $obj_user->password = Hash::make($request_data['new_password']);
                 $obj_user->save();
                 return response()->json(['success' => "Your password have been successfully updated!"], 200);
-            }
-            else
-            {
+            } else {
                 $error = array('current_password' => 'Please enter correct current password');
                 return response()->json(array('error' => $error), 400);
             }

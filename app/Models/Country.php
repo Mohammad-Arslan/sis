@@ -10,7 +10,10 @@ use App\Traits\SerializeDateTrait;
 
 class Country extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait, LogsActivity;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+    use LogsActivity;
 
     protected $fillable = [
         'country_name',

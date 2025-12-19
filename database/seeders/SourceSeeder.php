@@ -59,14 +59,15 @@ class SourceSeeder extends Seeder
         ];
 
         $dataToInsert = array();
-        foreach ($sources as $status)
-        {
+        foreach ($sources as $status) {
             $checkStatus = Source::where('source_name', $status['source_name'])->first();
-            if(empty($checkStatus))
+            if (empty($checkStatus)) {
                 $dataToInsert[] = $status;
+            }
         }
 
-        if (sizeof($dataToInsert))
+        if (sizeof($dataToInsert)) {
             Source::insert($dataToInsert);
+        }
     }
 }

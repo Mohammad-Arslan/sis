@@ -31,7 +31,8 @@ class GeographicSettingsController extends Controller
 {
     public function __construct(
         private readonly GeographicSettingsService $service
-    ) {}
+    ) {
+    }
 
     /**
      * Display the unified geographic settings page
@@ -41,7 +42,7 @@ class GeographicSettingsController extends Controller
         $countries = $this->service->getCountries();
         $regions = $this->service->getRegions();
         $buildingTypes = $this->service->getBuildingTypes();
-        
+
         return view('settings.geographic.index', compact('countries', 'regions', 'buildingTypes'));
     }
 
@@ -50,12 +51,12 @@ class GeographicSettingsController extends Controller
      */
     public function getCountries(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = Country::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Country'))
@@ -68,16 +69,16 @@ class GeographicSettingsController extends Controller
      */
     public function getStates(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = State::with('countries');
-        
+
         if ($request->country_id && $request->country_id > 0) {
             $data = $data->where('country_id', $request->country_id);
         }
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('country_name', fn($row) => $row->countries?->country_name ?? 'N/A')
@@ -91,20 +92,20 @@ class GeographicSettingsController extends Controller
      */
     public function getCities(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = City::with('states.countries');
-        
+
         if ($request->state_id && $request->state_id > 0) {
             $data = $data->where('state_id', $request->state_id);
         }
-        
+
         if ($request->country_id && $request->country_id > 0) {
             $data = $data->whereHas('states.countries', fn($query) => $query->where('countries.id', $request->country_id));
         }
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('state_name', fn($row) => $row->states?->state_name ?? 'N/A')
@@ -119,16 +120,16 @@ class GeographicSettingsController extends Controller
      */
     public function getTowns(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = Town::with(['cities.states.countries']);
-        
+
         if ($request->city_id && $request->city_id > 0) {
             $data = $data->where('city_id', $request->city_id);
         }
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('city_name', fn($row) => $row->cities?->city_name ?? 'N/A')
@@ -144,12 +145,12 @@ class GeographicSettingsController extends Controller
      */
     public function getRegions(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = Region::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Region'))
@@ -162,12 +163,12 @@ class GeographicSettingsController extends Controller
      */
     public function getBuildingTypes(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = BuildingType::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'BuildingType'))
@@ -229,14 +230,14 @@ class GeographicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteCountry($country);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete country.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Country deleted successfully.'
@@ -312,14 +313,14 @@ class GeographicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteState($state);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete state.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'State deleted successfully.'
@@ -395,14 +396,14 @@ class GeographicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteCity($city);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete city.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'City deleted successfully.'
@@ -478,14 +479,14 @@ class GeographicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteTown($town);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete town.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Town deleted successfully.'
@@ -561,14 +562,14 @@ class GeographicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteRegion($region);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete region.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Region deleted successfully.'
@@ -644,14 +645,14 @@ class GeographicSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteBuildingType($buildingType);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete building type.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Building type deleted successfully.'
@@ -679,7 +680,7 @@ class GeographicSettingsController extends Controller
     public function getStatesByCountry(Request $request): JsonResponse
     {
         $request->validate(['country_id' => 'required|exists:countries,id']);
-        
+
         $states = $this->service->getStatesByCountry($request->country_id);
         return response()->json($states);
     }
@@ -690,7 +691,7 @@ class GeographicSettingsController extends Controller
     public function getCitiesByState(Request $request): JsonResponse
     {
         $request->validate(['state_id' => 'required|exists:states,id']);
-        
+
         $cities = $this->service->getCitiesByState($request->state_id);
         return response()->json($cities);
     }

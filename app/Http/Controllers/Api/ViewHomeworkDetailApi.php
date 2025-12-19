@@ -76,5 +76,4 @@ class ViewHomeworkDetailApi extends Controller
         }
         return '';
     }
-
 }

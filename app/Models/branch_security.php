@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class branch_security extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'academic_year_id',
@@ -26,16 +28,16 @@ class branch_security extends Model
 
     public function academic_year()
     {
-        return $this->belongsTo(AcademicYear::class, 'academic_year_id','id');
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id', 'id');
     }
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class, 'branch_id','id');
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'created_by','id');
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
 }

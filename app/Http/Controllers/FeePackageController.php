@@ -25,37 +25,38 @@ class FeePackageController extends Controller
     {
         if ($request->ajax()) {
             $data = FeePackage::with(['company', 'branch', 'academic_year', 'fee_package_type', 'from_class_id', 'to_class_id']);
-            if($request->academic_year_id)
-            {
-                $data=$data->whereHas('academic_year',function($q)use($request){
-                    $q->where('id',$request->academic_year_id);
+            if ($request->academic_year_id) {
+                $data = $data->whereHas('academic_year', function ($q) use ($request) {
+                    $q->where('id', $request->academic_year_id);
                 });
             }
-            if($request->branch_id)
-            {
-                $data=$data->whereHas('branch',function($q) use ($request){
-                    $q->where('id',$request->branch_id);
+            if ($request->branch_id) {
+                $data = $data->whereHas('branch', function ($q) use ($request) {
+                    $q->where('id', $request->branch_id);
                 });
             }
-            if (($request->from_class_id))
-            $data = $data->where(function ($q) use ($request){
-                $q->where('com_class_id' , $request->from_class_id);
-            });
-            if (($request->to_class_id))
-            $data = $data->where(function ($q) use ($request){
-                $q->where('com_class_id' , $request->to_class_id);
-            });
-            if (($request->fee_package_type_id))
-            $data = $data->where(function ($q) use ($request){
-                $q->where('fee_package_type_id' , $request->fee_package_type_id);
-            });
+            if (($request->from_class_id)) {
+                $data = $data->where(function ($q) use ($request) {
+                    $q->where('com_class_id', $request->from_class_id);
+                });
+            }
+            if (($request->to_class_id)) {
+                $data = $data->where(function ($q) use ($request) {
+                    $q->where('com_class_id', $request->to_class_id);
+                });
+            }
+            if (($request->fee_package_type_id)) {
+                $data = $data->where(function ($q) use ($request) {
+                    $q->where('fee_package_type_id', $request->fee_package_type_id);
+                });
+            }
             // if($request->fee_package_type_id)
             // {
             //     $data=$data->whereHas('fee_package_type',function($q)use($request){
             //         $q->where('fee_package_type_id',$request->fee_package_type_id);
             //     });
             // }
-            $data= $data->get();
+            $data = $data->get();
             // dd($data->toArray());
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -73,7 +74,7 @@ class FeePackageController extends Controller
         $fee_package_type = FeePackageType::get();
     // dd($fee_package_type);
         $branches = Branch::get();
-        return view('settings.fee_packages.fee_packages', ['companies' => $companies, 'branches' => $branches,'academic_years'=>$academic_years, 'from_class_id'=>$from_class_id, 'to_class_id'=> $to_class_id, 'fee_package_type' => $fee_package_type]);
+        return view('settings.fee_packages.fee_packages', ['companies' => $companies, 'branches' => $branches,'academic_years' => $academic_years, 'from_class_id' => $from_class_id, 'to_class_id' => $to_class_id, 'fee_package_type' => $fee_package_type]);
     }
 
     /**

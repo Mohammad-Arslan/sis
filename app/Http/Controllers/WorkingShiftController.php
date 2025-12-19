@@ -6,6 +6,7 @@ use App\Models\WorkingShift;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use Yajra\DataTables\DataTables;
+
 class WorkingShiftController extends Controller
 {
     /**
@@ -20,23 +21,21 @@ class WorkingShiftController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('status', function ($row) {
-                    if($row->status == '0'){
+                    if ($row->status == '0') {
                         $Status =  "Off Day";
-                    }else if($row->status == '1'){
+                    } else if ($row->status == '1') {
                         $Status =  "Working Shift";
-                    }else if($row->status == '2'){
+                    } else if ($row->status == '2') {
                         $Status =  "Eid al-Fitar";
-                    }else if($row->status == '3'){
+                    } else if ($row->status == '3') {
                         $Status =  "Eid al-Adha";
-                    }
-                    else if($row->status == '4'){
+                    } else if ($row->status == '4') {
                         $Status =  "Pakistan Day";
-                    }else if($row->status == '5'){
+                    } else if ($row->status == '5') {
                         $Status =  "Independence Day";
-                    }
-                    else if($row->status == '6'){
+                    } else if ($row->status == '6') {
                         $Status =  "Quaid-e-Azam Day";
-                    }else if($row->status == '7'){
+                    } else if ($row->status == '7') {
                         $Status =  "Labour Day";
                     }
                     return $Status;

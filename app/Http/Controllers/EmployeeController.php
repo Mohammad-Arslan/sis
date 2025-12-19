@@ -58,9 +58,8 @@ class EmployeeController extends Controller
     {
         if ($request->ajax()) {
             try {
-
                 $branch_id = 0;
-                if(!Auth::user()->hasRole('super_admin|human_resource|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')){
+                if (! Auth::user()->hasRole('super_admin|human_resource|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
                     $branch_id = get_branch_id();
                 }
 
@@ -85,9 +84,9 @@ class EmployeeController extends Controller
                     'company:id,company_name',
                     'user:id,first_name,last_name,gender'
                 ]);
-                
+
                 // Apply branch filter early to reduce data set
-                if($branch_id != 0){
+                if ($branch_id != 0) {
                     $query->where('employees.branch_id', $branch_id);
                 }
 
@@ -117,11 +116,11 @@ class EmployeeController extends Controller
                 // Optimized search logic with better performance
                 if ($request->searchName && $request->searchName != null) {
                     $searchTerm = trim($request->searchName);
-                    
-                    if(Auth::user()->hasRole('super_admin|human_resource|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
-                        $query->where(function($q) use ($searchTerm) {
+
+                    if (Auth::user()->hasRole('super_admin|human_resource|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+                        $query->where(function ($q) use ($searchTerm) {
                             $q->whereHas('user', function ($userQuery) use ($searchTerm) {
-                                $userQuery->where(function($uq) use ($searchTerm) {
+                                $userQuery->where(function ($uq) use ($searchTerm) {
                                     $uq->where('first_name', 'like', '%' . $searchTerm . '%')
                                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
                                        ->orWhere('employee_id', 'like', '%' . $searchTerm . '%');
@@ -136,9 +135,9 @@ class EmployeeController extends Controller
                         });
                     } else {
                         // For non-admin users, only search in their branch
-                        $query->where(function($q) use ($searchTerm) {
+                        $query->where(function ($q) use ($searchTerm) {
                             $q->whereHas('user', function ($userQuery) use ($searchTerm) {
-                                $userQuery->where(function($uq) use ($searchTerm) {
+                                $userQuery->where(function ($uq) use ($searchTerm) {
                                     $uq->where('first_name', 'like', '%' . $searchTerm . '%')
                                        ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
                                        ->orWhere('employee_id', 'like', '%' . $searchTerm . '%');
@@ -152,7 +151,7 @@ class EmployeeController extends Controller
                 if ($request->order && count($request->order) > 0) {
                     $orderColumn = $request->order[0]['column'];
                     $orderDir = $request->order[0]['dir'];
-                    
+
                     $columns = ['id', 'employee_id', 'created_at'];
                     if (isset($columns[$orderColumn])) {
                         $query->orderBy('employees.' . $columns[$orderColumn], $orderDir);
@@ -191,7 +190,7 @@ class EmployeeController extends Controller
                     })
                     ->addColumn('action', function ($row) {
                         // Ensure we have valid data before rendering actions
-                        if (!$row->id || !$row->user_id) {
+                        if (! $row->id || ! $row->user_id) {
                             return '<span class="text-muted">Invalid Record</span>';
                         }
                         return view('employees.actions', ['row' => $row]);
@@ -200,7 +199,6 @@ class EmployeeController extends Controller
                     ->make(true);
 
                 return $result;
-                
             } catch (\Exception $e) {
                 return response()->json([
                     'error' => 'An error occurred while loading employee data. Please try again.',
@@ -210,31 +208,31 @@ class EmployeeController extends Controller
         }
 
         // Cache frequently used data for better performance with longer cache duration
-        $companies = cache()->remember('companies_list', 600, function() {
+        $companies = cache()->remember('companies_list', 600, function () {
             return Company::select('id', 'company_name')->orderBy('company_name')->get();
         });
 
-        if(Auth::user()->hasRole('network_associate')){
-           $departments = cache()->remember('nwa_departments', 600, function() {
-               return Employee::nwa_department_filter();
-           });
-           $designations = cache()->remember('nwa_designations', 600, function() {
-               return Employee::nwa_designation_filter();
-           });
+        if (Auth::user()->hasRole('network_associate')) {
+            $departments = cache()->remember('nwa_departments', 600, function () {
+                return Employee::nwa_department_filter();
+            });
+            $designations = cache()->remember('nwa_designations', 600, function () {
+                return Employee::nwa_designation_filter();
+            });
         } else {
-            $departments = cache()->remember('departments_list', 600, function() {
+            $departments = cache()->remember('departments_list', 600, function () {
                 return Department::select('id', 'department_name')->orderBy('department_name')->get();
             });
-            $designations = cache()->remember('designations_list', 600, function() {
+            $designations = cache()->remember('designations_list', 600, function () {
                 return Designation::select('id', 'designation_name')->orderBy('designation_name')->get();
             });
         }
-        
-        $regions = cache()->remember('regions_list', 600, function() {
+
+        $regions = cache()->remember('regions_list', 600, function () {
             return Region::select('id', 'region_name')->orderBy('region_name')->get();
         });
-        
-        $branches = cache()->remember('branches_list', 600, function() {
+
+        $branches = cache()->remember('branches_list', 600, function () {
             return Branch::select('id', 'br_name', 'branch_code')->orderBy('br_name')->get();
         });
 
@@ -371,7 +369,7 @@ class EmployeeController extends Controller
 
         // Store dates exactly as received from frontend
         $input = $request->all();
-        
+
         // Clear marriage-related fields if marital status is not Married
         if ($input['marital_status'] !== 'Married') {
             $input['date_of_marriage'] = null;
@@ -401,15 +399,12 @@ class EmployeeController extends Controller
         DB::beginTransaction();
         $user = User::create($input);
         $input['user_id'] = $user->id;
-        if(!auth()->user()->hasRole('super_admin'))
-        {
+        if (! auth()->user()->hasRole('super_admin')) {
             $input['branch_id'] = get_branch_id();
             $input['employee_id'] = Employee::max('employee_id');
-            if(is_null($input['employee_id']))
-            {
+            if (is_null($input['employee_id'])) {
                 $input['employee_id'] = 1001;
-            }
-            else{
+            } else {
                 $input['employee_id'] = $input['employee_id'] + 1 ;
             }
         }
@@ -514,7 +509,7 @@ class EmployeeController extends Controller
         // ]);
         //dd($request->toArray());
         $input = $request->all();
-        
+
         // Comprehensive validation for service info updates
         if ($request->form_info == 'service') {
             $request->validate([
@@ -581,28 +576,27 @@ class EmployeeController extends Controller
                 'ss_no.regex' => 'Social Security number can only contain uppercase letters, numbers, and hyphens.',
             ]);
         }
-        
+
         if ($request->form_info == 'company') {
             $designation_type_id = Designation::where('id', $input['designation_id'])->get('type_id');
             $input['designation_type_id'] = $designation_type_id[0]['type_id'];
             $input['employee_id'] = Employee::max('employee_id');
-            if(is_null($input['employee_id']))
-            {
+            if (is_null($input['employee_id'])) {
                 $input['employee_id'] = 1001;
-            }
-            else{
+            } else {
                 $input['employee_id'] = $input['employee_id'] + 1 ;
             }
 
             //assigning leave qoutas to newly added employee.
-            $emp_leave_qoutas = DesignationLeaveQuota::where('designation_id',$input['designation_id'])->get(['designation_id','leave_type_id','no_of_allowed_leaves']);
+            $emp_leave_qoutas = DesignationLeaveQuota::where('designation_id', $input['designation_id'])->get(['designation_id','leave_type_id','no_of_allowed_leaves']);
             //dd($emp_leave_qoutas->toArray());
-            foreach($emp_leave_qoutas as $emp_leave_qouta)
-            {
+            foreach ($emp_leave_qoutas as $emp_leave_qouta) {
                 $leave_inputs[] = ['employee_id' => $employee->id,'designation_id' => $emp_leave_qouta->designation_id,'leave_type_id' => $emp_leave_qouta->leave_type_id, 'no_of_allowed_leaves' => $emp_leave_qouta->no_of_allowed_leaves];
             }
 
-            collect($leave_inputs)->each(function ($input_qoutas){ EmployeeLeaveQuota::create($input_qoutas); } );
+            collect($leave_inputs)->each(function ($input_qoutas) {
+                EmployeeLeaveQuota::create($input_qoutas);
+            });
         }
 
         $employee->update($input);
@@ -652,7 +646,7 @@ class EmployeeController extends Controller
 
     public function editEmployee(Request $request, Employee $employee, $id)
     {
-        $employeeDependent = $employeeWorkingDay = $employeeOfficialLeaveDay = NULL;
+        $employeeDependent = $employeeWorkingDay = $employeeOfficialLeaveDay = null;
         if ($request->has('dependent_record_id')) {
             $record_id = $request->input('dependent_record_id');
             $employeeDependent = EmployeeDependent::find($record_id);
@@ -672,21 +666,24 @@ class EmployeeController extends Controller
         $religions = Religion::all();
         $nationalities = Nationality::all();
         $comapnies = Company::all();
-        $departments = new Department;
-        if (!isSuperAdmin() && !isHeadOfficeEmp())
-            $departments = $departments->where('for_school',1);
+        $departments = new Department();
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
+            $departments = $departments->where('for_school', 1);
+        }
         $departments = $departments->get();
 
         $designations = new Designation();
-        if (!isSuperAdmin() && !isHeadOfficeEmp())
-            $designations = $designations->where('for_school',1);
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
+            $designations = $designations->where('for_school', 1);
+        }
         $designations = $designations->get();
 
         //$categories = Category::all();
-        if (!auth()->user()->hasRole('super_admin') && !isHeadOfficeEmp())
-            $branches = Branch::where('id',get_branch_id())->get();
-        else
+        if (! auth()->user()->hasRole('super_admin') && ! isHeadOfficeEmp()) {
+            $branches = Branch::where('id', get_branch_id())->get();
+        } else {
             $branches = Branch::all();
+        }
 
         $working_days = WorkingDay::all();
         $working_shifts = WorkingShift::all();
@@ -796,7 +793,7 @@ class EmployeeController extends Controller
 
             // Store dates exactly as received from frontend
             $input = $request->all();
-            
+
             // Clear marriage-related fields if marital status is not Married
             if (isset($input['marital_status']) && $input['marital_status'] !== 'Married') {
                 $input['date_of_marriage'] = null;
@@ -822,8 +819,7 @@ class EmployeeController extends Controller
             $user_record->update($input);
         }
 
-        if ($request->form_info == 'company')
-        {
+        if ($request->form_info == 'company') {
             // Make sure $input is defined
             if (empty($input)) {
                 $input = $request->all();
@@ -833,63 +829,54 @@ class EmployeeController extends Controller
             $input['designation_type_id'] = $designation['type_id'];
             $user->syncRoles([$designation['role_id']]);
 
-            if(is_null($employee_record->employee_id))
-            {
+            if (is_null($employee_record->employee_id)) {
                 $input['employee_id'] = Employee::max('employee_id');
-                if(is_null($input['employee_id']))
-                {
+                if (is_null($input['employee_id'])) {
                     $input['employee_id'] = 1001;
-                }
-                else{
+                } else {
                     $input['employee_id'] = $input['employee_id'] + 1 ;
                 }
             }
             //assigning leave qoutas to employee if not assigned before.
-            $employee_leave_quota = NULL;
-            $employee_leave_quota = EmployeeLeaveQuota::where('employee_id',$request->id)->first();
-            if(is_null($employee_leave_quota))
-            {
-                $emp_leave_qoutas = DesignationLeaveQuota::where('designation_id',$input['designation_id'])->get(['designation_id','leave_type_id','no_of_allowed_leaves']);
+            $employee_leave_quota = null;
+            $employee_leave_quota = EmployeeLeaveQuota::where('employee_id', $request->id)->first();
+            if (is_null($employee_leave_quota)) {
+                $emp_leave_qoutas = DesignationLeaveQuota::where('designation_id', $input['designation_id'])->get(['designation_id','leave_type_id','no_of_allowed_leaves']);
                 $leave_inputs = [];
-                foreach($emp_leave_qoutas as $emp_leave_qouta)
-                {
+                foreach ($emp_leave_qoutas as $emp_leave_qouta) {
                     $leave_inputs[] = ['employee_id' => $request->id,'designation_id' => $emp_leave_qouta->designation_id,'leave_type_id' => $emp_leave_qouta->leave_type_id, 'no_of_allowed_leaves' => $emp_leave_qouta->no_of_allowed_leaves];
                 }
 
-                collect($leave_inputs)->each(function ($input_qoutas){ EmployeeLeaveQuota::create($input_qoutas); } );
-            }
-            else
-            {
-                $previous_designation = EmployeeLeaveQuota::where('employee_id',$request->id)->first('designation_id');
-                if($previous_designation->designation_id != $input['designation_id'])
-                {
+                collect($leave_inputs)->each(function ($input_qoutas) {
+                    EmployeeLeaveQuota::create($input_qoutas);
+                });
+            } else {
+                $previous_designation = EmployeeLeaveQuota::where('employee_id', $request->id)->first('designation_id');
+                if ($previous_designation->designation_id != $input['designation_id']) {
                     //dd('different designation');
-                    $previous_leave_quota = EmployeeLeaveQuota::where('employee_id',$request->id)->orderBy('leave_type_id')->get(['leave_type_id','no_of_balanced_leaves']);
+                    $previous_leave_quota = EmployeeLeaveQuota::where('employee_id', $request->id)->orderBy('leave_type_id')->get(['leave_type_id','no_of_balanced_leaves']);
                     //dd($previous_leave_quota->toArray());
-                    $designation_leave_quotas = DesignationLeaveQuota::where('designation_id',$input['designation_id'])->orderBy('leave_type_id')->get(['designation_id','leave_type_id','no_of_allowed_leaves']);
-                    EmployeeLeaveQuota::where('employee_id',$request->id)->delete();
+                    $designation_leave_quotas = DesignationLeaveQuota::where('designation_id', $input['designation_id'])->orderBy('leave_type_id')->get(['designation_id','leave_type_id','no_of_allowed_leaves']);
+                    EmployeeLeaveQuota::where('employee_id', $request->id)->delete();
                     $leave_inputs = [];
-                    foreach($designation_leave_quotas as $emp_new_quota)
-                    {
+                    foreach ($designation_leave_quotas as $emp_new_quota) {
                         $leave_inputs[] = ['employee_id' => $request->id,'designation_id' => $emp_new_quota->designation_id,'leave_type_id' => $emp_new_quota->leave_type_id, 'no_of_allowed_leaves' => $emp_new_quota->no_of_allowed_leaves];
                     }
-                    collect($leave_inputs)->each(function ($input_quotas){ EmployeeLeaveQuota::create($input_quotas); } );
+                    collect($leave_inputs)->each(function ($input_quotas) {
+                        EmployeeLeaveQuota::create($input_quotas);
+                    });
 
-                    foreach($previous_leave_quota as $previous_quota)
-                    {
+                    foreach ($previous_leave_quota as $previous_quota) {
                         $current_leave_quota = [];
                         $balanced_inputs = [];
-                        $current_leave_quota = EmployeeLeaveQuota::where('employee_id',$request->id)->where('leave_type_id',$previous_quota->leave_type_id)->first();
+                        $current_leave_quota = EmployeeLeaveQuota::where('employee_id', $request->id)->where('leave_type_id', $previous_quota->leave_type_id)->first();
                         //dd($current_leave_quota->toArray());
-                        if(isset($current_leave_quota))
-                        {
+                        if (isset($current_leave_quota)) {
                             $balanced_inputs['no_of_balanced_leaves'] = $previous_quota->no_of_balanced_leaves;
                             $current_leave_quota->update($balanced_inputs);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     //do nothing if designation is not changed.
                 }
             }
@@ -1023,13 +1010,11 @@ class EmployeeController extends Controller
         if ($request->form_info == 'company') {
             return redirect(route('edit-employee', $data['id']) . '?tab=dependent_info')->with('success', 'Employee company info has been updated successfully.');
         }
-
     }
 
     public function getBranchAdministrativeStaff(Request $request, $id)
     {
         if ($request->ajax()) {
-
             $branch = Branch::find($id);
             $data = Employee::where('branch_id', $branch->id)
                 ->whereNotNull('user_id') // Ensure only employees with valid user_id
@@ -1096,7 +1081,7 @@ class EmployeeController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     // Ensure we have valid data before rendering actions
-                    if (!$row->id || !$row->user_id) {
+                    if (! $row->id || ! $row->user_id) {
                         return '<span class="text-muted">Invalid Record</span>';
                     }
                     return view('employees.emp-actions', ['row' => $row]);
@@ -1112,18 +1097,18 @@ class EmployeeController extends Controller
     {
         if ($request->ajax()) {
             $html = '<option value="">Please select reporting manager</option>';
-            
+
             // Get all employees in the selected branch (excluding the current employee)
             $employees = Employee::where('branch_id', $request->branch_id)
                 ->where('id', '!=', $request->employee_id)
                 ->whereNull('left_date')
                 ->with('user')
                 ->get();
-                
-            foreach($employees as $employee) {
-                $html .= '<option value="'.$employee->user_id.'">'.($employee->user->name ?? 'Unknown User').'</option>';
+
+            foreach ($employees as $employee) {
+                $html .= '<option value="' . $employee->user_id . '">' . ($employee->user->name ?? 'Unknown User') . '</option>';
             }
-            
+
             return $html;
         }
     }
@@ -1131,7 +1116,7 @@ class EmployeeController extends Controller
     public function getEmployeeAttendance()
     {
         $employee = Employee::where('user_id', Auth::id())->get();
-        return view('employees.getmyattendance',['employee' => $employee]);
+        return view('employees.getmyattendance', ['employee' => $employee]);
     }
 
     /**
@@ -1149,34 +1134,34 @@ class EmployeeController extends Controller
         }
     }
 
-    public function getEmployeeUsingEmpId(Request $request){
+    public function getEmployeeUsingEmpId(Request $request)
+    {
         try {
-            if (isset($request->emp_id)){
-                $employee = Employee::with(['user'])->where('employee_id',$request->emp_id)->first();
+            if (isset($request->emp_id)) {
+                $employee = Employee::with(['user'])->where('employee_id', $request->emp_id)->first();
                 return response()->json(['code' => 200, 'status' => 'success', 'message' => 'Data Sent Successfully','data' => $employee]);
-            }
-            else{
+            } else {
                 return response()->json(['code' => 422, 'status' => 'success', 'message' => 'Data Not Found','data' => new \stdClass()]);
             }
-
         } catch (QueryException $e) {
             print_r($e->errorInfo);
         }
     }
 
-    public function generateEmployeeSalarySlip($id = null) {
+    public function generateEmployeeSalarySlip($id = null)
+    {
         if ($id != null) {
             $employee = Employee::find($id);
         } else {
             $employee = auth()->user()->employee;
         }
 
-        if (!empty($employee)) {
+        if (! empty($employee)) {
             // Get last month's data
             $lastMonth = date("n", strtotime("last month"));
             $lastYear = date("Y", strtotime("last month"));
             $lastMonthName = date("F", strtotime("last month"));
-            
+
             // Fetch the latest processed payroll for this employee
             $payroll = Payroll::with([
                 'details'
@@ -1188,7 +1173,7 @@ class EmployeeController extends Controller
 
             // Get attendance summary for the month
             $attendanceSummary = $this->getAttendanceSummary($employee->id, $lastMonth, $lastYear);
-            
+
             // Prepare data for the salary slip
             $salarySlipData = [
                 'employee' => $employee,
@@ -1209,7 +1194,8 @@ class EmployeeController extends Controller
     /**
      * Generate salary slip for specific month/year
      */
-    public function generateEmployeeSalarySlipForPeriod($id = null, $month = null, $year = null) {
+    public function generateEmployeeSalarySlipForPeriod($id = null, $month = null, $year = null)
+    {
         if ($id != null) {
             $employee = Employee::find($id);
         } else {
@@ -1220,8 +1206,8 @@ class EmployeeController extends Controller
         $targetMonth = $month ?: date("n", strtotime("last month"));
         $targetYear = $year ?: date("Y", strtotime("last month"));
         $targetMonthName = $month ? date("F", mktime(0, 0, 0, $month, 1, $year)) : date("F", strtotime("last month"));
-        
-        if (!empty($employee)) {
+
+        if (! empty($employee)) {
             // Fetch the processed payroll for this employee and period
             $payroll = Payroll::with([
                 'details'
@@ -1233,7 +1219,7 @@ class EmployeeController extends Controller
 
             // Get attendance summary for the month
             $attendanceSummary = $this->getAttendanceSummary($employee->id, $targetMonth, $targetYear);
-            
+
             // Prepare data for the salary slip
             $salarySlipData = [
                 'employee' => $employee,
@@ -1258,7 +1244,7 @@ class EmployeeController extends Controller
     {
         $start = Carbon::create($year, $month, 1)->startOfDay();
         $end = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay();
-        
+
         // Get attendance records for the employee in the specified period
         $attendances = \App\Models\EmployeeAttendance::where('employee_id', $employeeId)
             ->whereBetween('created_at', [$start, $end])
@@ -1274,7 +1260,7 @@ class EmployeeController extends Controller
         // Get approved leaves
         $approvedLeaves = \App\Models\LeaveApplication::where('employee_id', $employeeId)
             ->where('status', 'approved')
-            ->where(function($q) use ($start, $end) {
+            ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('from_date', [$start, $end])
                   ->orWhereBetween('to_date', [$start, $end]);
             })
@@ -1318,12 +1304,12 @@ class EmployeeController extends Controller
         try {
             // Generate unique import ID
             $importId = uniqid('emp_import_', true);
-            
+
             // Store file temporarily (use local disk explicitly)
             $file = $request->file('file');
             $fileName = $importId . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('imports/employees', $fileName, 'local');
-            
+
             // Create import progress record
             $importProgress = ImportProgress::create([
                 'import_id' => $importId,
@@ -1333,14 +1319,14 @@ class EmployeeController extends Controller
                 'status' => 'pending',
                 'current_message' => 'Import queued for processing...',
             ]);
-            
+
             // Dispatch job to queue
             ProcessEmployeeImport::dispatch(
                 $filePath,
                 $importId,
                 auth()->id()
             );
-            
+
             Log::info('Employee import job dispatched', [
                 'import_id' => $importId,
                 'file_path' => $filePath,
@@ -1360,7 +1346,6 @@ class EmployeeController extends Controller
                 'success' => 'Import started successfully! Processing in background...',
                 'import_id' => $importId
             ]);
-
         } catch (\Exception $e) {
             Log::error('Employee import dispatch failed: ' . $e->getMessage(), [
                 'exception' => $e->getMessage(),
@@ -1384,19 +1369,19 @@ class EmployeeController extends Controller
     public function getImportStats(Request $request)
     {
         $importId = $request->get('import_id');
-        
-        if (!$importId) {
+
+        if (! $importId) {
             return response()->json(['error' => 'Import ID required'], 400);
         }
-        
+
         $importProgress = ImportProgress::where('import_id', $importId)
             ->where('user_id', auth()->id())
             ->first();
-        
-        if (!$importProgress) {
+
+        if (! $importProgress) {
             return response()->json(['error' => 'Import not found'], 404);
         }
-        
+
         return response()->json([
             'import_id' => $importProgress->import_id,
             'status' => $importProgress->status,
@@ -1424,7 +1409,7 @@ class EmployeeController extends Controller
         try {
             // Generate unique export ID
             $exportId = uniqid('emp_export_', true);
-            
+
             // Create export progress record
             $exportProgress = ImportProgress::create([
                 'import_id' => $exportId,
@@ -1434,17 +1419,17 @@ class EmployeeController extends Controller
                 'status' => 'pending',
                 'current_message' => 'Export queued for processing...',
             ]);
-            
+
             // No filters - export all employees
             $filters = [];
-            
+
             // Dispatch job to queue
             ProcessEmployeeExport::dispatch(
                 $exportId,
                 auth()->id(),
                 $filters
             );
-            
+
             Log::info('Employee export job dispatched', [
                 'export_id' => $exportId,
                 'filters' => $filters,
@@ -1464,7 +1449,6 @@ class EmployeeController extends Controller
                 'success' => 'Export started successfully! Processing in background...',
                 'export_id' => $exportId
             ]);
-
         } catch (\Exception $e) {
             Log::error('Employee export dispatch failed: ' . $e->getMessage(), [
                 'exception' => $e->getMessage(),
@@ -1488,20 +1472,20 @@ class EmployeeController extends Controller
     public function getExportStats(Request $request)
     {
         $exportId = $request->get('export_id');
-        
-        if (!$exportId) {
+
+        if (! $exportId) {
             return response()->json(['error' => 'Export ID required'], 400);
         }
-        
+
         $exportProgress = ImportProgress::where('import_id', $exportId)
             ->where('import_type', 'employee_export')
             ->where('user_id', auth()->id())
             ->first();
-        
-        if (!$exportProgress) {
+
+        if (! $exportProgress) {
             return response()->json(['error' => 'Export not found'], 404);
         }
-        
+
         return response()->json([
             'export_id' => $exportProgress->import_id,
             'status' => $exportProgress->status,
@@ -1525,31 +1509,31 @@ class EmployeeController extends Controller
     public function downloadExport(Request $request)
     {
         $exportId = $request->get('export_id');
-        
-        if (!$exportId) {
+
+        if (! $exportId) {
             return response()->json(['error' => 'Export ID required'], 400);
         }
-        
+
         $exportProgress = ImportProgress::where('import_id', $exportId)
             ->where('import_type', 'employee_export')
             ->where('user_id', auth()->id())
             ->first();
-        
-        if (!$exportProgress) {
+
+        if (! $exportProgress) {
             return response()->json(['error' => 'Export not found'], 404);
         }
-        
+
         if ($exportProgress->status !== 'completed') {
             return response()->json(['error' => 'Export not completed yet'], 400);
         }
-        
+
         // File path (local disk uses storage/app as root)
         $filePath = 'exports/employees/employee_export_' . $exportId . '.xlsx';
-        
-        if (!Storage::disk('local')->exists($filePath)) {
+
+        if (! Storage::disk('local')->exists($filePath)) {
             return response()->json(['error' => 'Export file not found. Please try exporting again.'], 404);
         }
-        
+
         return Storage::disk('local')->download($filePath, $exportProgress->file_name);
     }
 
@@ -1559,34 +1543,34 @@ class EmployeeController extends Controller
     public function getImportErrorLogs(Request $request)
     {
         $importId = $request->get('import_id');
-        
-        if (!$importId) {
+
+        if (! $importId) {
             return response()->json(['error' => 'Import ID required'], 400);
         }
-        
+
         // Get import progress to verify ownership
         $importProgress = ImportProgress::where('import_id', $importId)
             ->where('user_id', auth()->id())
             ->first();
-        
-        if (!$importProgress) {
+
+        if (! $importProgress) {
             return response()->json(['error' => 'Import not found'], 404);
         }
-        
+
         // Get error logs with pagination
         $page = $request->get('page', 1);
         $perPage = $request->get('per_page', 50);
         $errorType = $request->get('error_type');
-        
+
         $query = ImportErrorLog::forImport($importId)
             ->orderBy('occurred_at', 'desc');
-            
+
         if ($errorType) {
             $query->byErrorType($errorType);
         }
-        
+
         $errorLogs = $query->paginate($perPage, ['*'], 'page', $page);
-        
+
         return response()->json([
             'success' => true,
             'data' => $errorLogs->items(),
@@ -1612,7 +1596,7 @@ class EmployeeController extends Controller
             ->groupBy('error_type')
             ->get()
             ->keyBy('error_type');
-            
+
         return [
             'validation_error' => $summary->get('validation_error')->count ?? 0,
             'import_error' => $summary->get('import_error')->count ?? 0,
@@ -1629,22 +1613,22 @@ class EmployeeController extends Controller
     public function clearImportErrorLogs(Request $request)
     {
         $importId = $request->get('import_id');
-        
-        if (!$importId) {
+
+        if (! $importId) {
             return response()->json(['error' => 'Import ID required'], 400);
         }
-        
+
         // Get import progress to verify ownership
         $importProgress = ImportProgress::where('import_id', $importId)
             ->where('user_id', auth()->id())
             ->first();
-        
-        if (!$importProgress) {
+
+        if (! $importProgress) {
             return response()->json(['error' => 'Import not found'], 404);
         }
-        
+
         $deletedCount = ImportErrorLog::truncateForImport($importId);
-        
+
         return response()->json([
             'success' => true,
             'message' => "Cleared {$deletedCount} error log entries",
@@ -1658,19 +1642,19 @@ class EmployeeController extends Controller
     public function getImportHistory(Request $request)
     {
         $perPage = $request->get('per_page', 10);
-        
+
         $imports = ImportProgress::where('user_id', auth()->id())
             ->where('import_type', 'employee')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
-        
+
         // Add error counts to each import
         $imports->getCollection()->transform(function ($import) {
             $errorCount = ImportErrorLog::forImport($import->import_id)->count();
             $import->error_count = $errorCount;
             return $import;
         });
-        
+
         return response()->json([
             'success' => true,
             'data' => $imports->items(),

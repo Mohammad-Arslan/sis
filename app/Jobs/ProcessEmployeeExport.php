@@ -16,7 +16,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProcessEmployeeExport implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public $timeout = 3600; // 1 hour timeout
     public $tries = 3; // Retry 3 times on failure
@@ -46,10 +49,10 @@ class ProcessEmployeeExport implements ShouldQueue
         if (class_exists(\Laravel\Telescope\Telescope::class)) {
             \Laravel\Telescope\Telescope::stopRecording();
         }
-        
+
         // Increase memory limit for large exports
         @ini_set('memory_limit', '1024M');
-        
+
         try {
             // Log::info("Starting employee export job", [
             //     'export_id' => $this->exportId,
@@ -61,8 +64,8 @@ class ProcessEmployeeExport implements ShouldQueue
             $exportProgress = ImportProgress::where('import_id', $this->exportId)
                 ->where('import_type', 'employee_export')
                 ->first();
-            
-            if (!$exportProgress) {
+
+            if (! $exportProgress) {
                 // Log::error("Export progress record not found for ID: {$this->exportId}");
                 return;
             }
@@ -72,7 +75,7 @@ class ProcessEmployeeExport implements ShouldQueue
 
             // Get total count for progress calculation
             $totalCount = $this->getTotalEmployeeCount();
-            
+
             // Update total rows in database
             $exportProgress->updateProgress([
                 'total_rows' => $totalCount,
@@ -94,25 +97,25 @@ class ProcessEmployeeExport implements ShouldQueue
 
             // Create export instance with progress callback
             $export = new ExportEmployee($this->filters);
-            $export->setProgressCallback(function($stats) use ($exportProgress) {
+            $export->setProgressCallback(function ($stats) use ($exportProgress) {
                 $this->updateProgress($stats, $exportProgress);
             });
 
             // Generate file path (local disk uses app as root)
             $this->filePath = 'exports/employees/employee_export_' . $this->exportId . '.xlsx';
-            
+
             // Ensure directory exists (local disk uses app as root)
             $fullPath = storage_path('app/' . $this->filePath);
             $directory = dirname($fullPath);
-            if (!file_exists($directory)) {
+            if (! file_exists($directory)) {
                 mkdir($directory, 0755, true);
             }
-            
+
             // Process the export with explicit local disk
             Excel::store($export, $this->filePath, 'local');
 
             // Verify file was created
-            if (!Storage::disk('local')->exists($this->filePath)) {
+            if (! Storage::disk('local')->exists($this->filePath)) {
                 throw new \Exception('Export file was not created successfully');
             }
 
@@ -149,7 +152,6 @@ class ProcessEmployeeExport implements ShouldQueue
             //     'stats' => $stats,
             //     'file_path' => $this->filePath
             // ]);
-
         } catch (\Exception $e) {
             // Log::error("Employee export job failed", [
             //     'export_id' => $this->exportId,
@@ -188,42 +190,42 @@ class ProcessEmployeeExport implements ShouldQueue
     protected function getTotalEmployeeCount(): int
     {
         $query = \App\Models\Employee::query();
-        
+
         // Apply filters if any
-        if (!empty($this->filters['company_id'])) {
+        if (! empty($this->filters['company_id'])) {
             $query->where('company_id', $this->filters['company_id']);
         }
-        
-        if (!empty($this->filters['branch_id'])) {
+
+        if (! empty($this->filters['branch_id'])) {
             $query->where('branch_id', $this->filters['branch_id']);
         }
-        
-        if (!empty($this->filters['department_id'])) {
+
+        if (! empty($this->filters['department_id'])) {
             $query->where('department_id', $this->filters['department_id']);
         }
-        
-        if (!empty($this->filters['designation_id'])) {
+
+        if (! empty($this->filters['designation_id'])) {
             $query->where('designation_id', $this->filters['designation_id']);
         }
-        
-        if (!empty($this->filters['gender'])) {
-            $query->whereHas('user', function($q) {
+
+        if (! empty($this->filters['gender'])) {
+            $query->whereHas('user', function ($q) {
                 $q->where('gender', $this->filters['gender']);
             });
         }
-        
-        if (!empty($this->filters['job_status'])) {
+
+        if (! empty($this->filters['job_status'])) {
             $query->where('job_status', $this->filters['job_status']);
         }
-        
-        if (!empty($this->filters['date_from'])) {
+
+        if (! empty($this->filters['date_from'])) {
             $query->where('hiring_date', '>=', $this->filters['date_from']);
         }
-        
-        if (!empty($this->filters['date_to'])) {
+
+        if (! empty($this->filters['date_to'])) {
             $query->where('hiring_date', '<=', $this->filters['date_to']);
         }
-        
+
         return $query->count();
     }
 

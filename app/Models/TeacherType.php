@@ -8,9 +8,11 @@ use App\Traits\SerializeDateTrait;
 
 class TeacherType extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
-    public function getNameAttribute($value){
+    public function getNameAttribute($value)
+    {
         return ucwords($value);
     }
 }

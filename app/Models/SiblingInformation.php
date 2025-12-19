@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SiblingInformation extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'family_information_id',
@@ -16,11 +17,13 @@ class SiblingInformation extends Model
         'sibling_no',
     ];
 
-    public function family() {
+    public function family()
+    {
         return $this->belongsTo(FamilyInformation::class, 'family_information_id', 'id');
     }
 
-    public function student() {
+    public function student()
+    {
         return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 }

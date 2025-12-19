@@ -22,7 +22,7 @@ class UpdateRegionRequest extends FormRequest
     public function rules(): array
     {
         $regionId = $this->route('region')->id;
-        
+
         return [
             'region_name' => [
                 'required',
@@ -47,4 +47,3 @@ class UpdateRegionRequest extends FormRequest
         ];
     }
 }
-

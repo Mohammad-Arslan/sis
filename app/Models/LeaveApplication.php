@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class LeaveApplication extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $guarded = [];
 
     protected $dates = [
@@ -34,8 +36,4 @@ class LeaveApplication extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
-
-    
-
-
 }

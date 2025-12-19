@@ -43,12 +43,11 @@ class GuardianInfoUpdateController extends Controller
 
 
         if ($request->ajax()) {
-
             $data = GuardianInfoUpdate::with([
                 'guardian', 'student.student_address'
             ])->where('status', 'pending');
 
-            if (!isSuperAdmin() && !isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
+            if (! isSuperAdmin() && ! isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
                 $data->whereHas('student', function ($q) {
                     $q->where('branch_id', get_branch_id());
                 });
@@ -124,12 +123,12 @@ class GuardianInfoUpdateController extends Controller
         //Get guardian record
         $guardianRecord = Guardian::where('id', $guardianId)->first();
 
-        if ($guardianInfoUpdate->student_id)
+        if ($guardianInfoUpdate->student_id) {
             // Get student address
             $studentAddress = StudentAddress::where('student_id', $guardianInfoUpdate->student_id)->first();
+        }
         //Check if record exits before update
         if ($guardianRecord) {
-
             if ($guardianInfoUpdateType == 'email') {
                 //Update guardian actual email with the provided one
                 $guardianRecord->email = $guardianInfoUpdate->update_value;
@@ -148,8 +147,9 @@ class GuardianInfoUpdateController extends Controller
             $guardianRecord->save();
 
             //Save actual corespondence address record
-            if ($guardianInfoUpdate->student_id)
+            if ($guardianInfoUpdate->student_id) {
                 $studentAddress->save();
+            }
             //Change status to completed
             $guardianInfoUpdate->status = 'completed';
             $guardianInfoUpdate->save();
@@ -169,7 +169,6 @@ class GuardianInfoUpdateController extends Controller
     public function destroy(GuardianInfoUpdate $guardianInfoUpdate)
     {
         try {
-
             //Remove record from database
             $guardianInfoUpdate->delete();
 

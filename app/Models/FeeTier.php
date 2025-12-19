@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class FeeTier extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'tier_name',
         'description'

@@ -34,11 +34,11 @@ class BranchController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
-            if(Auth::user()->hasRole('deputy-director|head-of-finance|ho-accountant|head_of_bd|bd_sales'))
+            if (Auth::user()->hasRole('deputy-director|head-of-finance|ho-accountant|head_of_bd|bd_sales')) {
                 $data = Branch::whereNotIn('id', [1,2,3,22,23,24,27,28])->with(['region', 'company', 'nwa.user', 'nwa.contact_information', 'class_group', 'contact_information.state']);
-            else
-                 $data = Branch::with(['region', 'company', 'nwa.user', 'nwa.contact_information', 'class_group', 'contact_information.state']);
+            } else {
+                $data = Branch::with(['region', 'company', 'nwa.user', 'nwa.contact_information', 'class_group', 'contact_information.state']);
+            }
             if ($request->company_id && $request->company_id > 0) {
                 $data->where('company_id', $request->company_id);
             }
@@ -266,7 +266,7 @@ class BranchController extends Controller
             'branch_taxes' => $branchTaxes
         ];
 
-        if (!empty($contactInformation)) {
+        if (! empty($contactInformation)) {
             $states = State::where('country_id', $contactInformation->country_id)->get();
             $cities = City::where('state_id', $contactInformation->state_id)->get();
             $towns = Town::where('city_id', $contactInformation->city_id)->get();

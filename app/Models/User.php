@@ -15,7 +15,10 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 class User extends Authenticatable implements LaratrustUser
 {
     use HasRolesAndPermissions;
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens;
+    use HasFactory;
+    use Notifiable;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

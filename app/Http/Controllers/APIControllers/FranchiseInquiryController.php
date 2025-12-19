@@ -38,7 +38,6 @@ class FranchiseInquiryController extends Controller
             $data = FranchiseInquiry::store_update_franchise_inquiry($request->all());
 
             return response()->json(['code' => 200, 'status' => 'success', 'message' => 'Data Saved Successfully.','data' => $data]);
-
         } catch (\Exception $exception) {
             return response()->json(['code' => 422, 'status' => 'false', 'message' => $exception->getMessage(), 'data' => new \stdClass()]);
         }

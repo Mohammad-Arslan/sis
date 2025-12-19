@@ -29,10 +29,11 @@ class FranchiseApplicationAttachmentTypeSeeder extends Seeder
             ['name' => 'Business Card'],
         ];
 
-        foreach ($types as $type){
-            $type_availability = FranchiseApplicationAttachmentType::where('name',$type)->first();
-            if (!$type_availability)
+        foreach ($types as $type) {
+            $type_availability = FranchiseApplicationAttachmentType::where('name', $type)->first();
+            if (! $type_availability) {
                 FranchiseApplicationAttachmentType::create($type);
+            }
         }
     }
 }

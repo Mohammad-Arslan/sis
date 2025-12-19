@@ -10,7 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BuildingType extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait, LogsActivity;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+    use LogsActivity;
+
     protected $fillable = [
        'type_name',
        'type_description'

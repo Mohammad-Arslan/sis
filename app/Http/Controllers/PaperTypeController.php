@@ -17,7 +17,6 @@ class PaperTypeController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = PaperType::with('subject');
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -33,7 +32,7 @@ class PaperTypeController extends Controller
 
         $data['subjects'] = Subject::all();
 
-        return view('settings.paper_type.index',$data);
+        return view('settings.paper_type.index', $data);
     }
 
     /**
@@ -87,7 +86,7 @@ class PaperTypeController extends Controller
         $data['paper_type'] = $paperType;
         $data['subjects'] = Subject::all();
 
-        return view('settings.paper_type.index',$data);
+        return view('settings.paper_type.index', $data);
     }
 
     /**

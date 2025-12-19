@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentBehaviourSkillRemark extends Model
 {
-    use HasFactory, SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'student_behaviour_skill_id',
@@ -20,11 +22,13 @@ class StudentBehaviourSkillRemark extends Model
         'parent_meeting_attended',
     ];
 
-    public function student(){
-        return $this->belongsTo(Student::class,'student_id','id');
+    public function student()
+    {
+        return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 
-    public function student_behaviour_skill(){
-        return $this->belongsTo(StudentBehaviourSkill::class,'student_behaviour_skill_id','id');
+    public function student_behaviour_skill()
+    {
+        return $this->belongsTo(StudentBehaviourSkill::class, 'student_behaviour_skill_id', 'id');
     }
 }

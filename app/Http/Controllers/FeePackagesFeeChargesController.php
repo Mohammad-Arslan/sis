@@ -21,7 +21,7 @@ class FeePackagesFeeChargesController extends Controller
         // $classes = ComClass::get();
         $academic_year_id = $request->academic_year_id;
         $fee_package = FeePackage::where('id', '=', $id)->get();
-        $fee_charges = FeeCharge::with('fee_charges_type')->where('branch_id', '=', $fee_package[0]->branch_id)->where('academic_year_id',$academic_year_id)->get();
+        $fee_charges = FeeCharge::with('fee_charges_type')->where('branch_id', '=', $fee_package[0]->branch_id)->where('academic_year_id', $academic_year_id)->get();
         $fee_packages_fee_charges = FeePackagesFeeCharges::where('fee_package_id', '=', $fee_package[0]->id)
             ->where('status', '=', '1')
             ->pluck('fee_charge_id')->toArray();

@@ -34,7 +34,7 @@ use Illuminate\Support\Str;
 class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, SkipsOnError, SkipsEmptyRows, SkipsOnFailure
 {
     use SkipsFailures;
-    
+
     public $importedCount = 0;
     public $skippedCount = 0;
     public $errors = [];
@@ -46,7 +46,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     public $duplicateSerialInExcel = []; // Track duplicate serials within Excel
     public $duplicateAssetInDb = 0; // Count of assets already existing in DB
     public $rowToExcelRowMap = []; // Map internal row numbers to Excel row numbers
-    
+
     // Cache for lookup tables to avoid repeated database queries
     public $categoryCache = [];
     public $supplierCache = [];
@@ -60,21 +60,21 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     {
         // Store import ID for logging
         $this->importId = $importId;
-        
+
         // Set dynamic PHP configuration for large imports
         $this->setDynamicConfiguration();
-        
+
         // Pre-load all lookup tables into memory for faster access
         $this->preloadLookupTables();
-        
+
         // Clear the log file at the start of each import session if no specific import ID
-        if (!$importId) {
+        if (! $importId) {
             $logPath = storage_path('logs/asset_import.log');
             if (File::exists($logPath)) {
                 File::put($logPath, '');
             }
         }
-        
+
         // Reset row counter
         $this->currentRowNumber = 0;
     }
@@ -88,43 +88,43 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         $currentMemoryLimit = ini_get('memory_limit');
         $currentMemoryBytes = $this->convertToBytes($currentMemoryLimit);
         $requiredMemoryBytes = 2 * 1024 * 1024 * 1024; // 2GB
-        
+
         if ($currentMemoryBytes < $requiredMemoryBytes) {
             ini_set('memory_limit', '2G');
         }
-        
+
         // Increase max execution time (30 minutes)
         ini_set('max_execution_time', 1800);
-        
+
         // Increase input time limit
         ini_set('max_input_time', 1800);
-        
+
         // Increase post max size for large file uploads
         $currentPostMaxSize = ini_get('post_max_size');
         $currentPostMaxBytes = $this->convertToBytes($currentPostMaxSize);
         $requiredPostMaxBytes = 100 * 1024 * 1024; // 100MB
-        
+
         if ($currentPostMaxBytes < $requiredPostMaxBytes) {
             ini_set('post_max_size', '100M');
         }
-        
+
         // Increase upload max filesize
         $currentUploadMaxSize = ini_get('upload_max_filesize');
         $currentUploadMaxBytes = $this->convertToBytes($currentUploadMaxSize);
         $requiredUploadMaxBytes = 100 * 1024 * 1024; // 100MB
-        
+
         if ($currentUploadMaxBytes < $requiredUploadMaxBytes) {
             ini_set('upload_max_filesize', '100M');
         }
-        
+
         // Disable output buffering for better memory management
         if (ob_get_level()) {
             ob_end_clean();
         }
-        
+
         // Set garbage collection to run more frequently
         gc_enable();
-        
+
         Log::info('Dynamic configuration set for large asset import', [
             'memory_limit' => ini_get('memory_limit'),
             'max_execution_time' => ini_get('max_execution_time'),
@@ -141,7 +141,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         $sizeStr = trim($sizeStr);
         $last = strtolower($sizeStr[strlen($sizeStr) - 1]);
         $size = (int) $sizeStr;
-        
+
         switch ($last) {
             case 'g':
                 $size *= 1024;
@@ -150,7 +150,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             case 'k':
                 $size *= 1024;
         }
-        
+
         return $size;
     }
 
@@ -160,11 +160,11 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     private function formatBytes($bytes, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
+
         return round($bytes, $precision) . ' ' . $units[$i];
     }
 
@@ -235,7 +235,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 $this->existingSerialNumberCache[trim($asset->serial_number)] = true;
             }
         }
-        
+
         // Note: Debug info is not logged to main import file
 
         // Log cache statistics for debugging
@@ -288,7 +288,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         // If it's already a string, try to parse it
         if (is_string($value)) {
             $value = trim($value);
-            
+
             // Try different date formats
             $formats = [
                 'Y-m-d',
@@ -330,7 +330,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
 
         if (is_string($value)) {
             $value = trim($value);
-            
+
             $formats = [
                 'Y-m-d',
                 'd/m/Y',
@@ -384,32 +384,32 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     {
         // Increment total rows processed (including headers and empty rows)
         $this->totalRowsProcessed++;
-        
+
         try {
             // Skip header row (check if name contains header-like text)
             if (isset($row['name']) && in_array(strtolower(trim($row['name'])), ['name', 'asset_name', 'asset name', 'asset_tag', 'asset tag'])) {
                 return null; // Skip header row silently
             }
-            
+
             // Skip if essential fields are missing or if row is completely empty
             if (empty($row['name']) || empty($row['serial_number'])) {
                 // Check if this is a completely empty row
                 $hasAnyData = false;
                 foreach ($row as $value) {
-                    if (!empty($value) && $value !== null && $value !== '') {
+                    if (! empty($value) && $value !== null && $value !== '') {
                         $hasAnyData = true;
                         break;
                     }
                 }
-                
-                if (!$hasAnyData) {
+
+                if (! $hasAnyData) {
                     // Completely empty row, skip silently
                     return null;
                 }
-                
+
                 // Row has some data but missing essential fields
                 $this->skippedCount++;
-                
+
                 // Write to log file
                 $logEntry = [
                     'type' => 'missing_fields',
@@ -420,10 +420,10 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                     'timestamp' => now()->toDateTimeString(),
                 ];
                 $this->writeLog('missing_fields', 'Missing essential fields', $logEntry);
-                
+
                 return null;
             }
-            
+
             // Convert serial number to string if it's numeric
             if (isset($row['serial_number']) && is_numeric($row['serial_number'])) {
                 $row['serial_number'] = (string) $row['serial_number'];
@@ -432,17 +432,19 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             // Check if asset already exists by asset tag or serial number (using cached data)
             $serialNumber = trim($row['serial_number']);
             $assetTag = trim($row['asset_tag'] ?? '');
-            
+
             // Generate asset tag if not provided
             if (empty($assetTag)) {
                 $asset = new \App\Models\Asset();
                 $assetTag = $asset->generateAssetTag();
                 $row['asset_tag'] = $assetTag;
             }
-            
+
             // Check for duplicates in database
-            if (isset($this->existingSerialNumberCache[$serialNumber]) || 
-                (!empty($assetTag) && isset($this->existingAssetTagCache[$assetTag]))) {
+            if (
+                isset($this->existingSerialNumberCache[$serialNumber]) ||
+                (! empty($assetTag) && isset($this->existingAssetTagCache[$assetTag]))
+            ) {
                 $this->skippedCount++;
                 return null; // Skip this row
             }
@@ -472,24 +474,24 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             // Validate lookup fields exist
             $categoryId = $this->getLookupId($this->categoryCache, $row['category'] ?? '', 'category');
             $supplierId = $this->getLookupId($this->supplierCache, $row['supplier'] ?? '', 'supplier');
-            
+
             // Try multiple possible column names for branch
             $branchValue = $row['Current Branch'] ?? $row['current_branch'] ?? $row['branch'] ?? '';
             $branchId = $this->getLookupId($this->branchCache, $branchValue, 'branch');
-            
+
             // Try multiple possible column names for department
             $departmentValue = $row['Current Department'] ?? $row['current_department'] ?? $row['department'] ?? '';
             $departmentId = $this->getLookupId($this->departmentCache, $departmentValue, 'department');
-            
+
             // Handle assigned to user
             $assignedToValue = $row['Assigned To'] ?? $row['assigned_to'] ?? $row['AssignedTo'] ?? '';
             $userId = null;
-            if (!empty($assignedToValue) && strtolower(trim($assignedToValue)) !== 'n/a' && strtolower(trim($assignedToValue)) !== 'na') {
+            if (! empty($assignedToValue) && strtolower(trim($assignedToValue)) !== 'n/a' && strtolower(trim($assignedToValue)) !== 'na') {
                 $userId = $this->getLookupId($this->userCache, $assignedToValue, 'user');
             }
 
             // Log errors for missing lookup records
-            if (!$categoryId && !empty($row['category'])) {
+            if (! $categoryId && ! empty($row['category'])) {
                 $logEntry = [
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -502,7 +504,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 $this->writeLog('lookup_error', 'Category does not exist in the system', $logEntry);
             }
 
-            if (!$branchId && !empty($branchValue)) {
+            if (! $branchId && ! empty($branchValue)) {
                 $logEntry = [
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -517,7 +519,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 return null; // Branch is required
             }
 
-            if (!$departmentId && !empty($departmentValue)) {
+            if (! $departmentId && ! empty($departmentValue)) {
                 $logEntry = [
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -530,7 +532,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 $this->writeLog('lookup_error', 'Department does not exist in the system', $logEntry);
             }
 
-            if (!$supplierId && !empty($row['supplier'])) {
+            if (! $supplierId && ! empty($row['supplier'])) {
                 $logEntry = [
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -559,7 +561,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                     'model' => trim($row['model'] ?? ''),
                     'brand' => trim($row['brand'] ?? ''),
                     'purchase_date' => $purchaseDate,
-                    'purchase_price' => !empty($row['purchase_price']) ? floatval($row['purchase_price']) : null,
+                    'purchase_price' => ! empty($row['purchase_price']) ? floatval($row['purchase_price']) : null,
                     'warranty_end_date' => $warrantyEndDate,
                     'condition' => strtolower(trim($row['condition'] ?? 'good')),
                     'status' => strtolower(trim($row['status'] ?? 'active')),
@@ -584,7 +586,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 if ($this->importedCount % 100 === 0) {
                     // Force garbage collection every 100 records
                     gc_collect_cycles();
-                    
+
                     // Log memory usage for monitoring
                     $memoryUsage = memory_get_usage(true);
                     $memoryPeak = memory_get_peak_usage(true);
@@ -596,23 +598,21 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 }
 
                 return $asset;
-
             } catch (\Exception $e) {
                 DB::rollBack();
                 throw $e; // Re-throw to be caught by outer try-catch
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->skippedCount++;
-            
+
             $errorMessage = "Error importing asset row: " . $e->getMessage();
             Log::error($errorMessage, [
                 'row' => $row,
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Write to log file
             $logEntry = [
                 'type' => 'import_error',
@@ -625,7 +625,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 'timestamp' => now()->toDateTimeString(),
             ];
             $this->writeLog('import_error', $errorMessage, $logEntry);
-            
+
             $this->errors[] = [
                 'row' => $this->currentRowNumber,
                 'error' => $errorMessage
@@ -651,12 +651,12 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             'condition' => ['nullable', Rule::in(['new', 'good', 'fair', 'poor', 'damaged', 'New', 'Good', 'Fair', 'Poor', 'Damaged'])],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'maintenance', 'retired', 'lost', 'stolen', 'Active', 'Inactive', 'Maintenance', 'Retired', 'Lost', 'Stolen'])],
             'purchase_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Purchase date must be a valid date format.');
                 }
             }],
             'warranty_end_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Warranty end date must be a valid date format.');
                 }
             }],
@@ -699,7 +699,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         // Optimize batch size based on available memory
         $memoryLimit = ini_get('memory_limit');
         $memoryBytes = $this->convertToBytes($memoryLimit);
-        
+
         // For large memory (2GB+), use larger batches
         if ($memoryBytes >= 2 * 1024 * 1024 * 1024) {
             return 200; // 200 records per batch
@@ -718,7 +718,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
         // Optimize chunk size based on available memory
         $memoryLimit = ini_get('memory_limit');
         $memoryBytes = $this->convertToBytes($memoryLimit);
-        
+
         // For large memory (2GB+), use larger chunks
         if ($memoryBytes >= 2 * 1024 * 1024 * 1024) {
             return 500; // 500 records per chunk
@@ -735,23 +735,23 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     public function onError(\Throwable $e)
     {
         $this->skippedCount++;
-        
+
         $errorMessage = "Error importing asset row: " . $e->getMessage();
         Log::error($errorMessage, [
             'row' => $this->currentRowNumber,
             'exception' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
-        
+
         // Extract the problematic row data for better error reporting
         $rowData = $e->getTrace()[0]['args'][0] ?? [];
         $problematicValue = 'N/A';
-        
+
         // Try to identify the specific field that caused the error
         $fieldName = null;
         $cleanErrorMessage = $errorMessage;
         $problematicValue = 'N/A';
-        
+
         if (strpos($errorMessage, 'Undefined variable') !== false) {
             // Extract variable name from error message
             preg_match('/Undefined variable \$(\w+)/', $errorMessage, $matches);
@@ -792,7 +792,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             $cleanErrorMessage = "Error processing row data";
             $problematicValue = "Check all required fields";
         }
-        
+
         // Write to log file
         $logEntry = [
             'type' => 'import_error',
@@ -806,7 +806,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             'timestamp' => now()->toDateTimeString(),
         ];
         $this->writeLog('import_error', $cleanErrorMessage, $logEntry);
-        
+
         $this->errors[] = [
             'error' => $errorMessage,
             'row' => $this->currentRowNumber
@@ -854,7 +854,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
     {
         foreach ($failures as $failure) {
             $this->skippedCount++;
-            
+
             $errorMessage = "Validation failed: " . implode(', ', $failure->errors());
             Log::warning($errorMessage, [
                 'row' => $this->currentRowNumber, // Use custom counter instead of failure->row()
@@ -862,7 +862,7 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 'errors' => $failure->errors(),
                 'values' => $failure->values()
             ]);
-            
+
             // Write to log file
             $logEntry = [
                 'type' => 'validation_error',
@@ -873,21 +873,21 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 'timestamp' => now()->toDateTimeString(),
             ];
             $this->writeLog('validation_error', $errorMessage, $logEntry);
-            
+
             $this->errors[] = [
                 'row' => $this->currentRowNumber, // Use custom counter instead of failure->row()
                 'error' => $errorMessage
             ];
         }
     }
-    
+
     /**
      * Log summary of import results
      */
     public function logImportSummary()
     {
         $stats = $this->getImportStats();
-        
+
         // Log duplicate assets found in database
         if ($this->duplicateAssetInDb > 0) {
             $this->writeLog('duplicate_summary', "Skipped {$this->duplicateAssetInDb} assets that already exist in database", [
@@ -895,16 +895,16 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
                 'type' => 'assets_already_in_database'
             ]);
         }
-        
+
         // Log duplicate serial numbers within Excel file
-        if (!empty($this->duplicateSerialInExcel)) {
+        if (! empty($this->duplicateSerialInExcel)) {
             $this->writeLog('duplicate_serial_summary', "Found " . count($this->duplicateSerialInExcel) . " duplicate serial numbers within Excel file", [
                 'duplicate_count' => count($this->duplicateSerialInExcel),
                 'duplicates' => $this->duplicateSerialInExcel,
                 'type' => 'duplicate_serials_in_excel'
             ]);
         }
-        
+
         // Log overall import summary
         $this->writeLog('import_summary', "Import completed with {$stats['imported']} assets imported and {$stats['skipped']} skipped", [
             'imported' => $stats['imported'],
@@ -926,10 +926,10 @@ class ImportAsset implements ToModel, WithHeadingRow, WithValidation, WithBatchI
             'timestamp' => now()->toDateTimeString(),
             'import_id' => $this->importId
         ], $context);
-        
+
         // Write to general asset import log
         File::append(storage_path('logs/asset_import.log'), json_encode($logEntry) . PHP_EOL);
-        
+
         // Also write to specific log file if we have an import ID
         if ($this->importId) {
             $specificLogPath = storage_path("logs/asset_import_{$this->importId}.log");

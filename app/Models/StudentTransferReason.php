@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class StudentTransferReason extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'transfer_reason',
         'description'

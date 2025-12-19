@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class DesignationLeaveQuota extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $guarded = [];
 
     public function leaveType()

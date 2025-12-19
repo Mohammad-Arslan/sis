@@ -92,7 +92,6 @@ class PermissionController extends Controller
         try {
             return $permission->delete();
             //return redirect(route('permissions.index'))->with('success', 'Permission record has been deleted');
-
         } catch (QueryException $e) {
             print_r($e->errorInfo);
         }

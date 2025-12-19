@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FamilyInformation extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'guardian_id',
@@ -16,8 +17,11 @@ class FamilyInformation extends Model
         'CNIC'
     ];
 
-    public static function create_record($data) {
-        if (isset($data->guardian_id)) return;
+    public static function create_record($data)
+    {
+        if (isset($data->guardian_id)) {
+            return;
+        }
 
         self::create([
             'guardian_id' => $data->guardian_id,
@@ -26,11 +30,13 @@ class FamilyInformation extends Model
         ]);
     }
 
-    public function parent() {
+    public function parent()
+    {
         return $this->belongsTo(Guardian::class, 'guardian_id', 'id');
     }
 
-    public function children() {
+    public function children()
+    {
         return $this->hasMany(SiblingInformation::class);
     }
 }

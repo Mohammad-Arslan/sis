@@ -12,8 +12,7 @@ class DesignationLeaveQuotaController extends Controller
     public function index(Request $request)
     {
 
-        if($request->ajax())
-        {
+        if ($request->ajax()) {
             $data = DesignationLeaveQuota::with(['leaveType','designation']);
             //dd($data->get()->toArray());
             if ($request->desig_id && $request->desig_id > 0) {
@@ -24,8 +23,7 @@ class DesignationLeaveQuotaController extends Controller
                 $data = $data->where('leave_type_id', $request->leavetype_id);
             }
 
-            if($request->searchName && $request->searchName != null)
-            {
+            if ($request->searchName && $request->searchName != null) {
                 $data = $data->orWhereHas('designation', function ($query) use ($request) {
                     $query->where('designation_name', 'like', '%' . $request->searchName . '%');
                 });
@@ -81,7 +79,7 @@ class DesignationLeaveQuotaController extends Controller
     {
         if ($id != null) {
             $leaveQuota = DesignationLeaveQuota::find($id);
-            if (!empty($leaveQuota)) {
+            if (! empty($leaveQuota)) {
                 $designationLeaveQuotas = DesignationLeaveQuota::all();
                 return view('settings.designation_leave_quotas.index', compact('designationLeaveQuotas', 'leaveQuota'));
             }
@@ -98,7 +96,7 @@ class DesignationLeaveQuotaController extends Controller
 
     public function getEmployeeLeaveQouta($id)
     {
-        $leaveQuotas = DesignationLeaveQuota::with('leaveType')->where('designation_id',$id)->get();
+        $leaveQuotas = DesignationLeaveQuota::with('leaveType')->where('designation_id', $id)->get();
         return view('employees.leave_applications.leave_quotas', compact('leaveQuotas'));
     }
 }

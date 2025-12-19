@@ -13,7 +13,6 @@ use App\Models\Town;
 use App\Models\User;
 use App\Models\Branch;
 use App\Models\NetworkAssociateBranch;
-
 use Illuminate\Http\Request;
 use DataTables;
 
@@ -34,7 +33,6 @@ class NetworkAssociateController extends Controller
             }
 
             if ($request->searchTerm && strlen($request->searchTerm) > 3) {
-
                 $data->orWhere('NTN', 'like', '%' . $request->searchTerm . '%');
                 $data->orWhere('STRN', 'like', '%' . $request->searchTerm . '%');
 
@@ -49,7 +47,7 @@ class NetworkAssociateController extends Controller
                 ->addIndexColumn()
                 ->addColumn('user_name', function ($row) {
                     $name = $row->user ? $row->user->name : 'N/A';
-                    return '<a href="' . route('network-associates.edit', $row->id) . '?tab=nwa' . '">'.$name .'</a>';
+                    return '<a href="' . route('network-associates.edit', $row->id) . '?tab=nwa' . '">' . $name . '</a>';
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<a href="' . route('network-associates.edit', $row->id) . '?tab=nwa' . '"  class="btn btn-sm btn-success btn-icon waves-effect waves-light">
@@ -135,7 +133,7 @@ class NetworkAssociateController extends Controller
     public function show(NetworkAssociate $networkAssociate)
     {
         $data['nwa_branches'] = $networkAssociate->branches ? $networkAssociate->branches->pluck('id')->toArray() : array();
-        $data['branches'] = Branch::where(['company_id' => $networkAssociate->company_id])->doesntHave('nwa')->orWhereIn('id',$data['nwa_branches'])->get();
+        $data['branches'] = Branch::where(['company_id' => $networkAssociate->company_id])->doesntHave('nwa')->orWhereIn('id', $data['nwa_branches'])->get();
 
         return view('network_associates.assign_branch_to_nwa', $data);
     }
@@ -161,7 +159,7 @@ class NetworkAssociateController extends Controller
             'countries' => $countries,
         ];
 
-        if (!empty($contactInformation)) {
+        if (! empty($contactInformation)) {
             $states = State::where('country_id', $contactInformation->country_id)->get();
             $cities = City::where('state_id', $contactInformation->state_id)->get();
             $towns = Town::where('city_id', $contactInformation->city_id)->get();
@@ -194,8 +192,9 @@ class NetworkAssociateController extends Controller
             'STRN' => 'required'
         ];
 
-        if (isset($request->password) && !empty($request->password))
+        if (isset($request->password) && ! empty($request->password)) {
             $validation['password'] = 'min:8';
+        }
 
         request()->validate($validation);
 

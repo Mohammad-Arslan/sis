@@ -34,15 +34,15 @@ class StudentLedgerController extends Controller
                     'invoice.arrears_carried_from',
                     'invoice.arrears_history'
                 ]);
-            
+
             if ($request->academic_year_id) {
                 $data = $data->whereHas('invoice.student_fee_package.academic_year', function ($q) use ($request) {
                     $q->where('academic_year_id', $request->academic_year_id);
                 });
             }
-            
+
             $data = $data->get();
-            
+
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('month_string', function ($row) {
@@ -58,42 +58,42 @@ class StudentLedgerController extends Controller
                     return isset($row->invoice) ? $row->invoice->invoice_no : '<i class="text-muted">Not Generated</i>';
                 })
                 ->addColumn('debit', function ($row) {
-                    if (!isset($row->invoice)) {
+                    if (! isset($row->invoice)) {
                         return '<span class="text-muted">0</span>';
                     }
-                    
+
                     // Use normalized structure - total_payable from student_invoices table
                     $totalPayable = $row->invoice->total_payable ?? 0;
-                    
+
                     // Check for arrears from previous months that were carried to this invoice
                     $arrearsCarried = 0;
                     if ($row->invoice->arrears_carried_from) {
                         $arrearsCarried = $row->invoice->arrears_carried_from->sum('amount');
                     }
-                    
+
                     // Calculate fine if due date has passed and arrears not cleared
                     $fine = 0;
                     $isArrearsCleared = $row->invoice->arrears_history()
                         ->where('cleared_date', '!=', null)
                         ->exists();
-                    
-                    if ($row->invoice->due_date && now()->gt($row->invoice->due_date) && !$isArrearsCleared) {
+
+                    if ($row->invoice->due_date && now()->gt($row->invoice->due_date) && ! $isArrearsCleared) {
                         $fine = $totalPayable * 0.025; // 2.5% fine
                     }
-                    
+
                     $totalWithFine = $totalPayable + $fine;
-                    
+
                     return number_format($totalWithFine);
                 })
                 ->addColumn('credit', function ($row) {
-                    if (!isset($row->invoice)) {
+                    if (! isset($row->invoice)) {
                         return '<span class="text-muted">0</span>';
                     }
                     $totalPaid = $row->invoice->payments->sum('amount') ?? 0;
                     return $totalPaid > 0 ? number_format($totalPaid) : '<span class="text-muted">0</span>';
                 })
                 ->addColumn('balance', function ($row) {
-                    if (!isset($row->invoice)) {
+                    if (! isset($row->invoice)) {
                         return '<span class="text-muted">0</span>';
                     }
                     $totalPayable = $row->invoice->total_payable ?? 0;

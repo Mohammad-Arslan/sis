@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\QuestionDimension;
 
+use App\Models\QuestionDimension;
 use Illuminate\Http\Request;
 
 class QuestionDimensionController extends Controller

@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Mail;
 /*implements ShouldQueue*/
 class SendEmail
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public $tries = 5;
     public $timeout = 100;
@@ -30,13 +33,13 @@ class SendEmail
     public function __construct($details)
     {
         $this->details = $details;
-        $this->subject = isset($this->details['subject']) && !empty($this->details['subject']) ? $this->details['subject'] : '';
-        $this->template = isset($this->details['template']) && !empty($this->details['template']) ? $this->details['template'] : '';
-        $this->name = isset($this->details['name']) && !empty($this->details['name']) ? $this->details['name'] : 'Ozoned Digital';
-        $this->from = isset($this->details['from']) && !empty($this->details['from']) ? $this->details['from'] : '';
-        $this->message = isset($this->details['message']) && !empty($this->details['message']) ? $this->details['message'] : '';
-        $this->documents = isset($this->details['documents']) && !empty($this->details['documents']) ? $this->details['documents'] : [];
-        $this->bcc = isset($this->details['bcc']) && !empty($this->details['bcc']) ? $this->details['bcc'] : null;
+        $this->subject = isset($this->details['subject']) && ! empty($this->details['subject']) ? $this->details['subject'] : '';
+        $this->template = isset($this->details['template']) && ! empty($this->details['template']) ? $this->details['template'] : '';
+        $this->name = isset($this->details['name']) && ! empty($this->details['name']) ? $this->details['name'] : 'Ozoned Digital';
+        $this->from = isset($this->details['from']) && ! empty($this->details['from']) ? $this->details['from'] : '';
+        $this->message = isset($this->details['message']) && ! empty($this->details['message']) ? $this->details['message'] : '';
+        $this->documents = isset($this->details['documents']) && ! empty($this->details['documents']) ? $this->details['documents'] : [];
+        $this->bcc = isset($this->details['bcc']) && ! empty($this->details['bcc']) ? $this->details['bcc'] : null;
     }
 
     /**
@@ -51,8 +54,9 @@ class SendEmail
         foreach ($this->details['email'] as $emailAddress) {
             $generateEmail = Mail::to($emailAddress);
 
-            if(isset($this->bcc))
+            if (isset($this->bcc)) {
                 $generateEmail = $generateEmail->bcc($this->bcc);
+            }
 
             $generateEmail->send($email);
         }

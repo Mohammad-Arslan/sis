@@ -45,7 +45,7 @@ class SendNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
+        return (new MailMessage())
             ->greeting($this->title)
             ->lines(explode('<br />', nl2br($this->message)))
             ->salutation($this->salutation);

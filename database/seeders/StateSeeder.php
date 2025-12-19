@@ -46,12 +46,14 @@ class StateSeeder extends Seeder
         if (isset($states)) {
             foreach ($states as $state) {
                 $checkStatus = State::where('state_name', $state['state_name'])->first();
-                if (empty($checkStatus))
+                if (empty($checkStatus)) {
                     $dataToInsert[] = $state;
+                }
             }
 
-            if (sizeof($dataToInsert))
+            if (sizeof($dataToInsert)) {
                 State::insert($dataToInsert);
+            }
         }
     }
 }

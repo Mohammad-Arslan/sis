@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class FeeStructureDetail extends Model
 {
     use SoftDeletes;
+
     protected $fillable = [
     'new_school_fee_structure_id',
     'nearest_bss_school',
@@ -35,7 +36,4 @@ class FeeStructureDetail extends Model
     {
         return $this->belongsTo(AcademicYear::class, 'academic_year_id');
     }
-
-
 }
-

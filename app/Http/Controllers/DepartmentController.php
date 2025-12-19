@@ -18,7 +18,6 @@ class DepartmentController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Department::with('company')->get();
             return Datatables::of($data)
                 ->addIndexColumn()

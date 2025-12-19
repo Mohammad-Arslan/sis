@@ -20,10 +20,8 @@ class AdmissionQueryController extends Controller
             $data = AdmissionQuery::store_update_admission_query($request->all());
 
             return response()->json(['code' => 200, 'status' => 'success', 'message' => 'Data Saved Successfully.','data' => $data]);
-
         } catch (\Exception $exception) {
             return response()->json(['code' => 422, 'status' => 'false', 'message' => $exception->getMessage(), 'data' => new \stdClass()]);
         }
     }
-
 }

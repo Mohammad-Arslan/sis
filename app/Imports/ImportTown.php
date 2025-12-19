@@ -17,7 +17,7 @@ class ImportTown implements ToModel
         return new Town([
             'town_name' => $row[0],
             'state_id' => $row[2],
-            'created_at'=>$row[3]
+            'created_at' => $row[3]
         ]);
     }
 }

@@ -12,15 +12,15 @@ class PermissionsSeeder extends Seeder
    *
    * @return void
    */
-  public function run()
-  {
-    // Skip if permissions already exist
-    if (DB::table('permissions')->where('system_module_id', '>', 0)->count() > 0) {
-      $this->command->info('Permissions already exist, skipping...');
-      return;
-    }
-    
-    DB::insert("INSERT INTO `permissions` (`name`, `display_name`, `description`, `system_module_id`, `created_at`, `updated_at`) VALUES
+    public function run()
+    {
+      // Skip if permissions already exist
+        if (DB::table('permissions')->where('system_module_id', '>', 0)->count() > 0) {
+            $this->command->info('Permissions already exist, skipping...');
+            return;
+        }
+
+        DB::insert("INSERT INTO `permissions` (`name`, `display_name`, `description`, `system_module_id`, `created_at`, `updated_at`) VALUES
     ( 'add-employee-basic', 'Add Employee Basic', 'Add employee basic information', 1, '2022-03-15 15:16:08', '2022-04-17 19:36:52'),
     ( 'add-employee-service-info', 'Add Employee Service Info', 'Add employee service information', 1, '2022-03-15 15:16:29', '2022-04-17 19:36:40'),
     ( 'add-employee-company-info', 'Add Employee Company Info', 'Add employee company information', 1, '2022-03-15 15:17:01', '2022-04-17 19:36:27'),
@@ -186,5 +186,5 @@ class PermissionsSeeder extends Seeder
     ( 'delete-attachments', 'Delete Attachments', 'Can Delete Attachments', NULL, '2022-07-06 06:11:34', '2022-07-06 06:11:34'),
     ( 'list-branding-marketing', 'List Branding Marketing', 'Can List Branding Marketing', NULL, '2022-07-07 02:21:01', '2022-07-07 02:21:01'),
     ( 'edit-employee-password', 'Edit Employee Password', 'Can update employee password', 1, '2022-07-07 05:03:02', '2022-07-07 05:03:02');");
-  }
+    }
 }

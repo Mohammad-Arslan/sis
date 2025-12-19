@@ -31,14 +31,14 @@ class UserSeeder extends Seeder
             ['email' => 'superadmin@academiqo.com'],
             $users[0]
         );
-        
+
         // Ensure user has super_admin role
-        if (!$user->hasRole('super_admin')) {
+        if (! $user->hasRole('super_admin')) {
             $user->addRole('super_admin'); // Updated for Laratrust v8
         }
 
         // Create Employee Profile for Super Admin if doesn't exist
-        if (!$user->employee) {
+        if (! $user->employee) {
             Employee::create([
                 'user_id' => $user->id,
                 'employee_id' => 'SA-001',

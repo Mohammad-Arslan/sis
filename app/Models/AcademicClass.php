@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class AcademicClass extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     public function branch_class_sections()
     {

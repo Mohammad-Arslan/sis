@@ -23,7 +23,7 @@ class UpdateCountryRequest extends FormRequest
     public function rules(): array
     {
         $countryId = $this->route('country')->id;
-        
+
         return [
             'country_name' => [
                 'required',
@@ -49,4 +49,3 @@ class UpdateCountryRequest extends FormRequest
         ];
     }
 }
-

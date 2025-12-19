@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class ClassStudentSubject extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'class_student_id',
@@ -17,11 +18,13 @@ class ClassStudentSubject extends Model
         'active_till'
     ];
 
-    public function subject(){
-        return $this->belongsTo(Subject::class,'subject_id','id');
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
-    public function class_student(){
-        return $this->belongsTo(ClassStudent::class,'class_student_id','id');
+    public function class_student()
+    {
+        return $this->belongsTo(ClassStudent::class, 'class_student_id', 'id');
     }
 }

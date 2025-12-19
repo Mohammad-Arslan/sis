@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class HomeWorkDiaryAttachment extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'diary_detail_id',
@@ -23,7 +25,6 @@ class HomeWorkDiaryAttachment extends Model
 
     public function DiaryDetial()
     {
-        return $this->belongsTo(HomeWorkDiaryDetial::class, 'diary_detail_id','id');
+        return $this->belongsTo(HomeWorkDiaryDetial::class, 'diary_detail_id', 'id');
     }
-
 }

@@ -15,14 +15,15 @@ class AcademicCalendarController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax()){
-
+        if ($request->ajax()) {
             $academic_calendar = GeneralDocument::whereHas(
-                'attachment_type' , function($q){
-                $q->where('slug','academic_calendar');
-            })->where('status','active');
+                'attachment_type',
+                function ($q) {
+                    $q->where('slug', 'academic_calendar');
+                }
+            )->where('status', 'active');
 
-            $academic_calendar = GeneralDocument::filteration($request,$academic_calendar);
+            $academic_calendar = GeneralDocument::filteration($request, $academic_calendar);
 
             $academic_calendar = $academic_calendar->get();
 

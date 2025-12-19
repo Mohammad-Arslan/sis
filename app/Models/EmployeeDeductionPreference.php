@@ -43,7 +43,7 @@ class EmployeeDeductionPreference extends Model
         if ($this->type === 'percentage') {
             return $grossSalary * ($this->amount / 100);
         }
-        
+
         return $this->amount;
     }
 }

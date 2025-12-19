@@ -10,7 +10,11 @@ use App\Traits\SerializeDateTrait;
 
 class Town extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait, LogsActivity;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+    use LogsActivity;
+
     protected $fillable = [
         'town_name',
         'abbreviation',
@@ -22,7 +26,8 @@ class Town extends Model
         'updated_at',
     ];
 
-    public function cities(){
-        return $this->belongsTo(City::class,'city_id','id');
+    public function cities()
+    {
+        return $this->belongsTo(City::class, 'city_id', 'id');
     }
 }

@@ -9,11 +9,11 @@ class LogLogout
 {
     public function __construct(
         private readonly ActivityLoggerService $logger
-    ) {}
+    ) {
+    }
 
     public function handle(Logout $event): void
     {
         $this->logger->logLogout($event->user->id);
     }
 }
-

@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LessonPlan extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'branch_id',
         'academic_year_id',
@@ -41,28 +44,34 @@ class LessonPlan extends Model
         'updated_at',
     ];
 
-    public function academic_year(){
-        return $this->belongsTo(AcademicYear::class,'academic_year_id','id');
+    public function academic_year()
+    {
+        return $this->belongsTo(AcademicYear::class, 'academic_year_id', 'id');
     }
 
-    public function branch(){
-        return $this->belongsTo(Branch::class,'branch_id','id');
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
-    public function term(){
-        return $this->belongsTo(Term::class,'term_id','id');
+    public function term()
+    {
+        return $this->belongsTo(Term::class, 'term_id', 'id');
     }
 
-    public function week(){
-        return $this->belongsTo(Week::class,'week_id','id');
+    public function week()
+    {
+        return $this->belongsTo(Week::class, 'week_id', 'id');
     }
 
-    public function com_class(){
-        return $this->belongsTo(ComClass::class,'com_class_id','id');
+    public function com_class()
+    {
+        return $this->belongsTo(ComClass::class, 'com_class_id', 'id');
     }
 
-    public function subject(){
-        return $this->belongsTo(Subject::class,'subject_id','id');
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
     public function attachments()
@@ -72,26 +81,26 @@ class LessonPlan extends Model
 
     public function student_learning_outcomes()
     {
-        return $this->hasMany(StudentLearningOutcome::class, 'lesson_plan_id','id');
+        return $this->hasMany(StudentLearningOutcome::class, 'lesson_plan_id', 'id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'approved_by','id');
+        return $this->belongsTo(User::class, 'approved_by', 'id');
     }
 
     public function creater()
     {
-        return $this->belongsTo(User::class, 'created_by','id');
+        return $this->belongsTo(User::class, 'created_by', 'id');
     }
 
     public function sections()
     {
-        return $this->belongsToMany(Section::class, 'lesson_plan_sections','lesson_plan_id','section_id');
+        return $this->belongsToMany(Section::class, 'lesson_plan_sections', 'lesson_plan_id', 'section_id');
     }
 
     public function state()
     {
-        return $this->belongsTo(State::class,'state_id','id');
+        return $this->belongsTo(State::class, 'state_id', 'id');
     }
 }

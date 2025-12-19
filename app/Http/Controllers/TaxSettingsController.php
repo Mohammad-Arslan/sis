@@ -21,7 +21,8 @@ class TaxSettingsController extends Controller
 {
     public function __construct(
         private readonly TaxSettingsService $service
-    ) {}
+    ) {
+    }
 
     /**
      * Display the unified tax settings page
@@ -30,7 +31,7 @@ class TaxSettingsController extends Controller
     {
         $taxTypes = $this->service->getTaxTypes();
         $states = $this->service->getStates();
-        
+
         return view('settings.tax.index', compact('taxTypes', 'states'));
     }
 
@@ -39,12 +40,12 @@ class TaxSettingsController extends Controller
      */
     public function getTaxTypes(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = TaxType::query();
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'TaxType'))
@@ -57,59 +58,63 @@ class TaxSettingsController extends Controller
      */
     public function getTaxes(Request $request): JsonResponse
     {
-        if (!$request->ajax()) {
+        if (! $request->ajax()) {
             return response()->json(['error' => 'Invalid request'], 400);
         }
 
         $data = Tax::with(['tax_type', 'state']);
-        
+
         if ($request->tax_type_id && $request->tax_type_id > 0) {
             $data = $data->where('tax_type_id', $request->tax_type_id);
         }
-        
+
         if ($request->state_id && $request->state_id > 0) {
             $data = $data->where('state_id', $request->state_id);
         }
-        
+
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('tax_type_name', fn($row) => $row->tax_type?->name ?? 'N/A')
             ->addColumn('state_name', fn($row) => $row->state?->state_name ?? 'N/A')
             ->addColumn('tax_percentage_formatted', fn($row) => number_format($row->tax_percentage, 2) . '%')
-            ->addColumn('active_from_formatted', function($row) {
-                if (!$row->active_from) return 'N/A';
-                return is_string($row->active_from) 
+            ->addColumn('active_from_formatted', function ($row) {
+                if (! $row->active_from) {
+                    return 'N/A';
+                }
+                return is_string($row->active_from)
                     ? Carbon::parse($row->active_from)->format('Y-m-d')
                     : $row->active_from->format('Y-m-d');
             })
-            ->addColumn('active_till_formatted', function($row) {
-                if (!$row->active_till) return 'N/A';
-                return is_string($row->active_till) 
+            ->addColumn('active_till_formatted', function ($row) {
+                if (! $row->active_till) {
+                    return 'N/A';
+                }
+                return is_string($row->active_till)
                     ? Carbon::parse($row->active_till)->format('Y-m-d')
                     : $row->active_till->format('Y-m-d');
             })
             ->addColumn('action', fn($row) => $this->service->generateModalActionButtons($row->id, 'Tax'))
-            ->filterColumn('tax_type_name', function($query, $keyword) {
-                $query->whereHas('tax_type', function($q) use ($keyword) {
+            ->filterColumn('tax_type_name', function ($query, $keyword) {
+                $query->whereHas('tax_type', function ($q) use ($keyword) {
                     $q->where('name', 'like', "%{$keyword}%");
                 });
             })
-            ->filterColumn('state_name', function($query, $keyword) {
-                $query->whereHas('state', function($q) use ($keyword) {
+            ->filterColumn('state_name', function ($query, $keyword) {
+                $query->whereHas('state', function ($q) use ($keyword) {
                     $q->where('state_name', 'like', "%{$keyword}%");
                 });
             })
-            ->filterColumn('tax_percentage', function($query, $keyword) {
+            ->filterColumn('tax_percentage', function ($query, $keyword) {
                 // Remove % sign and search on numeric value
                 $keyword = str_replace('%', '', $keyword);
                 if (is_numeric($keyword)) {
                     $query->where('tax_percentage', 'like', "%{$keyword}%");
                 }
             })
-            ->filterColumn('active_from', function($query, $keyword) {
+            ->filterColumn('active_from', function ($query, $keyword) {
                 $query->whereDate('active_from', 'like', "%{$keyword}%");
             })
-            ->filterColumn('active_till', function($query, $keyword) {
+            ->filterColumn('active_till', function ($query, $keyword) {
                 $query->whereDate('active_till', 'like', "%{$keyword}%");
             })
             ->rawColumns(['action'])
@@ -170,14 +175,14 @@ class TaxSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteTaxType($taxType);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete tax type.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Tax type deleted successfully.'
@@ -207,7 +212,7 @@ class TaxSettingsController extends Controller
         try {
             $data = $request->validated();
             $data['created_by'] = auth()->id();
-            
+
             $tax = $this->service->createTax($data);
 
             return response()->json([
@@ -256,14 +261,14 @@ class TaxSettingsController extends Controller
     {
         try {
             $deleted = $this->service->deleteTax($tax);
-            
-            if (!$deleted) {
+
+            if (! $deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete tax.'
                 ], 422);
             }
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Tax deleted successfully.'
@@ -299,7 +304,7 @@ class TaxSettingsController extends Controller
     public function getTax(Tax $tax): JsonResponse
     {
         $tax = $tax->load(['tax_type', 'state']);
-        
+
         // Format dates for frontend (Y-m-d format for date inputs)
         $data = $tax->toArray();
         if ($tax->active_from instanceof \Carbon\Carbon) {
@@ -312,7 +317,7 @@ class TaxSettingsController extends Controller
                 // Keep original if parsing fails
             }
         }
-        
+
         if ($tax->active_till instanceof \Carbon\Carbon) {
             $data['active_till'] = $tax->active_till->format('Y-m-d');
         } elseif ($tax->active_till && is_string($tax->active_till)) {
@@ -323,8 +328,7 @@ class TaxSettingsController extends Controller
                 // Keep original if parsing fails
             }
         }
-        
+
         return response()->json($data);
     }
 }
-

@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class FeeConcession extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'company_id',
         'branch_id',
@@ -34,7 +36,7 @@ class FeeConcession extends Model
 
     public function child_concession_type()
     {
-        return $this->belongsTo(FeeConcessionType::class, 'fee_concession_type_id', 'id')->whereIn('id',[8,9]);
+        return $this->belongsTo(FeeConcessionType::class, 'fee_concession_type_id', 'id')->whereIn('id', [8,9]);
     }
 
     public function company()

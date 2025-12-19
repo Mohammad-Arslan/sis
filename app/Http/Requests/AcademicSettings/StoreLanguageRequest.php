@@ -35,4 +35,3 @@ class StoreLanguageRequest extends FormRequest
         ];
     }
 }
-

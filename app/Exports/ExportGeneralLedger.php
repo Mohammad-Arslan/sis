@@ -43,25 +43,25 @@ class ExportGeneralLedger implements WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        
+
         // Define transaction types and their sheet names
         $transactionTypes = [
             'Student Fee' => 'Student Fees',
-            'Late Fee' => 'Late Fees', 
+            'Late Fee' => 'Late Fees',
             'Arrears Fine' => 'Arrears Fines',
             'Payroll' => 'Payroll',
             'Asset Purchase' => 'Asset Purchases'
         ];
-        
+
         // Define which transaction types belong to which account types
         $accountTypeMapping = [
             'Revenue' => ['Student Fee', 'Late Fee', 'Arrears Fine'],
             'Expense' => ['Payroll', 'Asset Purchase']
         ];
-        
+
         // Determine which transaction types to include based on filters
         $transactionTypesToInclude = [];
-        
+
         if ($this->transactionType) {
             // If specific transaction type is selected, only create that sheet
             $transactionTypesToInclude = [$this->transactionType];
@@ -72,14 +72,14 @@ class ExportGeneralLedger implements WithMultipleSheets
             // If no filters, include all transaction types
             $transactionTypesToInclude = array_keys($transactionTypes);
         }
-        
+
         // Create sheets only for the determined transaction types
         foreach ($transactionTypesToInclude as $transactionType) {
             if (isset($transactionTypes[$transactionType])) {
                 $sheets[] = new GeneralLedgerSheet($transactionType, $transactionTypes[$transactionType], $this->fromDate, $this->toDate, $this->branchId, $this->accountType, $this->transactionType, $this->searchTerm);
             }
         }
-        
+
         return $sheets;
     }
 }
@@ -114,21 +114,21 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
     {
         ini_set('memory_limit', '512M');
         ini_set('max_execution_time', 300);
-        
+
         // Apply branch filter for non-admin users
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $this->branchId = get_branch_id();
         }
-        
+
         // Collect all financial transactions
         $transactions = collect();
-        
+
         // 1. Student Fee Revenue
         $feeQuery = StudentInvoice::with([
             'student:id,first_name,last_name,registration_no,roll_no,branch_id',
             'student.branch:id,br_name,branch_code'
         ]);
-        
+
         // Apply date filtering only if dates are provided
         if ($this->fromDate && $this->toDate) {
             $feeQuery->whereBetween('issue_date', [$this->fromDate, $this->toDate]);
@@ -137,15 +137,15 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
         } elseif ($this->toDate) {
             $feeQuery->where('issue_date', '<=', $this->toDate);
         }
-        
+
         if ($this->branchId) {
             $feeQuery->whereHas('student', function ($q) {
                 $q->where('branch_id', $this->branchId);
             });
         }
-        
+
         $studentInvoices = $feeQuery->get();
-        
+
         foreach ($studentInvoices as $invoice) {
             // Main fee revenue
             if ($invoice->total_payable > 0) {
@@ -161,7 +161,7 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
                     'transaction_type' => 'Student Fee'
                 ]);
             }
-            
+
             // Calculate Late Fee (2.5% of total_payable if due date passed)
             if ($invoice->due_date && $invoice->due_date < now()->toDateString()) {
                 $lateFeeAmount = $invoice->total_payable * 0.025; // 2.5% of total payable
@@ -180,14 +180,14 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
                 }
             }
         }
-        
+
         // 2.5. Arrears Fines from arrears_history table
         $arrearsQuery = StudentArrearsHistory::with([
             'student:id,first_name,last_name,branch_id',
             'student.branch:id,br_name',
             'from_invoice:id,invoice_no'
         ])->whereNull('cleared_date'); // Only uncleared arrears
-        
+
         // Apply date filtering
         if ($this->fromDate && $this->toDate) {
             $arrearsQuery->whereBetween('carried_date', [$this->fromDate, $this->toDate]);
@@ -196,15 +196,15 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
         } elseif ($this->toDate) {
             $arrearsQuery->where('carried_date', '<=', $this->toDate);
         }
-        
+
         if ($this->branchId) {
-            $arrearsQuery->whereHas('student', function($query) {
+            $arrearsQuery->whereHas('student', function ($query) {
                 $query->where('branch_id', $this->branchId);
             });
         }
-        
+
         $arrears = $arrearsQuery->get();
-        
+
         foreach ($arrears as $arrear) {
             $transactions->push([
                 'date' => $arrear->carried_date,
@@ -218,13 +218,13 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
                 'transaction_type' => 'Arrears Fine'
             ]);
         }
-        
+
         // 3. Payroll Expenses
         $payrollQuery = Payroll::with([
             'employee:id,preferred_name,branch_id',
             'employee.branch:id,br_name,branch_code'
         ]);
-        
+
         // Apply date filtering only if dates are provided
         if ($this->fromDate && $this->toDate) {
             $payrollQuery->whereBetween('processed_at', [$this->fromDate, $this->toDate]);
@@ -233,15 +233,15 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
         } elseif ($this->toDate) {
             $payrollQuery->where('processed_at', '<=', $this->toDate);
         }
-        
+
         if ($this->branchId) {
             $payrollQuery->whereHas('employee', function ($q) {
                 $q->where('branch_id', $this->branchId);
             });
         }
-        
+
         $payrolls = $payrollQuery->get();
-        
+
         foreach ($payrolls as $payroll) {
             $transactions->push([
                 'date' => $payroll->processed_at,
@@ -255,13 +255,13 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
                 'transaction_type' => 'Payroll'
             ]);
         }
-        
+
         // 4. Asset Purchases
         $assetQuery = Asset::with([
             'currentBranch:id,br_name,branch_code',
             'category:id,name'
         ]);
-        
+
         // Apply date filtering only if dates are provided
         if ($this->fromDate && $this->toDate) {
             $assetQuery->whereBetween('purchase_date', [$this->fromDate, $this->toDate]);
@@ -270,13 +270,13 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
         } elseif ($this->toDate) {
             $assetQuery->where('purchase_date', '<=', $this->toDate);
         }
-        
+
         if ($this->branchId) {
             $assetQuery->where('current_branch_id', $this->branchId);
         }
-        
+
         $assets = $assetQuery->get();
-        
+
         foreach ($assets as $asset) {
             // Asset purchase as expense (business expense)
             $transactions->push([
@@ -291,32 +291,32 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
                 'transaction_type' => 'Asset Purchase'
             ]);
         }
-        
+
         // Filter by transaction type for this sheet
-        $transactions = $transactions->filter(function($transaction) {
+        $transactions = $transactions->filter(function ($transaction) {
             return $transaction['transaction_type'] === $this->transactionType;
         });
-        
+
         // Apply additional filters if specified
         if ($this->filterTransactionType && $this->filterTransactionType !== $this->transactionType) {
             return collect(); // Return empty collection if filter doesn't match this sheet
         }
-        
+
         if ($this->filterAccountType) {
-            $transactions = $transactions->filter(function($transaction) {
+            $transactions = $transactions->filter(function ($transaction) {
                 return $transaction['account_type'] === $this->filterAccountType;
             });
         }
-        
+
         if ($this->searchTerm) {
             $searchTerm = strtolower($this->searchTerm);
-            $transactions = $transactions->filter(function($transaction) use ($searchTerm) {
+            $transactions = $transactions->filter(function ($transaction) use ($searchTerm) {
                 return strpos(strtolower($transaction['account']), $searchTerm) !== false ||
                        strpos(strtolower($transaction['description']), $searchTerm) !== false ||
                        strpos(strtolower($transaction['reference']), $searchTerm) !== false;
             });
         }
-        
+
         // Sort transactions by date
         return $transactions->sortBy('date');
     }
@@ -372,7 +372,7 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 // Style the header row with different colors for each transaction type
                 $headerColors = [
                     'Student Fee' => '28A745',    // Green
@@ -381,9 +381,9 @@ class GeneralLedgerSheet implements FromCollection, WithHeadings, WithMapping, S
                     'Payroll' => 'DC3545',        // Red
                     'Asset Purchase' => '6F42C1'  // Purple
                 ];
-                
+
                 $headerColor = $headerColors[$this->transactionType] ?? '4472C4';
-                
+
                 $event->sheet->getStyle('A1:I1')->applyFromArray([
                     'font' => [
                         'bold' => true,

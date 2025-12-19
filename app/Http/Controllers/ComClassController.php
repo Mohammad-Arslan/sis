@@ -32,7 +32,7 @@ class ComClassController extends Controller
 
         $data['attendance_types'] = AttendanceType::all();
 
-        return view('settings.classes.classes',$data);
+        return view('settings.classes.classes', $data);
     }
 
     /**
@@ -131,16 +131,12 @@ class ComClassController extends Controller
 
     public function importClass(Request $request)
     {
-        Excel::import(new ImportClass, $request->file('file')->store('files'));
+        Excel::import(new ImportClass(), $request->file('file')->store('files'));
         return redirect()->back();
     }
 
     public function exportClass(Request $request)
     {
-        return Excel::download(new ExportClass, 'classes.xlsx');
+        return Excel::download(new ExportClass(), 'classes.xlsx');
     }
-
-
-
-
 }

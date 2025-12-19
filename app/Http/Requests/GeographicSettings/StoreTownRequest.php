@@ -38,4 +38,3 @@ class StoreTownRequest extends FormRequest
         ];
     }
 }
-

@@ -12,11 +12,11 @@ class NationalitySeeder extends Seeder
    *
    * @return void
    */
-  public function run()
-  {
-    DB::insert("INSERT INTO `nationalities` (`nationality_name`, `created_at`) VALUES
+    public function run()
+    {
+        DB::insert("INSERT INTO `nationalities` (`nationality_name`, `created_at`) VALUES
     ('Pakistani', '" . \Carbon\Carbon::now() . "'),
     ('British', '" . \Carbon\Carbon::now() . "'),
     ('Chinese', '" . \Carbon\Carbon::now() . "');");
-  }
+    }
 }

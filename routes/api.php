@@ -3,12 +3,12 @@
 use App\Http\Controllers\Api\BiometricAttendanceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use \App\Http\Controllers\APIControllers\AuthController;
-use \App\Http\Controllers\APIControllers\FranchiseInquiryController;
+use App\Http\Controllers\APIControllers\AuthController;
+use App\Http\Controllers\APIControllers\FranchiseInquiryController;
 use App\Http\Controllers\APIControllers\CommonController;
-use \App\Http\Controllers\APIControllers\BankController;
-use \App\Http\Controllers\APIControllers\AdmissionQueryController;
-use \App\Http\Controllers\Api\GuardianController;
+use App\Http\Controllers\APIControllers\BankController;
+use App\Http\Controllers\APIControllers\AdmissionQueryController;
+use App\Http\Controllers\Api\GuardianController;
 use App\Http\Controllers\Api\StudentAttendanceController;
 use App\Http\Controllers\Api\GuardianInfoUpdateController;
 use App\Http\Controllers\Api\NotificationController;
@@ -17,7 +17,6 @@ use App\Http\Controllers\Api\StudentAssessmentController;
 use App\Http\Controllers\Api\StudentInvoiceController;
 use App\Http\Controllers\GuardianInfoUpdateController as ControllersGuardianInfoUpdateController;
 use App\Http\Controllers\Api\ViewHomeworkDetailApi;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -77,7 +76,4 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::post('/biometric-attendance', [BiometricAttendanceController::class, 'store']);
-
-
-
 });

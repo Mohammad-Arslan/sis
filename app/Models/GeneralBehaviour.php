@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class GeneralBehaviour extends Model
 {
-    use HasFactory, SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'title',
@@ -25,11 +26,11 @@ class GeneralBehaviour extends Model
 
     public function parent()
     {
-        return $this->belongsTo(self::class,'parent_id','id');
+        return $this->belongsTo(self::class, 'parent_id', 'id');
     }
 
     public function com_class()
     {
-        return $this->belongsTo(ComClass::class,'class_id','id');
+        return $this->belongsTo(ComClass::class, 'class_id', 'id');
     }
 }

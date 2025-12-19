@@ -72,7 +72,7 @@ class GeneralDocumentController extends Controller
         $query = $query->orderByDesc('id')->get();
 
         $data = array();
-        if (!empty($query)) {
+        if (! empty($query)) {
             foreach ($query as $key => $document) {
                 $nestedData['document_name'] = $document['document_name'];
                 $nestedData['branch_name'] = $document['branch'] ? $document['branch']['br_name'] : 'N/A';
@@ -128,7 +128,6 @@ class GeneralDocumentController extends Controller
         if ($request->document_type == 'url') {
             $input['file_name'] = $request->url;
         } else if ($request->hasfile('file')) {
-
             $extension = $request->file->extension();
             $file_basename = basename($request->file->getClientOriginalName(), '.' . $extension);
             $filename = $request->file->getClientOriginalName();
@@ -207,10 +206,10 @@ class GeneralDocumentController extends Controller
         if ($request->document_type == 'url') {
             $input['file_name'] = $request->url;
         } else if ($request->hasfile('file')) {
-
             $aws_previous_path = 'general_documents/' . $generalDocument->attachment_type_id . '/' . $generalDocument->file_name;
-            if (Storage::disk('s3')->exists($aws_previous_path))
+            if (Storage::disk('s3')->exists($aws_previous_path)) {
                 Storage::disk('s3')->delete($aws_previous_path);
+            }
 
             $extension = $request->file->extension();
             $file_basename = basename($request->file->getClientOriginalName(), '.' . $extension);
@@ -225,10 +224,11 @@ class GeneralDocumentController extends Controller
 
         $generalDocument->update($input);
 
-        if (isset($request->student_id))
+        if (isset($request->student_id)) {
             return redirect(route('students.edit', $request->student_id) . '?tab=student_image')->with('success', 'Form updated successfully');
-        else
+        } else {
             return redirect()->route('general-document.index')->with('success', 'Form updated successfully');
+        }
     }
 
     /**
@@ -249,7 +249,6 @@ class GeneralDocumentController extends Controller
     public function class_timetable(Request $request)
     {
         if ($request->ajax()) {
-
             $class_timetable = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -291,7 +290,6 @@ class GeneralDocumentController extends Controller
     public function subject_teacher_timetable(Request $request)
     {
         if ($request->ajax()) {
-
             $subject_teacher_timetable = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -340,7 +338,6 @@ class GeneralDocumentController extends Controller
     public function school_manual(Request $request)
     {
         if ($request->ajax()) {
-
             $school_manuals = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -363,10 +360,11 @@ class GeneralDocumentController extends Controller
         }
 
         $data['branches'] = Branch::all();
-        if (isSuperAdmin() || isHeadOfficeEmp())
+        if (isSuperAdmin() || isHeadOfficeEmp()) {
             $data['states'] = State::all();
-        else
+        } else {
             $data['states'] = State::where('id', get_branch_state_id())->get();
+        }
 
         return view('general_document.school_manual.index', $data);
     }
@@ -374,7 +372,6 @@ class GeneralDocumentController extends Controller
     public function infinity_teacher_guide(Request $request)
     {
         if ($request->ajax()) {
-
             $infinity_teacher_guide = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -405,7 +402,6 @@ class GeneralDocumentController extends Controller
     public function support_staff_uniform(Request $request)
     {
         if ($request->ajax()) {
-
             $infinity_teacher_guide = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -435,7 +431,6 @@ class GeneralDocumentController extends Controller
     public function syllabus(Request $request)
     {
         if ($request->ajax()) {
-
             $subject_teacher_timetable = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -484,7 +479,6 @@ class GeneralDocumentController extends Controller
     public function assessment_paper(Request $request)
     {
         if ($request->ajax()) {
-
             $subject_teacher_timetable = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -540,7 +534,6 @@ class GeneralDocumentController extends Controller
     public function winter_resource_pack(Request $request)
     {
         if ($request->ajax()) {
-
             $subject_teacher_timetable = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -597,7 +590,6 @@ class GeneralDocumentController extends Controller
     public function summer_resource_pack(Request $request)
     {
         if ($request->ajax()) {
-
             $subject_teacher_timetable = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -654,14 +646,15 @@ class GeneralDocumentController extends Controller
     public function admission_test(Request $request)
     {
 
-        if ($request->ajax()){
-
+        if ($request->ajax()) {
             $admissiontest = GeneralDocument::whereHas(
-                'attachment_type' , function($q){
-                $q->where('slug','admission_test');
-            })->where('status','active');
+                'attachment_type',
+                function ($q) {
+                    $q->where('slug', 'admission_test');
+                }
+            )->where('status', 'active');
 
-            $admissiontest = GeneralDocument::filteration($request,$admissiontest);
+            $admissiontest = GeneralDocument::filteration($request, $admissiontest);
 
             $admissiontest = $admissiontest->get();
             return DataTables::of($admissiontest)
@@ -696,12 +689,11 @@ class GeneralDocumentController extends Controller
 
         $data = GeneralDocument::filterationDropdownData();
 
-        return view('general_document.admission_test.index',$data);
+        return view('general_document.admission_test.index', $data);
     }
     public function certificates(Request $request)
     {
         if ($request->ajax()) {
-
             $certificates = GeneralDocument::whereHas(
                 'attachment_type',
                 function ($q) {
@@ -724,10 +716,11 @@ class GeneralDocumentController extends Controller
         }
 
         $data['branches'] = Branch::all();
-        if (isSuperAdmin() || isHeadOfficeEmp())
+        if (isSuperAdmin() || isHeadOfficeEmp()) {
             $data['states'] = State::all();
-        else
+        } else {
             $data['states'] = State::where('id', get_branch_state_id())->get();
+        }
 
         return view('general_document.certificates.index', $data);
     }

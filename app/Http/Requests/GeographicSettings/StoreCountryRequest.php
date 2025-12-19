@@ -41,4 +41,3 @@ class StoreCountryRequest extends FormRequest
         ];
     }
 }
-

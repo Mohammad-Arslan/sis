@@ -76,7 +76,7 @@ class StudentWithdrawalController extends Controller
 
                     if ($request->filled('branch_id')) {
                         $query->where('branch_id', $request->branch_id);
-                    } elseif (!isSuperAdmin() && !isHeadOfficeEmp()) {
+                    } elseif (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                         $query->where('branch_id', get_branch_id());
                     }
 
@@ -164,7 +164,7 @@ class StudentWithdrawalController extends Controller
         $sections = Section::select('id', 'section_name')->get();
         $academic_years = AcademicYear::select('id', 'title')->get();
 
-        $classes = (!isSuperAdmin() && !isHeadOfficeEmp())
+        $classes = (! isSuperAdmin() && ! isHeadOfficeEmp())
             ? BranchClass::where('branch_id', get_branch_id())->with('com_classes:id,class_name')->get()
             : ComClass::select('id', 'class_name')->get();
 
@@ -197,17 +197,17 @@ class StudentWithdrawalController extends Controller
 
         //if (!$request->ajax()) return view('students.withdrawal.withdrawal_requests_list');
         if ($request->ajax()) {
-
             $withdrawalRequests = StudentWithdrawalRequest::whereHas('student', function (Builder $query) use ($request) {
                 //Filter by student status
                 if ($request->status && $request->status != 'all') {
-                    if (in_array($request->status, ['on_roll', 'registered', 'left']))
+                    if (in_array($request->status, ['on_roll', 'registered', 'left'])) {
                         $query->where('status', $request->status);
-                    else
+                    } else {
                         $query->whereNull('status');
+                    }
                 }
                 //Filter by student name
-                if (!empty($request->searchName)) {
+                if (! empty($request->searchName)) {
                     $query->where('first_name', 'like', $request->searchName . '%')
                         ->orWhere('middle_name', 'like', $request->searchName . '%')
                         ->orWhere('last_name', 'like', $request->searchName . '%');
@@ -215,7 +215,7 @@ class StudentWithdrawalController extends Controller
                 //Filter by Branch, Section & Class
                 if ($request->branch_id && $request->branch_id > 0) {
                     $query->where('branch_id', $request->branch_id);
-                } elseif (!isSuperAdmin() && !isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
+                } elseif (! isSuperAdmin() && ! isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
                     $query->where('branch_id', get_branch_id());
                 }
 
@@ -245,11 +245,11 @@ class StudentWithdrawalController extends Controller
                 ->addIndexColumn()
                 ->addColumn('student_name', function ($row) {
                     $studentInfo = Student::where('id', $row['student_id'])->first();
-                    return (!empty($studentInfo->first_name)) ? $studentInfo->first_name . ' ' . $studentInfo->middle_name . ' ' . $studentInfo->last_name : '';
+                    return (! empty($studentInfo->first_name)) ? $studentInfo->first_name . ' ' . $studentInfo->middle_name . ' ' . $studentInfo->last_name : '';
                 })
                 ->addColumn('roll_no', function ($row) {
                     $studentInfo = Student::where('id', $row['student_id'])->first();
-                    return (!empty($studentInfo->roll_no)) ? $studentInfo->roll_no : '';
+                    return (! empty($studentInfo->roll_no)) ? $studentInfo->roll_no : '';
                 })
                 ->addColumn('class_section', function ($row) {
                     $studentInfo = Student::where('id', $row['student_id'])->with(
@@ -285,7 +285,7 @@ class StudentWithdrawalController extends Controller
         }
 
         $branches = Branch::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -313,7 +313,7 @@ class StudentWithdrawalController extends Controller
         //Get request id if provided in URL
         $requestId = $request->get('request');
         $withdrawalRequest = '';
-        if (!empty($requestId)) {
+        if (! empty($requestId)) {
             $withdrawalRequest = StudentWithdrawalRequest::with([
                 'reason',
                 'guardian.relation',
@@ -321,7 +321,7 @@ class StudentWithdrawalController extends Controller
             ])->findOrFail($requestId);
         }
         $branch_id = 0;
-        if (!Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+        if (! Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
             $branch_id = get_branch_id();
         }
 
@@ -385,19 +385,22 @@ class StudentWithdrawalController extends Controller
             'beneficiary_phone.regex' => 'Beneficiary phone must be a valid Pakistani mobile number (03XXXXXXXXX or +923XXXXXXXXX).',
         ];
 
-        if (isset(request()->library_clearance))
+        if (isset(request()->library_clearance)) {
             $validation_array['clearance_amount'] = 'required';
+        }
 
         $request->validate($validation_array, $customMessages);
 
         $student = Student::find($request->student_id);
 
-        if ($student->status == 'withdrawn')
+        if ($student->status == 'withdrawn') {
             return redirect()->back()->with('error', 'Student already withdrawn.');
+        }
 
         $checkExisting = StudentWithdrawal::where('student_id', $request->student_id)->first();
-        if (isset($checkExisting))
+        if (isset($checkExisting)) {
             return redirect()->back()->with('error', 'Withdrawal form already submitted for the student.');
+        }
         //Get last paid invoice
         $last_paid_invoice = StudentInvoice::where(['student_id' => $request->student_id, 'is_paid' => 1, 'bank_payment_status' => 'paid'])->latest('created_at')->first();
 
@@ -510,11 +513,11 @@ class StudentWithdrawalController extends Controller
     {
         //if (!$request->ajax()) return view('students.withdrawal.auto_withdrawal_list');
         if ($request->ajax()) {
-
             //$studentWhere = ['status' => 'on_roll'];
 
-            if (get_NWABranchCode() != 0)
+            if (get_NWABranchCode() != 0) {
                 $studentWhere['branch_id'] = get_NWABranchCode();
+            }
 
             $unpaidStudents = [];
             if (isSuperAdmin() || get_NWABranchCode() != 0) {
@@ -531,15 +534,17 @@ class StudentWithdrawalController extends Controller
 
             $finalStudents = array();
             foreach ($unpaidStudents as $key => $student) {
-                if ($student->student_invoices->count() >= 3)
+                if ($student->student_invoices->count() >= 3) {
                     array_push($finalStudents, $student->id);
+                }
             }
 
             //dd($finalStudents);
 
             $data = Student::studentListingQuery($request, 0, ['student_invoices'], $finalStudents);
-            if (!count($finalStudents))
+            if (! count($finalStudents)) {
                 $data = [];
+            }
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('full_name', function ($row) {
@@ -547,7 +552,7 @@ class StudentWithdrawalController extends Controller
                     return view('students.student_image_tr', ['row' => $row]);
                 })
                 ->addColumn('reg_roll_no', function ($row) {
-                    return !empty($row->roll_no) ? $row->roll_no : $row->registration_no;
+                    return ! empty($row->roll_no) ? $row->roll_no : $row->registration_no;
                 })
                 ->addColumn('class_section', function ($row) {
                     $class_name = isset($row['active_class']['branch_class_sections']['com_classes']) ? $row['active_class']['branch_class_sections']['com_classes']['class_name'] : 'N/A';
@@ -573,7 +578,7 @@ class StudentWithdrawalController extends Controller
         }
 
         $branches = Branch::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -626,10 +631,10 @@ class StudentWithdrawalController extends Controller
             // If student status is changed to 'left', deactivate their fee package
             if ($newStatus === 'left') {
                 $studentFeePackage = StudentFeePackage::where([
-                    'student_id' => $studentId, 
+                    'student_id' => $studentId,
                     'is_valid' => 1
                 ])->first();
-                
+
                 if ($studentFeePackage) {
                     $studentFeePackage->update([
                         'is_valid' => 0,
@@ -650,11 +655,11 @@ class StudentWithdrawalController extends Controller
     {
         // Optimize database queries for better performance
         $this->optimizeQueries();
-        
+
         $type = $request->type;
         $withdrawalId = $request->id;
         $showFormInfo = false;
-        
+
         //If no student if is passed, show blank form
         if (empty($withdrawalId)) {
             $data = [''];
@@ -664,17 +669,23 @@ class StudentWithdrawalController extends Controller
             $branchInfo = null;
         } else {
             $showFormInfo = true;
-            
+
             // Use caching to improve performance for repeated requests
             $cacheKey = "withdrawal_form_{$withdrawalId}";
             $cachedData = cache()->get($cacheKey);
-            
+
             if ($cachedData && $type == 'modal') {
                 // Return cached data for modal views (faster)
-                return $this->renderForm($type, $showFormInfo, $cachedData['withdrawalInfo'], 
-                    $cachedData['studentInfo'], $cachedData['guardianInfo'], $cachedData['branchInfo']);
+                return $this->renderForm(
+                    $type,
+                    $showFormInfo,
+                    $cachedData['withdrawalInfo'],
+                    $cachedData['studentInfo'],
+                    $cachedData['guardianInfo'],
+                    $cachedData['branchInfo']
+                );
             }
-            
+
             // Optimized: Single query with only necessary fields and relationships
             $withdrawalInfo = StudentWithdrawal::select([
                 'id', 'application_date', 'last_day_at', 'last_invoice_paid_at',
@@ -696,7 +707,7 @@ class StudentWithdrawalController extends Controller
                 'guardian.relation:id,relation_name'
             ])
             ->first();
-            
+
             if ($withdrawalInfo && $withdrawalInfo->student) {
                 $studentInfo = $withdrawalInfo->student;
                 $branchInfo = $studentInfo->branch;
@@ -706,7 +717,7 @@ class StudentWithdrawalController extends Controller
                 $branchInfo = null;
                 $guardianInfo = null;
             }
-            
+
             // Cache the data for future modal requests (cache for 5 minutes)
             if ($type == 'modal') {
                 cache()->put($cacheKey, [
@@ -720,7 +731,7 @@ class StudentWithdrawalController extends Controller
 
         return $this->renderForm($type, $showFormInfo, $withdrawalInfo, $studentInfo, $guardianInfo, $branchInfo);
     }
-    
+
     /**
      * Helper method to render the form (modal or PDF)
      */
@@ -729,27 +740,27 @@ class StudentWithdrawalController extends Controller
         // Optimize memory usage by garbage collection before PDF generation
         if ($type != 'modal') {
             gc_collect_cycles();
-            
+
             // Set memory limit for PDF generation
             ini_set('memory_limit', '512M');
             ini_set('max_execution_time', 120);
         }
-        
+
         $viewData = [
-            'showFormInfo' => $showFormInfo, 
-            'withdrawalInfo' => $withdrawalInfo, 
-            'studentInfo' => $studentInfo, 
-            'guardianInfo' => $guardianInfo, 
-            'branchInfo' => $branchInfo, 
+            'showFormInfo' => $showFormInfo,
+            'withdrawalInfo' => $withdrawalInfo,
+            'studentInfo' => $studentInfo,
+            'guardianInfo' => $guardianInfo,
+            'branchInfo' => $branchInfo,
             'type' => $type
         ];
-        
+
         if ($type == 'modal') {
             return view('students.withdrawal.withdrawal_print_form_modal', $viewData);
         } else {
             // Optimize PDF generation with memory and performance settings
             $pdf = Pdf::loadView('students.withdrawal.withdrawal_print_form_pdf', $viewData);
-            
+
             // Set PDF options for better performance
             $pdf->setOptions([
                 'isHtml5ParserEnabled' => true,
@@ -764,14 +775,14 @@ class StudentWithdrawalController extends Controller
                 'defaultPaperSize' => 'a4',
                 'isFontSubsettingEnabled' => true
             ]);
-            
+
             // Clear view data from memory after PDF generation
             unset($viewData);
-            
+
             return $pdf->download('StudentWithdrawalForm.pdf');
         }
     }
-    
+
     /**
      * Optimize database queries for better performance
      */
@@ -781,7 +792,7 @@ class StudentWithdrawalController extends Controller
         if (config('app.debug')) {
             \DB::enableQueryLog();
         }
-        
+
         // Set database connection timeout
         \DB::statement('SET SESSION wait_timeout=60');
         \DB::statement('SET SESSION interactive_timeout=60');
@@ -802,7 +813,7 @@ class StudentWithdrawalController extends Controller
 
         //Get all employees
         $branch_id = 0;
-        if (!Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+        if (! Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
             $branch_id = get_branch_id();
         }
 
@@ -845,7 +856,7 @@ class StudentWithdrawalController extends Controller
         $studentWithdrawalRecord->update($requestArray);
 
         //Remove student withdrawal approval status
-        $studentWithdrawalRecord->approved_by = NULL;
+        $studentWithdrawalRecord->approved_by = null;
         $studentWithdrawalRecord->save();
         //$studentWithdrawalRecord->delete();
 
@@ -873,7 +884,7 @@ class StudentWithdrawalController extends Controller
 
         //Get all employees
         $branch_id = 0;
-        if (!Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+        if (! Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
             $branch_id = get_branch_id();
         }
 
@@ -922,10 +933,10 @@ class StudentWithdrawalController extends Controller
 
         // Inactivate student's fee package
         $studentFeePackage = StudentFeePackage::where([
-            'student_id' => $studentId, 
+            'student_id' => $studentId,
             'is_valid' => 1
         ])->first();
-        
+
         if ($studentFeePackage) {
             $studentFeePackage->update([
                 'is_valid' => 0,
@@ -976,7 +987,7 @@ class StudentWithdrawalController extends Controller
 
         //Get all employees
         $branch_id = 0;
-        if (!Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
+        if (! Auth::user()->hasRole('super_admin|finance-manager|manager-parent-relations|senior-finance-manager|manager-parent-relations|senior-manager-business-development|manager-business-development|deputy-director|ceo|manager-quality-assurance|manager-legal-affairs-litigation|senior-marketing-manager|marketing-manager')) {
             $branch_id = get_branch_id();
         }
 

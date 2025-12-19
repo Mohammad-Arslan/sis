@@ -103,7 +103,7 @@ class TransferRequestController extends Controller
             }
 
             DB::commit();
-            
+
             session()->flash('success', 'Transfer request created successfully.');
             return redirect()->route('fixed-assets.transfer-requests.index');
         } catch (\Exception $e) {
@@ -145,11 +145,11 @@ class TransferRequestController extends Controller
         $transferRequest = TransferRequest::with(['transferItems.asset'])->findOrFail($id);
         $branches = Branch::all();
         $departments = Department::all();
-        $assets = Asset::with(['assignedTo' => function($query) {
+        $assets = Asset::with(['assignedTo' => function ($query) {
                 $query->withTrashed();
-            }])
+        }])
             ->where('status', 'available')
-            ->orWhereHas('transferItems', function($query) use ($id) {
+            ->orWhereHas('transferItems', function ($query) use ($id) {
                 $query->where('transfer_request_id', $id);
             })->get();
 
@@ -247,26 +247,26 @@ class TransferRequestController extends Controller
             $transferRequest->delete();
 
             DB::commit();
-            
+
             if (request()->ajax()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Transfer request deleted successfully.'
                 ]);
             }
-            
+
             return redirect()->route('fixed-assets.transfer-requests.index')
                 ->with('success', 'Transfer request deleted successfully.');
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             if (request()->ajax()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to delete transfer request. ' . $e->getMessage()
                 ], 500);
             }
-            
+
             return back()->with('error', 'Failed to delete transfer request. ' . $e->getMessage());
         }
     }
@@ -341,31 +341,31 @@ class TransferRequestController extends Controller
     public function getBranchUsers(Request $request)
     {
         $users = Employee::where('branch_id', $request->branch_id)
-            ->when($request->department_id, function($query) use ($request) {
+            ->when($request->department_id, function ($query) use ($request) {
                 $query->where('department_id', $request->department_id);
             })
             ->get()
-            ->map(function($employee) {
+            ->map(function ($employee) {
                 // If preferred_name exists, use it
-                if (!empty($employee->preferred_name)) {
+                if (! empty($employee->preferred_name)) {
                     return [
                         'id' => $employee->user_id,
                         'name' => $employee->preferred_name
                     ];
                 }
-                
+
                 // Otherwise concatenate first, middle, last names with null safety
                 $nameParts = array_filter([
                     $employee->first_name,
                     $employee->middle_name,
                     $employee->last_name
-                ], function($part) {
-                    return !empty($part);
+                ], function ($part) {
+                    return ! empty($part);
                 });
-                
+
                 return [
                     'id' => $employee->user_id,
-                    'name' => !empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User'
+                    'name' => ! empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User'
                 ];
             });
 
@@ -376,20 +376,20 @@ class TransferRequestController extends Controller
 
     public function getBranchAssets(Request $request)
     {
-        $query = Asset::with(['assignedTo' => function($query) {
+        $query = Asset::with(['assignedTo' => function ($query) {
                 $query->withTrashed();
-            }])
+        }])
             ->where('current_branch_id', $request->branch_id)
-            ->when($request->department_id, function($query) use ($request) {
+            ->when($request->department_id, function ($query) use ($request) {
                 $query->where('current_department_id', $request->department_id);
             });
 
-        $assets = $query->get()->map(function($asset) {
+        $assets = $query->get()->map(function ($asset) {
             $assignedUser = $asset->assignedTo;
             $userName = 'Not Assigned';
-            
+
             if ($assignedUser) {
-                if (!empty($assignedUser->preferred_name)) {
+                if (! empty($assignedUser->preferred_name)) {
                     $userName = $assignedUser->preferred_name;
                 } else {
                     $nameParts = array_filter([
@@ -397,7 +397,7 @@ class TransferRequestController extends Controller
                         $assignedUser->middle_name,
                         $assignedUser->last_name
                     ]);
-                    $userName = !empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User';
+                    $userName = ! empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User';
                 }
             }
 

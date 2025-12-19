@@ -13,7 +13,6 @@ use App\Models\StudentAddress;
 
 class GuardianInfoUpdateController extends Controller
 {
-
     public function getGuardiansInfo(Request $request)
     {
         $student = Student::where('id', $request->student_id)->with(['guardians.relation', 'student_address'])->get();
@@ -31,7 +30,6 @@ class GuardianInfoUpdateController extends Controller
 
         //Check if request is validated
         if ($changeDataRequest) {
-
             //Get request params
             $updateType = $request->input('update_type');
             $updateValue = $request->input('update_value');
@@ -44,8 +42,7 @@ class GuardianInfoUpdateController extends Controller
                 ->first();
 
             //Check if record not already exists
-            if (!$checkInfoAlready) {
-
+            if (! $checkInfoAlready) {
                 //Check if email or password not already exits for any other guardian/parent
                 if ($updateType == 'email') {
                     $checkRecordAlreadyExists = Guardian::where('email', $updateValue)->first();
@@ -63,7 +60,6 @@ class GuardianInfoUpdateController extends Controller
                 if ($checkRecordAlreadyExists) {
                     return response('Your provided ' . $updateType . ' already exists in our system, please user other!', 400);
                 } else {
-
                     //Create record
                     GuardianInfoUpdate::create($changeDataRequest);
                 }

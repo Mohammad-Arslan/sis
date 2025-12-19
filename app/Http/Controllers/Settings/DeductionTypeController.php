@@ -13,12 +13,12 @@ class DeductionTypeController extends Controller
         if ($request->ajax()) {
             $data = DeductionType::select(['id', 'name', 'description', 'status']);
             return datatables()->of($data)
-                ->addColumn('status', function($row) {
+                ->addColumn('status', function ($row) {
                     return $row->status
                         ? '<span class="badge bg-success">Active</span>'
                         : '<span class="badge bg-secondary">Inactive</span>';
                 })
-                ->addColumn('action', function($row) {
+                ->addColumn('action', function ($row) {
                     return '<div class="text-center">
                         <button class="btn btn-sm btn-outline-info edit-btn" data-id="' . $row->id . '">
                             <i class="ri-edit-line"></i> Edit

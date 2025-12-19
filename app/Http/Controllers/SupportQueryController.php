@@ -16,14 +16,14 @@ class SupportQueryController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax()){
+        if ($request->ajax()) {
             $supports = SupportQuery::with([
                 'user',
                 'branch',
             ]);
 
-            $supports = $this->filteration($request,$supports);
-            $supports = $this->paginateData($supports,$request);
+            $supports = $this->filteration($request, $supports);
+            $supports = $this->paginateData($supports, $request);
 
             $json_data = array(
                 "draw"            => intval($request->input('draw')),
@@ -37,7 +37,7 @@ class SupportQueryController extends Controller
 
         $data['branches'] = Branch::all();
 
-        return view('support.index',$data);
+        return view('support.index', $data);
     }
 
     /**
@@ -66,7 +66,7 @@ class SupportQueryController extends Controller
         ]);
 
         $input = $request->all();
-        if ($request->hasfile('file')){
+        if ($request->hasfile('file')) {
             $file = $request->file;
 
             $file_names = SupportQuery::pluck('file_name')->unique()->toArray();
@@ -76,7 +76,7 @@ class SupportQueryController extends Controller
             $filename = getUniqueFileName($filename_data);
 
             $input['file_name'] = $filename;
-            $filepath = 'support/'. $filename;
+            $filepath = 'support/' . $filename;
             Storage::disk('s3')->put($filepath, file_get_contents($file));
         }
 
@@ -84,7 +84,7 @@ class SupportQueryController extends Controller
         $input['raised_by'] = auth()->user()->id;
         SupportQuery::create($input);
 
-        return redirect()->back()->with('success','Your query has been registered.');
+        return redirect()->back()->with('success', 'Your query has been registered.');
     }
 
     /**
@@ -134,33 +134,39 @@ class SupportQueryController extends Controller
 
 
 
-    public static function filteration($request,$query){
+    public static function filteration($request, $query)
+    {
 
-        if (isset($request->branch_id))
-            $query = $query->where(function ($q) use ($request){
-                $q->where('branch_id' , $request->branch_id);
+        if (isset($request->branch_id)) {
+            $query = $query->where(function ($q) use ($request) {
+                $q->where('branch_id', $request->branch_id);
                 $q->orWhereNull('branch_id');
             });
+        }
 
-        if (isset($request->priority))
-            $query = $query->where(function ($q) use ($request){
-                $q->where('priority' , $request->priority);
+        if (isset($request->priority)) {
+            $query = $query->where(function ($q) use ($request) {
+                $q->where('priority', $request->priority);
                 $q->orWhereNull('priority');
             });
+        }
 
-        if (isset($request->from_date))
-            $query = $query->whereDate('created_at' ,'>=', $request->from_date);
+        if (isset($request->from_date)) {
+            $query = $query->whereDate('created_at', '>=', $request->from_date);
+        }
 
-        if (isset($request->to_date))
-            $query = $query->whereDate('created_at' ,'<=', $request->to_date);
+        if (isset($request->to_date)) {
+            $query = $query->whereDate('created_at', '<=', $request->to_date);
+        }
 
         return $query;
     }
 
-    public function paginateData($query,$request,$data = 0){
-        $limit = $request->input( 'length' );
-        $start = $request->input( 'start' );
-        $search = $request->input( 'search.value' );
+    public function paginateData($query, $request, $data = 0)
+    {
+        $limit = $request->input('length');
+        $start = $request->input('start');
+        $search = $request->input('search.value');
 
         $totalData = $query->count();
         $query = $query->offset($start)->limit($limit);
@@ -169,26 +175,25 @@ class SupportQueryController extends Controller
         $query = $query->orderByDesc('id')->get();
 
         $data = array();
-        if(!empty($query))
-        {
-            foreach ($query as $key => $support)
-            {
-                $nestedData['document_name'] = $support['file_name'] ? '<a href="'.get_file_from_s3('support/'.$support['file_name']).'" target="_blank">'.$support['file_name'].'</a>' : '-';
-                $nestedData['url'] = $support['url'] ? '<a href="'.$support['url'].'" target="_blank">URL</a>' : '-';
+        if (! empty($query)) {
+            foreach ($query as $key => $support) {
+                $nestedData['document_name'] = $support['file_name'] ? '<a href="' . get_file_from_s3('support/' . $support['file_name']) . '" target="_blank">' . $support['file_name'] . '</a>' : '-';
+                $nestedData['url'] = $support['url'] ? '<a href="' . $support['url'] . '" target="_blank">URL</a>' : '-';
                 $nestedData['branch_id'] = isset($support['branch']['branch_code']) ? $support['branch']['branch_code'] : '-';
                 $nestedData['branch_name'] = isset($support['branch']['br_name']) ? $support['branch']['br_name'] : '-';
                 $nestedData['raised_by'] = $support['user']['name'];
-                $nestedData['date'] = date_format($support['created_at'],'d-m-Y');
+                $nestedData['date'] = date_format($support['created_at'], 'd-m-Y');
                 $nestedData['description'] = $support['description'];
 
-                if ($support['priority'] == 'low')
+                if ($support['priority'] == 'low') {
                     $nestedData['priority'] = '<span class="badge bg-success">Low</span>';
-                else if ($support['priority'] == 'medium')
+                } else if ($support['priority'] == 'medium') {
                     $nestedData['priority'] = '<span class="badge bg-warning">Medium</span>';
-                else if ($support['priority'] == 'high')
+                } else if ($support['priority'] == 'high') {
                     $nestedData['priority'] = '<span class="badge bg-danger">High</span>';
+                }
 
-                $nestedData['created_at'] = date_format($support['created_at'],'d-m-Y');
+                $nestedData['created_at'] = date_format($support['created_at'], 'd-m-Y');
 
                 $data[] = $nestedData;
             }

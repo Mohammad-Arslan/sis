@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FranchiseInquiry extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'full_name',
         'CNIC',
@@ -47,19 +50,22 @@ class FranchiseInquiry extends Model
         'forwarded_date'
     ];
 
-    public function city(){
-        return $this->belongsTo(City::class,'city_id','id');
+    public function city()
+    {
+        return $this->belongsTo(City::class, 'city_id', 'id');
     }
 
-    public function source(){
-        return $this->belongsTo(Source::class,'source_id','id');
+    public function source()
+    {
+        return $this->belongsTo(Source::class, 'source_id', 'id');
     }
 
-    public static function store_update_franchise_inquiry($request,$franchisesInquiry = null,$type = 'create'){
+    public static function store_update_franchise_inquiry($request, $franchisesInquiry = null, $type = 'create')
+    {
 
-        if ($type == 'create')
+        if ($type == 'create') {
             $response = self::create($request);
-        else if ($type == 'update'){
+        } else if ($type == 'update') {
             $franchisesInquiry->update($request);
             $response = $franchisesInquiry->refresh();
         }

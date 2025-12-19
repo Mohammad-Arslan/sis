@@ -19,14 +19,15 @@ class BrandingMarketingController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax()){
-
+        if ($request->ajax()) {
             $marketing_documents = GeneralDocument::whereHas(
-                'attachment_type' , function($q){
-                $q->where('slug','branding_marketing');
-            })->where('status','active');
+                'attachment_type',
+                function ($q) {
+                    $q->where('slug', 'branding_marketing');
+                }
+            )->where('status', 'active');
 
-            $marketing_documents = GeneralDocument::filteration($request,$marketing_documents);
+            $marketing_documents = GeneralDocument::filteration($request, $marketing_documents);
 
             $marketing_documents = $marketing_documents->get();
 

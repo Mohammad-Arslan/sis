@@ -29,7 +29,7 @@ class SectionSeeder extends Seeder
                 'section_name' => 'Red',
                 'abbreviation' => 'red',
                 'description' => '',
-            ],    
+            ],
         ];
 
         DB::table('sections')->insert($sections);

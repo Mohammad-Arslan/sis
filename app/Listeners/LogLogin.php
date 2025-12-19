@@ -9,11 +9,11 @@ class LogLogin
 {
     public function __construct(
         private readonly ActivityLoggerService $logger
-    ) {}
+    ) {
+    }
 
     public function handle(Login $event): void
     {
         $this->logger->logLogin($event->user->id);
     }
 }
-

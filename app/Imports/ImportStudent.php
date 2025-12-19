@@ -14,6 +14,8 @@ use App\Models\Employee;
 use App\Models\Relation;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\Guardian;
+use App\Models\SiblingInformation;
 use App\Models\Language;
 use App\Models\Religion;
 use App\Models\Nationality;
@@ -49,10 +51,11 @@ use Illuminate\Support\Facades\File;
 class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, SkipsOnError, SkipsEmptyRows, SkipsOnFailure
 {
     use SkipsFailures;
+
     public $importedCount = 0;
     public $skippedCount = 0;
     public $errors = [];
-    
+
     // Cache for lookup tables to avoid repeated database queries
     private $languageCache = [];
     private $religionCache = [];
@@ -140,11 +143,11 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
         $existingCnics = Student::whereNotNull('cnic')
             ->where('cnic', '!=', '')
             ->pluck('cnic')
-            ->map(function($cnic) {
+            ->map(function ($cnic) {
                 return preg_replace('/[\s\-]/', '', $cnic);
             })
             ->toArray();
-        
+
         $this->existingCnicCache = array_flip($existingCnics);
 
         // Load towns
@@ -200,7 +203,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
         // If it's a string, try to parse it as a date
         if (is_string($value)) {
             $value = trim($value);
-            
+
             // Try common date formats
             $formats = [
                 'Y-m-d',           // 2024-01-15
@@ -262,7 +265,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
         // If it's a string, try to parse it as a datetime
         if (is_string($value)) {
             $value = trim($value);
-            
+
             // Try common datetime formats
             $formats = [
                 'Y-m-d H:i:s',     // 2024-01-15 14:30:00
@@ -305,12 +308,12 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
      */
     private function isValidDateString($value)
     {
-        if (empty($value) || !is_string($value)) {
+        if (empty($value) || ! is_string($value)) {
             return false;
         }
 
         $value = trim($value);
-        
+
         // Try common date formats
         $formats = [
             'Y-m-d',           // 2024-01-15
@@ -353,12 +356,12 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
      */
     private function isValidDateTimeString($value)
     {
-        if (empty($value) || !is_string($value)) {
+        if (empty($value) || ! is_string($value)) {
             return false;
         }
 
         $value = trim($value);
-        
+
         // Try common datetime formats
         $formats = [
             'Y-m-d H:i:s',     // 2024-01-15 14:30:00
@@ -397,10 +400,10 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
     {
         try {
             // Check if student already exists by CNIC (using cached data)
-            if (!empty($row['cnic']) && $row['cnic'] !== 'NULL') {
+            if (! empty($row['cnic']) && $row['cnic'] !== 'NULL') {
                 // Normalize CNIC format for comparison (remove dashes and spaces)
                 $normalizedCnic = preg_replace('/[\s\-]/', '', $row['cnic']);
-                
+
                 // Check if CNIC exists in cache
                 if (isset($this->existingCnicCache[$normalizedCnic])) {
                     $this->skippedCount++;
@@ -421,7 +424,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
             // Validate that all required records exist
             $errors = [];
             // For each lookup field, log a custom_error if not found
-            if (!$languageId) {
+            if (! $languageId) {
                 $msg = 'Language name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -435,7 +438,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$religionId) {
+            if (! $religionId) {
                 $msg = 'Religion name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -449,7 +452,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$nationalityId) {
+            if (! $nationalityId) {
                 $msg = 'Nationality name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -463,7 +466,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$countryId) {
+            if (! $countryId) {
                 $msg = 'Country name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -477,7 +480,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$stateId) {
+            if (! $stateId) {
                 $msg = 'State name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -491,7 +494,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$cityId) {
+            if (! $cityId) {
                 $msg = 'City name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -505,7 +508,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$branchId) {
+            if (! $branchId) {
                 $msg = 'Branch name does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -519,7 +522,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 $this->errors[] = $logEntry;
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
-            if (!$academicYearId) {
+            if (! $academicYearId) {
                 $msg = 'Academic year does not exist.';
                 $logEntry = [
                     'type' => 'custom_error',
@@ -534,7 +537,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
             }
 
-            if (!empty($errors)) {
+            if (! empty($errors)) {
                 $logEntry = [
                     'type' => 'validation',
                     'row' => $row['row_number'] ?? null,
@@ -585,7 +588,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-            
+
             // Insert and get the ID
             $studentId = DB::table('students')->insertGetId($studentData);
             $student = Student::find($studentId);
@@ -596,7 +599,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
             $resCityId = $this->cityCache[strtolower(trim($row['res_city'] ?? ''))] ?? null;
             $resTownId = $this->townCache[strtolower(trim($row['town'] ?? ''))] ?? null;
             $perCityId = $this->permanentCityCache[strtolower(trim($row['per_city'] ?? ''))] ?? null;
-            
+
             // Check if we have the minimum required fields for address creation
             if ($resCountryId && $resStateId && $resCityId && $resTownId && $perCityId) {
                 $student->student_address()->create([
@@ -618,12 +621,22 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
             } else {
                 // Log missing fields for debugging
                 $missingFields = [];
-                if (!$resCountryId) $missingFields[] = 'res_country';
-                if (!$resStateId) $missingFields[] = 'res_state';
-                if (!$resCityId) $missingFields[] = 'res_city';
-                if (!$resTownId) $missingFields[] = 'town';
-                if (!$perCityId) $missingFields[] = 'per_city';
-                
+                if (! $resCountryId) {
+                    $missingFields[] = 'res_country';
+                }
+                if (! $resStateId) {
+                    $missingFields[] = 'res_state';
+                }
+                if (! $resCityId) {
+                    $missingFields[] = 'res_city';
+                }
+                if (! $resTownId) {
+                    $missingFields[] = 'town';
+                }
+                if (! $perCityId) {
+                    $missingFields[] = 'per_city';
+                }
+
                 $msg = 'Address not created for student: ' . ($student->first_name ?? '') . '. Missing required fields: ' . implode(', ', $missingFields);
                 $this->errors[] = $msg;
                 $logEntry = [
@@ -643,7 +656,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
             $employeeNo = $row['employee_no'] ?? null;
             $employeeNoValidated = null;
             if ($snsEmployee === 'yes') {
-                if (!$employeeNo || !isset($this->employeeCache[strtolower(trim($employeeNo))])) {
+                if (! $employeeNo || ! isset($this->employeeCache[strtolower(trim($employeeNo))])) {
                     // If employee_no is required but not found, skip guardian creation
                     $msg = 'Employee number required and must exist for SNS employee for student: ' . ($student->first_name ?? '');
                     $this->errors[] = $msg;
@@ -662,41 +675,105 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 }
             }
             if ($relationId && $row['guardian_name']) {
-                $guardianData = [
-                    'guardian_name' => $row['guardian_name'],
-                    'relation_id' => $relationId,
-                    'CNIC' => $row['guardian_cnic'] ?? null,
-                    'mobile' => $row['guardian_mobile'] ?? null,
-                    'email' => $row['guardian_email'] ?? null,
-                    'student_id' => $student->id,
-                    'is_parent' => $snsEmployee === 'yes' ? 'yes' : 'no',
-                    'employee_no' => $employeeNoValidated,
-                ];
-                $student->guardians()->create($guardianData);
+                $guardianCNIC = $row['guardian_cnic'] ?? null;
+
+                // Check if guardian with same CNIC already exists for this student
+                $existingGuardian = $student->guardians()
+                    ->where('CNIC', $guardianCNIC)
+                    ->first();
+
+                if ($existingGuardian) {
+                    // Guardian already exists, skip creation but still process sibling logic
+                    $guardian = $existingGuardian;
+                } else {
+                    // Create new guardian only if it doesn't exist
+                    $guardianData = [
+                        'guardian_name' => $row['guardian_name'],
+                        'relation_id' => $relationId,
+                        'CNIC' => $guardianCNIC,
+                        'mobile' => $row['guardian_mobile'] ?? null,
+                        'email' => $row['guardian_email'] ?? null,
+                        'student_id' => $student->id,
+                        'is_parent' => $snsEmployee === 'yes' ? 'yes' : 'no',
+                        'employee_no' => $employeeNoValidated,
+                    ];
+                    $guardian = $student->guardians()->create($guardianData);
+                }
+
                 // --- Sibling/Family logic (mimic GuardianController@store) ---
-                $guardian = $student->guardians()->latest()->first();
-                if ($guardian) {
-                    $siblings = Student::with('first_guardian.family.children')
-                        ->whereHas('first_guardian', function ($query) use ($guardian) {
-                            $query->where('CNIC', $guardian->CNIC);
-                            $query->whereHas('family');
-                        })->oldest('created_at');
-                    $no_of_siblings = $siblings->count();
-                    if ($no_of_siblings) {
-                        $sibling_no = count($siblings->first()->first_guardian->family->children);
-                        $siblings->first()->first_guardian->family->children()->create([
-                            'student_id' => $student->id,
-                            'sibling_no' => $sibling_no + 1
-                        ]);
-                    } else {
-                        $family = $guardian->family()->create([
-                            'family_no' => rand(100000, 999999),
-                            'CNIC' => $guardian->CNIC
-                        ]);
-                        $family->children()->create([
-                            'student_id' => $student->id,
-                            'sibling_no' => 1
-                        ]);
+                if ($guardian && $guardianCNIC) {
+                    // Check if student already has a sibling relationship
+                    $existingSiblingInfo = SiblingInformation::where('student_id', $student->id)->first();
+
+                    if (! $existingSiblingInfo) {
+                        // Find other students with the same guardian CNIC (excluding current student)
+                        $siblings = Student::with('first_guardian.family.children')
+                            ->where('id', '!=', $student->id) // Exclude current student
+                            ->whereHas('first_guardian', function ($query) use ($guardianCNIC) {
+                                $query->where('CNIC', $guardianCNIC);
+                                $query->whereHas('family');
+                            })
+                            ->oldest('created_at')
+                            ->get();
+
+                        $no_of_siblings = $siblings->count();
+
+                        if ($no_of_siblings > 0) {
+                            // Link to existing family
+                            $firstSibling = $siblings->first();
+                            if ($firstSibling->first_guardian && $firstSibling->first_guardian->family) {
+                                $existingFamily = $firstSibling->first_guardian->family;
+                                $sibling_no = $existingFamily->children()->count() + 1;
+
+                                // Check if this student is already in this family
+                                $alreadyInFamily = $existingFamily->children()
+                                    ->where('student_id', $student->id)
+                                    ->exists();
+
+                                if (! $alreadyInFamily) {
+                                    $existingFamily->children()->create([
+                                        'student_id' => $student->id,
+                                        'sibling_no' => $sibling_no
+                                    ]);
+                                }
+                            }
+                        } else {
+                            // Check if guardian already has a family
+                            $existingFamily = $guardian->family;
+
+                            if (! $existingFamily) {
+                                // Create new family only if it doesn't exist
+                                $family = $guardian->family()->create([
+                                    'family_no' => rand(100000, 999999),
+                                    'CNIC' => $guardianCNIC
+                                ]);
+
+                                // Check if student is already in this family (shouldn't happen, but safety check)
+                                $alreadyInFamily = $family->children()
+                                    ->where('student_id', $student->id)
+                                    ->exists();
+
+                                if (! $alreadyInFamily) {
+                                    $family->children()->create([
+                                        'student_id' => $student->id,
+                                        'sibling_no' => 1
+                                    ]);
+                                }
+                            } else {
+                                // Guardian has family but student is not linked - add student to existing family
+                                $alreadyInFamily = $existingFamily->children()
+                                    ->where('student_id', $student->id)
+                                    ->exists();
+
+                                if (! $alreadyInFamily) {
+                                    $sibling_no = $existingFamily->children()->count() + 1;
+                                    $existingFamily->children()->create([
+                                        'student_id' => $student->id,
+                                        'sibling_no' => $sibling_no
+                                    ]);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -717,17 +794,23 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     'branch_id' => $branchId,
                     'academic_year_id' => $academicYearId
                 ])->first();
-                if (!$branchAcademicYear) $missingAcademicLinks[] = 'branch_academic_year';
+                if (! $branchAcademicYear) {
+                    $missingAcademicLinks[] = 'branch_academic_year';
+                }
             } else {
-                if (!$branchId) $missingAcademicLinks[] = 'branch_id';
-                if (!$academicYearId) $missingAcademicLinks[] = 'academic_year_id';
+                if (! $branchId) {
+                    $missingAcademicLinks[] = 'branch_id';
+                }
+                if (! $academicYearId) {
+                    $missingAcademicLinks[] = 'academic_year_id';
+                }
             }
             if ($branchId && $classId) {
                 $branchClass = BranchClass::where([
                     'branch_id' => $branchId,
                     'class_id' => $classId
                 ])->first();
-                if (!$branchClass) {
+                if (! $branchClass) {
                     $msg = 'Class does not exist.';
                     $logEntry = [
                         'type' => 'custom_error',
@@ -742,7 +825,9 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
                 }
             } else {
-                if (!$classId) $missingAcademicLinks[] = 'class_id';
+                if (! $classId) {
+                    $missingAcademicLinks[] = 'class_id';
+                }
             }
             if ($branchId && $classId && $sectionId) {
                 $branchClassSection = BranchClassSection::where([
@@ -750,7 +835,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     'class_id' => $classId,
                     'section_id' => $sectionId
                 ])->first();
-                if (!$branchClassSection) {
+                if (! $branchClassSection) {
                     $msg = 'Section does not exist.';
                     $logEntry = [
                         'type' => 'custom_error',
@@ -765,7 +850,9 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     File::append(storage_path('logs/student_import.log'), json_encode($logEntry) . PHP_EOL);
                 }
             } else {
-                if (!$sectionId) $missingAcademicLinks[] = 'section_id';
+                if (! $sectionId) {
+                    $missingAcademicLinks[] = 'section_id';
+                }
             }
             if ($branchAcademicYear && $branchClass && $branchClassSection) {
                 // Mark previous ClassStudent records as inactive
@@ -776,7 +863,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     'is_valid' => 0,
                     'active_till' => now()
                 ]);
-                
+
                 // Create new ClassStudent record
                 $classStudent = ClassStudent::create([
                     'academic_year_id' => $academicYearId,
@@ -890,7 +977,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
             'last_name' => ['nullable', 'string', 'max:255'],
             'gender' => ['required', Rule::in(['Male', 'Female', 'male', 'female'])],
             'email' => [
-                'nullable', 
+                'nullable',
                 'email',
                 'max:255',
             ],
@@ -899,9 +986,9 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     $fail('Date of birth is required.');
                     return;
                 }
-                
+
                 // Check if it's a valid date (numeric Excel format or readable string)
-                if (!is_numeric($value) && !$this->isValidDateString($value)) {
+                if (! is_numeric($value) && ! $this->isValidDateString($value)) {
                     $fail('Date of birth must be a valid date format (e.g., 2024-01-15, 15/01/2024, or Excel date number).');
                 }
             }],
@@ -910,9 +997,9 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     $fail('Admission start date is required.');
                     return;
                 }
-                
+
                 // Check if it's a valid date (numeric Excel format or readable string)
-                if (!is_numeric($value) && !$this->isValidDateString($value)) {
+                if (! is_numeric($value) && ! $this->isValidDateString($value)) {
                     $fail('Admission start date must be a valid date format (e.g., 2024-01-15, 15/01/2024, or Excel date number).');
                 }
             }],
@@ -921,9 +1008,9 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     $fail('Registration date is required.');
                     return;
                 }
-                
+
                 // Check if it's a valid date (numeric Excel format or readable string)
-                if (!is_numeric($value) && !$this->isValidDateString($value)) {
+                if (! is_numeric($value) && ! $this->isValidDateString($value)) {
                     $fail('Registration date must be a valid date format (e.g., 2024-01-15, 15/01/2024, or Excel date number).');
                 }
             }],
@@ -944,17 +1031,17 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
             'admission_year' => ['required', 'string'],
             'registration_fee' => ['nullable', 'numeric', 'min:0'],
             'test_date_time' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && $value !== 'NULL') {
+                if (! empty($value) && $value !== 'NULL') {
                     // Check if it's a valid datetime (numeric Excel format or readable string)
-                    if (!is_numeric($value) && !$this->isValidDateTimeString($value)) {
+                    if (! is_numeric($value) && ! $this->isValidDateTimeString($value)) {
                         $fail('Test date/time must be a valid datetime format (e.g., 2024-01-15 14:30, 15/01/2024 14:30, or Excel datetime number).');
                     }
                 }
             }],
             'interview_date_time' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && $value !== 'NULL') {
+                if (! empty($value) && $value !== 'NULL') {
                     // Check if it's a valid datetime (numeric Excel format or readable string)
-                    if (!is_numeric($value) && !$this->isValidDateTimeString($value)) {
+                    if (! is_numeric($value) && ! $this->isValidDateTimeString($value)) {
                         $fail('Interview date/time must be a valid datetime format (e.g., 2024-01-15 14:30, 15/01/2024 14:30, or Excel datetime number).');
                     }
                 }
@@ -964,10 +1051,10 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 'string',
                 'max:255',
                 function ($attribute, $value, $fail) {
-                    if (!empty($value)) {
+                    if (! empty($value)) {
                         // Sanitize and validate the URL to prevent XSS attacks
                         $cleanedValue = trim($value);
-                        
+
                         // Check for dangerous protocols
                         $dangerousProtocols = [
                             'javascript:',
@@ -980,7 +1067,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                             'sms:',
                             'about:'
                         ];
-                        
+
                         $lowerValue = strtolower($cleanedValue);
                         foreach ($dangerousProtocols as $protocol) {
                             if (str_starts_with($lowerValue, $protocol)) {
@@ -988,32 +1075,32 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                                 return;
                             }
                         }
-                        
+
                         // Only allow HTTP/HTTPS URLs or relative paths
-                        if (!preg_match('/^(https?:\/\/|\/)/i', $cleanedValue)) {
+                        if (! preg_match('/^(https?:\/\/|\/)/i', $cleanedValue)) {
                             $fail('Student image must start with http://, https://, or be a relative path starting with /.');
                             return;
                         }
-                        
+
                         // If it's a full URL, validate it further
                         if (preg_match('/^https?:\/\//i', $cleanedValue)) {
                             // Validate URL format
-                            if (!filter_var($cleanedValue, FILTER_VALIDATE_URL)) {
+                            if (! filter_var($cleanedValue, FILTER_VALIDATE_URL)) {
                                 $fail('Student image must be a valid URL.');
                                 return;
                             }
-                            
+
                             // Check if URL ends with common image extensions
                             $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'];
                             $urlPath = parse_url($cleanedValue, PHP_URL_PATH);
                             $extension = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
-                            
-                            if (!in_array($extension, $allowedExtensions)) {
+
+                            if (! in_array($extension, $allowedExtensions)) {
                                 $fail('Student image must be a valid image file with extension: ' . implode(', ', $allowedExtensions) . '.');
                                 return;
                             }
                         }
-                        
+
                         // Additional security check for encoded malicious content
                         $decodedValue = urldecode($cleanedValue);
                         $lowerDecodedValue = strtolower($decodedValue);
@@ -1023,7 +1110,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                                 return;
                             }
                         }
-                        
+
                         // Check for script tags or event handlers
                         $maliciousPatterns = [
                             '<script',
@@ -1042,7 +1129,7 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                             'confirm(',
                             'prompt(',
                         ];
-                        
+
                         foreach ($maliciousPatterns as $pattern) {
                             if (str_contains($lowerDecodedValue, $pattern)) {
                                 $fail('Student image contains potentially malicious script content.');
@@ -1060,25 +1147,25 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                     if (empty($value) && empty(request()->input('passport_number'))) {
                         $fail('Either CNIC, Passport number, or Smart Card is required.');
                     }
-                    
+
                     // Validate CNIC format (with or without dashes)
-                    if (!empty($value)) {
+                    if (! empty($value)) {
                         // Remove dashes to validate the numeric part
                         $cleanedCnic = str_replace('-', '', $value);
-                        
+
                         // Check if it contains only digits
-                        if (!preg_match('/^[0-9]+$/', $cleanedCnic)) {
+                        if (! preg_match('/^[0-9]+$/', $cleanedCnic)) {
                             $fail('CNIC must contain only digits and dashes.');
                         }
-                        
+
                         // Check if it's exactly 13 digits
                         if (strlen($cleanedCnic) !== 13) {
                             $fail('CNIC must be exactly 13 digits. Format: xxxxx-xxxxxxx-x or 13 consecutive digits.');
                         }
-                        
+
                         // If dashes are present, validate the exact format
                         if (strpos($value, '-') !== false) {
-                            if (!preg_match('/^[0-9]{5}-[0-9]{7}-[0-9]{1}$/', $value)) {
+                            if (! preg_match('/^[0-9]{5}-[0-9]{7}-[0-9]{1}$/', $value)) {
                                 $fail('CNIC with dashes must follow the format: xxxxx-xxxxxxx-x (5-7-1 digit pattern).');
                             }
                         }
@@ -1091,21 +1178,21 @@ class ImportStudent implements ToModel, WithHeadingRow, WithValidation, WithBatc
                 'max:20',
                 'regex:/^[\+]?[0-9\s\-\(\)]{7,20}$/',
                 function ($attribute, $value, $fail) {
-                    if (!empty($value)) {
+                    if (! empty($value)) {
                         // Remove common phone number formatting characters
                         $cleanedPhone = preg_replace('/[\s\-\(\)]/', '', $value);
-                        
+
                         // Check if it starts with + for international format
                         if (str_starts_with($cleanedPhone, '+')) {
                             $cleanedPhone = substr($cleanedPhone, 1);
                         }
-                        
+
                         // Must contain only digits after cleaning
-                        if (!preg_match('/^[0-9]+$/', $cleanedPhone)) {
+                        if (! preg_match('/^[0-9]+$/', $cleanedPhone)) {
                             $fail('Emergency phone number must contain only digits, spaces, hyphens, parentheses, and optionally start with +.');
                             return;
                         }
-                        
+
                         // Must be between 7 and 15 digits (international standard)
                         if (strlen($cleanedPhone) < 7 || strlen($cleanedPhone) > 15) {
                             $fail('Emergency phone number must be between 7 and 15 digits long.');

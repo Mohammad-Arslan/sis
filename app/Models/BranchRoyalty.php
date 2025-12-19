@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BranchRoyalty extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'branch_id',
         'royalty_rate',
@@ -26,11 +29,13 @@ class BranchRoyalty extends Model
         'closing_date'
     ];
 
-    public function branch(){
-        return $this->belongsTo(Branch::class,'branch_id','id');
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
-    public function employee(){
-        return $this->belongsTo(Employee::class,'updated_by','id');
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'updated_by', 'id');
     }
 }

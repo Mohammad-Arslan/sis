@@ -18,7 +18,7 @@ class ImportCountry implements ToModel
             'country_name' => $row[0],
             'abbreviation' => $row[1],
             'country_code' => $row[2],
-            'created_at'=>$row[3]
+            'created_at' => $row[3]
         ]);
     }
 }

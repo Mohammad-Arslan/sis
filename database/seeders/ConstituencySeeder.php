@@ -46,14 +46,15 @@ class ConstituencySeeder extends Seeder
         ];
 
         $dataToInsert = array();
-        foreach ($attendance_statuses as $status)
-        {
+        foreach ($attendance_statuses as $status) {
             $checkStatus = Constituency::where('abbreviation', $status['abbreviation'])->first();
-            if(empty($checkStatus))
+            if (empty($checkStatus)) {
                 $dataToInsert[] = $status;
+            }
         }
 
-        if (sizeof($dataToInsert))
+        if (sizeof($dataToInsert)) {
             Constituency::insert($dataToInsert);
+        }
     }
 }

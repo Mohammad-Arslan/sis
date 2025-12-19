@@ -69,26 +69,26 @@ class SupplierController extends Controller
 
         return response()->json($suppliers);
     }
-    
+
     /**
      * Generate a random code for suppliers.
      */
     public function generateCode()
     {
         $code = Supplier::generateCode();
-        
+
         return response()->json([
             'code' => $code
         ]);
     }
-    
+
     /**
      * Update the specified supplier.
      */
     public function update(Request $request, $id)
     {
         $supplier = Supplier::findOrFail($id);
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:suppliers,code,' . $id,
@@ -103,7 +103,7 @@ class SupplierController extends Controller
             'category_ids.*' => 'exists:asset_categories,id',
             'is_active' => 'required|in:true,false,1,0'
         ]);
-        
+
         $supplier->update([
             'name' => $request->name,
             'code' => $request->code,
@@ -117,14 +117,14 @@ class SupplierController extends Controller
             'category_ids' => $request->category_ids ?? [],
             'is_active' => $request->is_active == 'true' || $request->is_active == '1'
         ]);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Supplier updated successfully',
             'data' => $supplier
         ]);
     }
-    
+
     /**
      * Remove the specified supplier.
      */
@@ -132,13 +132,13 @@ class SupplierController extends Controller
     {
         $supplier = Supplier::findOrFail($id);
         $supplier->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Supplier deleted successfully'
         ]);
     }
-    
+
     /**
      * Get asset categories for dropdown selection
      */
@@ -148,7 +148,7 @@ class SupplierController extends Controller
             ->whereNull('parent_id')
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
-            
+
         return response()->json($categories);
     }
 }

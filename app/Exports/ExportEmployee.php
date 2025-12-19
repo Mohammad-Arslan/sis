@@ -40,7 +40,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
     {
         ini_set('memory_limit', '512M');
         ini_set('max_execution_time', 300);
-        
+
         $query = Employee::with([
             'user:id,name,email,first_name,last_name,CNIC,gender',
             'branch:id,br_name,branch_code,state_id,region_id',
@@ -58,43 +58,43 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
         ]);
 
         // Apply filters
-        if (!empty($this->filters['company_id'])) {
+        if (! empty($this->filters['company_id'])) {
             $query->where('company_id', $this->filters['company_id']);
         }
-        
-        if (!empty($this->filters['branch_id'])) {
+
+        if (! empty($this->filters['branch_id'])) {
             $query->where('branch_id', $this->filters['branch_id']);
         }
-        
-        if (!empty($this->filters['department_id'])) {
+
+        if (! empty($this->filters['department_id'])) {
             $query->where('department_id', $this->filters['department_id']);
         }
-        
-        if (!empty($this->filters['designation_id'])) {
+
+        if (! empty($this->filters['designation_id'])) {
             $query->where('designation_id', $this->filters['designation_id']);
         }
-        
-        if (!empty($this->filters['gender'])) {
-            $query->whereHas('user', function($q) {
+
+        if (! empty($this->filters['gender'])) {
+            $query->whereHas('user', function ($q) {
                 $q->where('gender', $this->filters['gender']);
             });
         }
-        
-        if (!empty($this->filters['job_status'])) {
+
+        if (! empty($this->filters['job_status'])) {
             $query->where('job_status', $this->filters['job_status']);
         }
-        
-        if (!empty($this->filters['date_from'])) {
+
+        if (! empty($this->filters['date_from'])) {
             $query->where('hiring_date', '>=', $this->filters['date_from']);
         }
-        
-        if (!empty($this->filters['date_to'])) {
+
+        if (! empty($this->filters['date_to'])) {
             $query->where('hiring_date', '<=', $this->filters['date_to']);
         }
 
         // Apply branch filter for non-admin users (skip in queue context)
         try {
-            if (auth()->check() && !isSuperAdmin() && !isHeadOfficeEmp()) {
+            if (auth()->check() && ! isSuperAdmin() && ! isHeadOfficeEmp()) {
                 $branch_id = get_branch_id();
                 $query->where('branch_id', $branch_id);
             }
@@ -105,15 +105,15 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
 
         // Get total count for progress tracking
         $this->totalRows = $query->count();
-        
+
         $employees = $query->get();
-        
+
         $data = [];
         $this->currentRow = 0;
-        
+
         foreach ($employees as $employee) {
             $this->currentRow++;
-            
+
             try {
                 $data[] = [
                     // User fields (from users table)
@@ -126,7 +126,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                     'cnic_expiry' => $employee->cnic_expiry ? date('d-m-Y', strtotime($employee->cnic_expiry)) : '-',
                     'gender' => $employee->user?->gender ?? '-',
                     'date_of_birth' => $employee->date_of_birth ? date('d-m-Y', strtotime($employee->date_of_birth)) : '-',
-                    
+
                     // Personal Information
                     'father_name' => $employee->father_name ?? '-',
                     'spouse_name' => $employee->spouse_name ?? '-',
@@ -134,20 +134,20 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                     'date_of_marriage' => $employee->date_of_marriage ? date('d-m-Y', strtotime($employee->date_of_marriage)) : '-',
                     'no_of_children' => $employee->no_of_children !== null ? $employee->no_of_children : '-',
                     'children_in_ucs' => $employee->children_in_ucs !== null ? $employee->children_in_ucs : '-',
-                    
+
                     // Contact Information
                     'mobile_number' => $employee->mobile_number ?? '-',
                     'address' => $employee->address ?? '-',
-                    
+
                     // Nationality and Religion
                     'nationality' => $employee->nationality?->nationality_name ?? '-',
                     'religion' => $employee->religion?->religion_name ?? '-',
-                    
+
                     // Location
                     'country' => $employee->countries?->country_name ?? '-',
                     'state' => $employee->states?->state_name ?? '-',
                     'city' => $employee->cities?->city_name ?? '-',
-                    
+
                     // Organization Information
                     'company' => $employee->company?->company_name ?? '-',
                     'region' => $employee->branch?->region?->region_name ?? '-',
@@ -156,7 +156,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                     'department' => $employee->department?->department_name ?? '-',
                     'designation' => $employee->designation?->designation_name ?? '-',
                     'designation_type' => $employee->designation_type?->type_name ?? '-',
-                    
+
                     // Employment Status
                     'job_status' => $employee->job_status ?? '-',
                     'hiring_date' => $employee->hiring_date ? date('d-m-Y', strtotime($employee->hiring_date)) : '-',
@@ -165,7 +165,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                     'left_date' => $employee->left_date ? date('d-m-Y', strtotime($employee->left_date)) : '-',
                     'probation_end_date' => $employee->probation_end_date ? date('d-m-Y', strtotime($employee->probation_end_date)) : '-',
                     'probation_extended' => $employee->probation_extended ?? '-',
-                    
+
                     // ID Numbers
                     'pin_code' => $employee->pin_code ?? '-',
                     'card_no' => $employee->card_no ?? '-',
@@ -173,26 +173,25 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                     'ni_number' => $employee->ni_number ?? '-',
                     'ss_no' => $employee->ss_no ?? '-',
                     'previous_id' => $employee->previous_id ?? '-',
-                    
+
                     // Passport Information
                     'passport_number' => $employee->passport_number ?? '-',
                     'issue_date' => $employee->issue_date ? date('d-m-Y', strtotime($employee->issue_date)) : '-',
                     'expiry_date' => $employee->expiry_date ? date('d-m-Y', strtotime($employee->expiry_date)) : '-',
-                    
+
                     // Other
                     'crb' => $employee->crb ?? '-',
-                    
+
                     // Calculated field (for information only - not imported)
                     'total_service' => $this->calculateTotalService($employee),
                 ];
-                
+
                 $this->exportedCount++;
-                
+
                 // Trigger progress callback every 10 records
                 if ($this->currentRow % 10 === 0 && $this->progressCallback) {
                     $this->triggerProgressCallback();
                 }
-                
             } catch (\Exception $e) {
                 $this->errors[] = [
                     'row' => $this->currentRow,
@@ -200,19 +199,19 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                     'error' => $e->getMessage(),
                 ];
                 $this->skippedCount++;
-                
+
                 // Still trigger progress callback for errors
                 if ($this->progressCallback) {
                     $this->triggerProgressCallback();
                 }
             }
         }
-        
+
         // Final progress update
         if ($this->progressCallback) {
             $this->triggerProgressCallback();
         }
-        
+
         return collect($data);
     }
 
@@ -232,7 +231,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
             'CNIC Expiry',
             'Gender',
             'Date of Birth',
-            
+
             // Personal Information
             'Father Name',
             'Spouse Name',
@@ -240,20 +239,20 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
             'Date of Marriage',
             'No of Children',
             'Children in UCS',
-            
+
             // Contact Information
             'Mobile Number',
             'Address',
-            
+
             // Nationality and Religion
             'Nationality',
             'Religion',
-            
+
             // Location
             'Country',
             'State',
             'City',
-            
+
             // Organization Information
             'Company',
             'Region',
@@ -262,7 +261,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
             'Department',
             'Designation',
             'Designation Type',
-            
+
             // Employment Status
             'Job Status',
             'Hiring Date',
@@ -271,7 +270,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
             'Left Date',
             'Probation End Date',
             'Probation Extended',
-            
+
             // ID Numbers
             'Pin Code',
             'Card No',
@@ -279,15 +278,15 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
             'NI Number',
             'SS No',
             'Previous ID',
-            
+
             // Passport Information
             'Passport Number',
             'Issue Date',
             'Expiry Date',
-            
+
             // Other
             'CRB',
-            
+
             // Calculated field (for information only)
             'Total Service',
         ];
@@ -295,19 +294,19 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
 
     /**
      * Calculate total service duration for an employee
-     * 
+     *
      * @param Employee $employee
      * @return string
      */
     private function calculateTotalService($employee)
     {
         try {
-            if (!$employee->hiring_date) {
+            if (! $employee->hiring_date) {
                 return '-';
             }
 
             $hiringDate = \Carbon\Carbon::parse($employee->hiring_date);
-            
+
             // If employee has left, calculate from hiring date to left date
             if ($employee->job_status === 'left' && $employee->left_date) {
                 $endDate = \Carbon\Carbon::parse($employee->left_date);
@@ -318,28 +317,27 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
 
             // Calculate the difference
             $diff = $hiringDate->diff($endDate);
-            
+
             $years = $diff->y;
             $months = $diff->m;
             $days = $diff->d;
 
             // Format the result
             $result = [];
-            
+
             if ($years > 0) {
                 $result[] = $years . ' ' . ($years == 1 ? 'Year' : 'Years');
             }
-            
+
             if ($months > 0) {
                 $result[] = $months . ' ' . ($months == 1 ? 'Month' : 'Months');
             }
-            
+
             if ($days > 0 && $years == 0) {
                 $result[] = $days . ' ' . ($days == 1 ? 'Day' : 'Days');
             }
 
             return empty($result) ? 'Less than 1 day' : implode(', ', $result);
-            
         } catch (\Exception $e) {
             Log::error('Error calculating total service for employee ID: ' . $employee->id . ' - ' . $e->getMessage());
             return '-';
@@ -360,7 +358,7 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
                 'errors' => count($this->errors),
                 'current_row' => $this->currentRow,
             ];
-            
+
             call_user_func($this->progressCallback, $stats);
         }
     }
@@ -394,14 +392,14 @@ class ExportEmployee implements FromCollection, WithHeadings, WithChunkReading, 
     public function registerEvents(): array
     {
         return [
-            BeforeSheet::class => function(BeforeSheet $event) {
+            BeforeSheet::class => function (BeforeSheet $event) {
                 // Initialize progress tracking
                 $this->currentRow = 0;
                 $this->exportedCount = 0;
                 $this->skippedCount = 0;
                 $this->errors = [];
             },
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 // Final progress update
                 if ($this->progressCallback) {
                     $this->triggerProgressCallback();

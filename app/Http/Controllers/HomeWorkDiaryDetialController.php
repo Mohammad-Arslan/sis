@@ -53,7 +53,7 @@ class HomeWorkDiaryDetialController extends Controller
         //     // 'attachment.*' => 'required'
         // ]);
 
-        if (!isset($request->diary_id) || !isset($request->subject_id) || !isset($request->homework) || !isset($request->created_by)) {
+        if (! isset($request->diary_id) || ! isset($request->subject_id) || ! isset($request->homework) || ! isset($request->created_by)) {
             return redirect()->route('homeWorkDiary.index')->with('error', 'Subject and Home Work fields are required, unable to insert the record.');
         }
 
@@ -94,7 +94,6 @@ class HomeWorkDiaryDetialController extends Controller
         }
 
         return redirect()->route('homeWorkDiary.index')->with('success', 'Home work has been created successfully.');
-
     }
 
     /**
@@ -105,7 +104,6 @@ class HomeWorkDiaryDetialController extends Controller
      */
     public function show(HomeWorkDiaryDetial $homeWorkDiaryDetial)
     {
-
     }
 
     /**
@@ -130,7 +128,7 @@ class HomeWorkDiaryDetialController extends Controller
      */
     public function update(Request $request, HomeWorkDiaryDetial $homeWorkDiaryDetial)
     {
-        if (!isset($request->diary_id) || !isset($request->subject_id) || !isset($request->homework) || !isset($request->updated_by)) {
+        if (! isset($request->diary_id) || ! isset($request->subject_id) || ! isset($request->homework) || ! isset($request->updated_by)) {
             return redirect()->route('homeWorkDiary.index')->with('error', 'Subject and Home Work fields are required, unable to insert the record.');
         }
 

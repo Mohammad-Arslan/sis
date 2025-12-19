@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class TaskStatusChangeLog extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'task_id',
         'from_status',

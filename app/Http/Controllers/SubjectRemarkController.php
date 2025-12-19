@@ -29,7 +29,6 @@ class SubjectRemarkController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $query = array();
 
             if (isset($request->section_id)) {
@@ -43,21 +42,23 @@ class SubjectRemarkController extends Controller
                     'created_by'
                 ])->select('subject_remarks.*', 'subject_remarks.id as subject_remark_id');
 
-                if (isset($request->academic_year_id))
+                if (isset($request->academic_year_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('academic_year_id', $request->academic_year_id);
                         $q->orWhereNull('academic_year_id');
                     });
+                }
 
-                if (isset($request->branch_id))
+                if (isset($request->branch_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('subject_remarks.branch_id', $request->branch_id);
                         $q->orWhereNull('subject_remarks.branch_id');
                     });
+                }
 
                 if (isset($request->class_id)) {
                     $branch_class = BranchClass::find($request->class_id);
-                    $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+                    $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
                     $query = $query->where(function ($q) use ($class_id) {
                         $q->where('class_id', $class_id);
                         $q->orWhereNull('class_id');
@@ -66,18 +67,19 @@ class SubjectRemarkController extends Controller
 
                 if (isset($request->section_id)) {
                     $branch_class_section = BranchClassSection::find($request->section_id);
-                    $section_id = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+                    $section_id = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
                     $query = $query->where(function ($q) use ($section_id) {
                         $q->where('section_id', $section_id);
                         $q->orWhereNull('section_id');
                     });
                 }
 
-                if (isset($request->subject_id))
+                if (isset($request->subject_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('subject_id', $request->subject_id);
                         $q->orWhereNull('subject_id');
                     });
+                }
 
                 /*if (isset($request->term_id))
                     $query = $query->where(function ($q) use ($request){
@@ -105,8 +107,9 @@ class SubjectRemarkController extends Controller
             $employee = NetworkAssociate::where('user_id', $user->id)->with('branches')->first();
             // dd($employee->branches->toArray());
             $data['branches'] = $employee->branches;
-        } else
+        } else {
             $data['branches'] = Branch::all();
+        }
         $data['terms'] = Term::all();
         $data['assessment_level_one'] = AssessmentLevel::where('parent_id', 0)->get();
 
@@ -137,8 +140,8 @@ class SubjectRemarkController extends Controller
 
         $branch_class = BranchClass::find($request->class_id);
         $branch_class_section = BranchClassSection::find($request->section_id);
-        $input['class_id'] = !empty($branch_class) ? $branch_class->class_id : 0;
-        $input['section_id'] = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+        $input['class_id'] = ! empty($branch_class) ? $branch_class->class_id : 0;
+        $input['section_id'] = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
         $input['remarks_date'] = parse_date($request->remarks_date, 'Y-m-d');
         $input['created_by_id'] = Auth::user()->id;
         $subject_marks_setup = SubjectRemark::where([
@@ -150,7 +153,7 @@ class SubjectRemarkController extends Controller
             ['section_id', $input['section_id']],
         ])->first();
         // dd($subject_marks_setup->toArray());
-        if (!empty($subject_marks_setup)) {
+        if (! empty($subject_marks_setup)) {
             return redirect()->back()->with('error', 'Record already exists');
         }
         DB::beginTransaction();

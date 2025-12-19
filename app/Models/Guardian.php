@@ -11,7 +11,11 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Guardian extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait, HasApiTokens, Notifiable;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+    use HasApiTokens;
+    use Notifiable;
 
     protected $fillable = [
         'guardian_name',
@@ -59,7 +63,6 @@ class Guardian extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class,'employee_no','employee_id');
+        return $this->belongsTo(Employee::class, 'employee_no', 'employee_id');
     }
-
 }

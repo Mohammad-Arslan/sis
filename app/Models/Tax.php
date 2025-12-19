@@ -10,7 +10,10 @@ use App\Traits\SerializeDateTrait;
 
 class Tax extends Model
 {
-    use HasFactory, CreatingObserverTrait, SerializeDateTrait, LogsActivity;
+    use HasFactory;
+    use CreatingObserverTrait;
+    use SerializeDateTrait;
+    use LogsActivity;
 
     protected $fillable = [
         'tax_type_id',

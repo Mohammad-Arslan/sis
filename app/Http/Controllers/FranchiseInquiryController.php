@@ -52,13 +52,13 @@ class FranchiseInquiryController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('initiated_by', function ($row) {
-                    return !empty($row->initiated_by) ? User::getUserNameByID($row->initiated_by) : '--';
+                    return ! empty($row->initiated_by) ? User::getUserNameByID($row->initiated_by) : '--';
                 })
                 ->addColumn('created_by', function ($row) {
-                    return !empty($row->created_by) ? $row->created_by : '--';
+                    return ! empty($row->created_by) ? $row->created_by : '--';
                 })
                 ->addColumn('last_updated_by', function ($row) {
-                    return !empty($row->last_updated_by) ? User::getUserNameByID($row->last_updated_by) : '--';
+                    return ! empty($row->last_updated_by) ? User::getUserNameByID($row->last_updated_by) : '--';
                 })
                 ->addColumn('led_franchise', function ($row) {
                     return ucwords($row->led_franchise);
@@ -133,7 +133,7 @@ class FranchiseInquiryController extends Controller
         $data['sources'] = Source::all();
         $data['franchise_inquiry'] = $franchisesInquiry;
 
-        return view('franchise-inquiry.franchise_inquiry',$data);
+        return view('franchise-inquiry.franchise_inquiry', $data);
     }
 
     /**
@@ -159,7 +159,7 @@ class FranchiseInquiryController extends Controller
         }
 //        FranchiseInquiry::store_update_franchise_inquiry($request->all(),$franchisesInquiry,'update');
 
-        return redirect()->back()->with('success','Franchise Inquiry Updated Successfully.');
+        return redirect()->back()->with('success', 'Franchise Inquiry Updated Successfully.');
     }
 
     /**

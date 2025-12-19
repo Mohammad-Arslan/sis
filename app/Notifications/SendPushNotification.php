@@ -45,7 +45,7 @@ class SendPushNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        return (new MailMessage)
+        return (new MailMessage())
             ->line('The introduction to the notification.')
             ->action('Notification Action', url('/'))
             ->line('Thank you for using our application!');
@@ -68,7 +68,7 @@ class SendPushNotification extends Notification
         //     'status' => 'sent'
         // ]);
 
-        return (new FirebaseMessage)
+        return (new FirebaseMessage())
             ->withTitle($this->title)
             ->withBody($this->message)
             ->asNotification($deviceTokens); // OR ->asMessage($deviceTokens);

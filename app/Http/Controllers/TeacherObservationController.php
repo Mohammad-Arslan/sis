@@ -11,9 +11,6 @@ use App\Models\Branch;
 use App\Models\Employee;
 use Carbon\Carbon;
 
-
-
-
 class TeacherObservationController extends Controller
 {
     /**
@@ -29,18 +26,18 @@ class TeacherObservationController extends Controller
         return view('teacher_evaluation.index', compact('observations'));
     }
 
-    
+
     public function create()
     {
         $user = Auth::user();
         $isSuperAdmin = $user->hasRole('super_admin');
-        
+
         // For super_admin, show all branches
         if ($isSuperAdmin) {
             $branches = Branch::all();
             $selectedBranch = null; // No pre-selected branch for super_admin
             $employees = collect(); // Empty collection initially
-            
+
             return view('teacher_evaluation.create', [
                 'branches' => $branches,
                 'employees' => $employees,
@@ -48,20 +45,22 @@ class TeacherObservationController extends Controller
                 'isSuperAdmin' => $isSuperAdmin,
             ]);
         }
-        
+
         // For non-super_admin users, check employee record
-        if (!$user->employee) {
-            return redirect()->back()->with('error', 
+        if (! $user->employee) {
+            return redirect()->back()->with(
+                'error',
                 'Error: Your user account is not associated with an employee record. ' .
                 'Please contact the administrator to set up your employee profile.'
             );
         }
-        
+
         $selectedBranch = $user->employee->branch;
-        
+
         // Check if employee has a branch
-        if (!$selectedBranch) {
-            return redirect()->back()->with('error', 
+        if (! $selectedBranch) {
+            return redirect()->back()->with(
+                'error',
                 'Error: Your employee record is not associated with any branch. ' .
                 'Please contact the administrator to assign you to a branch.'
             );
@@ -71,21 +70,22 @@ class TeacherObservationController extends Controller
         $branches = collect([$selectedBranch]); // Only their branch
         $employees = Employee::where('branch_id', $selectedBranch->id)
             ->whereNotNull('preferred_name')
-            ->whereHas('designation', function($query) {
+            ->whereHas('designation', function ($query) {
                 $query->where('designation_name', 'Teacher');
             })
             ->get();
 
         // Check if branch has class sections configured
         $branchClassSections = \App\Models\BranchClassSection::where('branch_id', $selectedBranch->id)->count();
-        
+
         if ($branchClassSections == 0) {
             return view('teacher_evaluation.create', [
                 'branches' => $branches,
                 'employees' => $employees,
                 'selectedBranch' => $selectedBranch,
                 'isSuperAdmin' => $isSuperAdmin,
-            ])->with('warning', 
+            ])->with(
+                'warning',
                 "Warning: The selected branch '{$selectedBranch->br_name}' does not have any class sections configured. " .
                 "Please set up branch class sections before creating teacher observations. " .
                 "Go to Branch Management > Classes > Class Sections to configure this."
@@ -121,12 +121,11 @@ class TeacherObservationController extends Controller
 
             // Redirect to the index page or a success page.
             return redirect()->route('teacher_evaluation.index')->with('success', 'Teacher Observation created successfully');
-            
         } catch (QueryException $e) {
             // Handle foreign key constraint violations
             if ($e->getCode() == 23000) {
                 $errorMessage = "Database constraint error: ";
-                
+
                 if (strpos($e->getMessage(), 'teacher_observations_branch_id_foreign') !== false) {
                     $errorMessage .= "The selected branch (ID: {$request->input('branch_id')}) does not have any class sections configured. ";
                     $errorMessage .= "Please ensure that branch class sections are set up for this branch before creating teacher observations.";
@@ -137,10 +136,10 @@ class TeacherObservationController extends Controller
                 } else {
                     $errorMessage .= "A foreign key constraint failed. Please check that all referenced records exist.";
                 }
-                
+
                 return redirect()->back()->with('error', $errorMessage)->withInput();
             }
-            
+
             // Re-throw other database exceptions
             throw $e;
         }
@@ -203,7 +202,7 @@ class TeacherObservationController extends Controller
     {
         $teachers = Employee::where('branch_id', $branchId)
             ->whereNotNull('preferred_name')
-            ->whereHas('designation', function($query) {
+            ->whereHas('designation', function ($query) {
                 $query->where('designation_name', 'Teacher');
             })
             ->get(['id', 'preferred_name']);

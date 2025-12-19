@@ -48,7 +48,6 @@ class FeeChargeController extends Controller
             }
 
             if ($request->searchName && $request->searchName != null) {
-
                 $data = $data->where(function ($query) use ($request) {
                     $query->orWhere('amount', 'like', '%' . $request->searchName . '%');
                     $query->orWhere('created_at', 'like', '%' . $request->searchName . '%');
@@ -188,7 +187,7 @@ class FeeChargeController extends Controller
             $message .= " Skipped {$skippedCount} duplicate(s).";
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             return redirect()->back()
                 ->withInput()
                 ->with('warning', $message)

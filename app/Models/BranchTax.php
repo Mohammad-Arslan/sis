@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class BranchTax extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'branch_id',

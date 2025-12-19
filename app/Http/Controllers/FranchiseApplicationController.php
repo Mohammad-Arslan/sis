@@ -50,8 +50,6 @@ class FranchiseApplicationController extends Controller
             'attachment_types' => $attachmentTypes,
         ];
         if ($request->ajax()) {
-
-
             $query = FranchiseApplication::with(['states', 'cities', 'source', 'other_informations','franchise_application_qa','franchise_application_bd','franchise_application_tor','franchise_application_legal','franchise_application_dd']);
 
             if ($request->state_id && $request->state_id > 0) {
@@ -103,8 +101,7 @@ class FranchiseApplicationController extends Controller
             if ($request->agreement_type && $request->agreement_type != '') {
                 if ($request->agreement_type == 'APP') {
                     $query->where('agreement_type', $request->agreement_type)->orWhereNull('agreement_type');
-                }
-                else{
+                } else {
                     $query->where('agreement_type', $request->agreement_type);
                 }
             }
@@ -119,8 +116,6 @@ class FranchiseApplicationController extends Controller
             }
 
             if ($request->searchTerm && $request->searchTerm != null) {
-
-
                 $query->whereHas('franchise_application_bd', function ($query) use ($request) {
                     $query->where('proposed_school_name', 'like', '%' . $request->searchTerm . '%');
                 });
@@ -142,7 +137,7 @@ class FranchiseApplicationController extends Controller
                 ->addIndexColumn()
                 ->addColumn('full_name', function ($row) {
                     $full_name = $row['appl_name'] . ' ' . $row['appl_last_name'];
-                    return auth()->user()->hasPermission('edit-franchise-application') ? '<a href="'.route('franchise-applications.edit', $row->id).'">'.$full_name.'</a>' : $full_name;
+                    return auth()->user()->hasPermission('edit-franchise-application') ? '<a href="' . route('franchise-applications.edit', $row->id) . '">' . $full_name . '</a>' : $full_name;
                 })
                 ->addColumn('province_city', function ($row) {
                     return $row['states']['state_name'] . '/' . $row['cities']['city_name'];
@@ -181,9 +176,11 @@ class FranchiseApplicationController extends Controller
                     return $badge;
                 })
                 ->addColumn('agreement_type', function ($row) {
-                    if($row['agreement_type']=='' || $row['agreement_type']=='APP')
-                    { $badge="Applied"; }
-                    else{ $badge =  $row['agreement_type'];}
+                    if ($row['agreement_type'] == '' || $row['agreement_type'] == 'APP') {
+                        $badge = "Applied";
+                    } else {
+                        $badge =  $row['agreement_type'];
+                    }
                     return $badge;
                 })
                 ->addColumn('total_franchise_fee', function ($row) {
@@ -336,8 +333,8 @@ class FranchiseApplicationController extends Controller
         $sources = Source::all();
         $states = State::all();
         $users = User::all();
-        $recommended_by = getUserByDepartmentAndBranchID(5,2);
-        $approved_by = getUserByDepartmentAndBranchID(5,2);
+        $recommended_by = getUserByDepartmentAndBranchID(5, 2);
+        $approved_by = getUserByDepartmentAndBranchID(5, 2);
         $other_informations = FranchiseApplication::with(['other_informations'])->get();
         $attachment_types = FranchiseApplicationAttachmentType::all();
         $data = [
@@ -409,8 +406,9 @@ class FranchiseApplicationController extends Controller
         $franchise_application_id = $request->franchise_application_id;
         $details = FranchiseApplicationsAttachment::with(['user','attachment_type'])->where(['franchise_application_id' => $franchise_application_id]);
 
-        if (!auth()->user())
+        if (! auth()->user()) {
             $details = $details->whereNull('uploaded_by');
+        }
         $details = $details->get();
 
         $rows = view('franchise_application.franchise_application_docs_table_row', ['franchise_application_attachments' => $details])->render();
@@ -436,11 +434,11 @@ class FranchiseApplicationController extends Controller
             }*/
 
             $type = $request->file->extension();
-            $file_original_name = basename($request->file->getClientOriginalName(),'.'.$type);
+            $file_original_name = basename($request->file->getClientOriginalName(), '.' . $type);
             $fileName = $file_original_name . '-' . getCurrentMiliSec() . '.' . $type;
             // $request->file->move($path, $fileName);
 
-             $s3_storage_path = 'franchise_application_attachments/' . $request->franchise_application_id . '/'. $fileName;
+             $s3_storage_path = 'franchise_application_attachments/' . $request->franchise_application_id . '/' . $fileName;
              Storage::disk('s3')->put($s3_storage_path, file_get_contents($request->file));
 
             $input['file_name'] = $fileName;
@@ -768,42 +766,33 @@ class FranchiseApplicationController extends Controller
     public function franchiseApplicationInquiryAssessmentSurvey(Request $request)
     {
         //dd($request->id);
-        $Application_detail = FranchiseApplication::where('id','=',$request->id)->with(['states', 'cities', 'source', 'other_informations','franchise_application_qa','franchise_application_bd','franchise_application_bd.school_type','franchise_application_tor','franchise_application_legal','franchise_application_dd','franchise_application_qa_remarks','franchise_application_bd_remarks','franchise_application_dd_remarks'])->get()->toArray();
-        $applicant_name = '-';  $applicant_contact =  $bank_acc_detail = null;
+        $Application_detail = FranchiseApplication::where('id', '=', $request->id)->with(['states', 'cities', 'source', 'other_informations','franchise_application_qa','franchise_application_bd','franchise_application_bd.school_type','franchise_application_tor','franchise_application_legal','franchise_application_dd','franchise_application_qa_remarks','franchise_application_bd_remarks','franchise_application_dd_remarks'])->get()->toArray();
+        $applicant_name = '-';
+        $applicant_contact =  $bank_acc_detail = null;
         $id = $Application_detail[0]['id'];
-        if(isset($Application_detail[0]['agreement_type']))
-        {
+        if (isset($Application_detail[0]['agreement_type'])) {
             $agreement_type = $Application_detail[0]['agreement_type'];
-        }
-        else
-        {
+        } else {
             $agreement_type = '-';
         }
 
-        if($agreement_type == 'FA')
-        {
+        if ($agreement_type == 'FA') {
             $attachments = FranchiseApplicationsAttachment::where(['franchise_application_id' => $request->id,'attachment_type_id' => 9])->get()->toArray();
             //dd($attachments[0]['uploaded_date']);
-            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Agreement updated on '.Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
-        }
-        elseif($agreement_type == 'MOU')
-        {
+            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Agreement updated on ' . Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
+        } elseif ($agreement_type == 'MOU') {
             $attachments = FranchiseApplicationsAttachment::where(['franchise_application_id' => $request->id,'attachment_type_id' => 8])->get()->toArray();
-            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Agreement updated on '.Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
-        }
-        else
-        {
+            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Agreement updated on ' . Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
+        } else {
             $mou_fa_status = '';
         }
 
-            if(isset($Application_detail[0]['appl_name']))
-            {
-                $applicant_name = $Application_detail[0]['appl_name'];
-            }
-            if(isset($Application_detail[0]['appl_last_name']))
-            {
-                $applicant_name .= ' '.$Application_detail[0]['appl_last_name'];
-            }
+        if (isset($Application_detail[0]['appl_name'])) {
+            $applicant_name = $Application_detail[0]['appl_name'];
+        }
+        if (isset($Application_detail[0]['appl_last_name'])) {
+            $applicant_name .= ' ' . $Application_detail[0]['appl_last_name'];
+        }
             // else if(isset($Application_detail[0]['appl_last_name']) && $applicant_name == '')
             // {
             //     $applicant_name = $Application_detail[0]['appl_last_name'];
@@ -811,300 +800,202 @@ class FranchiseApplicationController extends Controller
             // else{
             //     $applicant_name = '-';
             // }
-            if(isset($Application_detail[0]['contact_no_1']))
-            {
-                $applicant_contact = $Application_detail[0]['contact_no_1'];
-            }
-            else if(isset($Application_detail[0]['contact_no_2']))
-            {
-                $applicant_contact .= ', '.$Application_detail[0]['contact_no_2'];
-            }
-            else{
-                $applicant_contact = '-';
-            }
-            if(isset($Application_detail[0]['CNIC']))
-            {
-                $cnic = $Application_detail[0]['CNIC'];
-            }
-            if(isset($Application_detail[0]['personal_address']))
-            {
-                $nwa_address = $Application_detail[0]['personal_address'];
-            }
-            if(isset($Application_detail[0]['email']))
-            {
-                $nwa_email = $Application_detail[0]['email'];
-            }
-            if(isset($Application_detail[0]['franchise_application_qa']['proposed_location']))
-            {
-                $proposed_location = $Application_detail[0]['franchise_application_qa']['proposed_location'];
-            }
-            else
-            {
-                $proposed_location = '-';
-            }
-            if(isset($Application_detail[0]['franchise_application_bd']['school_type']['name']))
-            {
-                $school_type = $Application_detail[0]['franchise_application_bd']['school_type']['name'];
-            }
-            else
-            {
-                $school_type = '-';
-            }
+        if (isset($Application_detail[0]['contact_no_1'])) {
+            $applicant_contact = $Application_detail[0]['contact_no_1'];
+        } else if (isset($Application_detail[0]['contact_no_2'])) {
+            $applicant_contact .= ', ' . $Application_detail[0]['contact_no_2'];
+        } else {
+            $applicant_contact = '-';
+        }
+        if (isset($Application_detail[0]['CNIC'])) {
+            $cnic = $Application_detail[0]['CNIC'];
+        }
+        if (isset($Application_detail[0]['personal_address'])) {
+            $nwa_address = $Application_detail[0]['personal_address'];
+        }
+        if (isset($Application_detail[0]['email'])) {
+            $nwa_email = $Application_detail[0]['email'];
+        }
+        if (isset($Application_detail[0]['franchise_application_qa']['proposed_location'])) {
+            $proposed_location = $Application_detail[0]['franchise_application_qa']['proposed_location'];
+        } else {
+            $proposed_location = '-';
+        }
+        if (isset($Application_detail[0]['franchise_application_bd']['school_type']['name'])) {
+            $school_type = $Application_detail[0]['franchise_application_bd']['school_type']['name'];
+        } else {
+            $school_type = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['school_type']['description']))
-            {
-                $school_configuration = $Application_detail[0]['franchise_application_bd']['school_type']['description'];
-            }
-            else
-            {
-                $school_configuration = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['school_type']['description'])) {
+            $school_configuration = $Application_detail[0]['franchise_application_bd']['school_type']['description'];
+        } else {
+            $school_configuration = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['proposed_school_name']))
-            {
-                $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
-            }
-            else
-            {
-                $proposed_school_name = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['proposed_school_name'])) {
+            $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
+        } else {
+            $proposed_school_name = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['proposed_school_name']))
-            {
-                $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
-            }
-            else
-            {
-                $proposed_school_name = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['proposed_school_name'])) {
+            $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
+        } else {
+            $proposed_school_name = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['area_population_half_km_radius']))
-            {
-                $area_population_half_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_half_km_radius'];
-            }
-            else
-            {
-                $area_population_half_km_radius = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['area_population_half_km_radius'])) {
+            $area_population_half_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_half_km_radius'];
+        } else {
+            $area_population_half_km_radius = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['area_population_one_km_radius']))
-            {
-                $area_population_one_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_one_km_radius'];
-            }
-            else
-            {
-                $area_population_one_km_radius = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['area_population_one_km_radius'])) {
+            $area_population_one_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_one_km_radius'];
+        } else {
+            $area_population_one_km_radius = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['area_population_two_km_radius']))
-            {
-                $area_population_two_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_two_km_radius'];
-            }
-            else
-            {
-                $area_population_two_km_radius = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['area_population_two_km_radius'])) {
+            $area_population_two_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_two_km_radius'];
+        } else {
+            $area_population_two_km_radius = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd_remarks']))
-            {
-                $bd_remarks = $Application_detail[0]['franchise_application_bd_remarks']['observation'];
-            }
-            else
-            {
-                $bd_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd_remarks'])) {
+            $bd_remarks = $Application_detail[0]['franchise_application_bd_remarks']['observation'];
+        } else {
+            $bd_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['bd_status']))
-            {
-                $bd_status = $Application_detail[0]['franchise_application_bd']['bd_status'];
-            }
-            else
-            {
-                $bd_status = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['bd_status'])) {
+            $bd_status = $Application_detail[0]['franchise_application_bd']['bd_status'];
+        } else {
+            $bd_status = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['token_money']))
-            {
-                $token_money = ucfirst($Application_detail[0]['franchise_application_tor']['token_money']);
-            }
-            else
-            {
-                $token_money = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['token_money'])) {
+            $token_money = ucfirst($Application_detail[0]['franchise_application_tor']['token_money']);
+        } else {
+            $token_money = 0;
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['agreement_date']))
-            {
-                $agreement_date = $Application_detail[0]['franchise_application_tor']['agreement_date'];
-            }
-            else
-            {
-                $agreement_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['agreement_date'])) {
+            $agreement_date = $Application_detail[0]['franchise_application_tor']['agreement_date'];
+        } else {
+            $agreement_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['operational_date']))
-            {
-                $operational_date = $Application_detail[0]['franchise_application_tor']['operational_date'];
-            }
-            else
-            {
-                $operational_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['operational_date'])) {
+            $operational_date = $Application_detail[0]['franchise_application_tor']['operational_date'];
+        } else {
+            $operational_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['actual_operational_date']))
-            {
-                $actual_operational_date = Carbon::parse($Application_detail[0]['franchise_application_tor']['actual_operational_date'])->format('d-m-Y');
-            }
-            else
-            {
-                $actual_operational_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['actual_operational_date'])) {
+            $actual_operational_date = Carbon::parse($Application_detail[0]['franchise_application_tor']['actual_operational_date'])->format('d-m-Y');
+        } else {
+            $actual_operational_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['renewal_date']))
-            {
-                $renewal_date = $Application_detail[0]['franchise_application_tor']['renewal_date'];
-            }
-            else
-            {
-                $renewal_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['renewal_date'])) {
+            $renewal_date = $Application_detail[0]['franchise_application_tor']['renewal_date'];
+        } else {
+            $renewal_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['bank_name']))
-            {
-                $bank_name = $Application_detail[0]['franchise_application_tor']['bank_name'];
-                $bank_acc_detail = $bank_name;
-            }
-            elseif(isset($Application_detail[0]['franchise_application_tor']['bank_account']))
-            {
-                $bank_account = ', Account #:'.$Application_detail[0]['franchise_application_tor']['bank_account'];
-                $bank_acc_detail .= $bank_account;
-            }
-            elseif(isset($Application_detail[0]['franchise_application_tor']['bank_acc_opening_date']))
-            {
-                $bank_acc_opening_date = ', Account Opening Date:'.$Application_detail[0]['franchise_application_tor']['bank_acc_opening_date'];
-                $bank_acc_detail .= $bank_acc_opening_date;
-            }
-            else
-            {
-                $bank_acc_detail = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['bank_name'])) {
+            $bank_name = $Application_detail[0]['franchise_application_tor']['bank_name'];
+            $bank_acc_detail = $bank_name;
+        } elseif (isset($Application_detail[0]['franchise_application_tor']['bank_account'])) {
+            $bank_account = ', Account #:' . $Application_detail[0]['franchise_application_tor']['bank_account'];
+            $bank_acc_detail .= $bank_account;
+        } elseif (isset($Application_detail[0]['franchise_application_tor']['bank_acc_opening_date'])) {
+            $bank_acc_opening_date = ', Account Opening Date:' . $Application_detail[0]['franchise_application_tor']['bank_acc_opening_date'];
+            $bank_acc_detail .= $bank_acc_opening_date;
+        } else {
+            $bank_acc_detail = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['type_of_locality']))
-            {
-                $type_of_locality = $Application_detail[0]['franchise_application_qa']['type_of_locality'];
-            }
-            else
-            {
-                $type_of_locality ='-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['type_of_locality'])) {
+            $type_of_locality = $Application_detail[0]['franchise_application_qa']['type_of_locality'];
+        } else {
+            $type_of_locality = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['qa_status']))
-            {
-                $qa_status = $Application_detail[0]['franchise_application_qa']['qa_status'];
-            }
-            else
-            {
-                $qa_status ='-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['qa_status'])) {
+            $qa_status = $Application_detail[0]['franchise_application_qa']['qa_status'];
+        } else {
+            $qa_status = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['type_of_construction']))
-            {
-                $construction = explode('_',$Application_detail[0]['franchise_application_qa']['type_of_construction']);
-                $type_of_construction = ucfirst($construction[0]).' '.ucfirst($construction[1]);
-            }
-            else
-            {
-                $type_of_construction = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['type_of_construction'])) {
+            $construction = explode('_', $Application_detail[0]['franchise_application_qa']['type_of_construction']);
+            $type_of_construction = ucfirst($construction[0]) . ' ' . ucfirst($construction[1]);
+        } else {
+            $type_of_construction = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['plot_size_actual']))
-            {
-                $plot_size_actual = $Application_detail[0]['franchise_application_qa']['plot_size_actual'].' '.$Application_detail[0]['franchise_application_qa']['actual_uom'];
-            }
-            else
-            {
-                $plot_size_actual = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['plot_size_actual'])) {
+            $plot_size_actual = $Application_detail[0]['franchise_application_qa']['plot_size_actual'] . ' ' . $Application_detail[0]['franchise_application_qa']['actual_uom'];
+        } else {
+            $plot_size_actual = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa_remarks']))
-            {
-                $qa_remarks = $Application_detail[0]['franchise_application_qa_remarks']['observation'];
-            }
-            else
-            {
-                $qa_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa_remarks'])) {
+            $qa_remarks = $Application_detail[0]['franchise_application_qa_remarks']['observation'];
+        } else {
+            $qa_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['total_franchise_fee']))
-            {
-                $total_franchise_fee = $Application_detail[0]['franchise_application_tor']['total_franchise_fee'];
-            }
-            else
-            {
-                $total_franchise_fee = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['total_franchise_fee'])) {
+            $total_franchise_fee = $Application_detail[0]['franchise_application_tor']['total_franchise_fee'];
+        } else {
+            $total_franchise_fee = 0;
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['royalty_rate']))
-            {
-                $royalty_rate = $Application_detail[0]['franchise_application_tor']['royalty_rate'];
-            }
-            else
-            {
-                $royalty_rate = 0;
-            }
-            if(isset($Application_detail[0]['franchise_application_tor']['payment_on_agreement']))
-            {
-                $payment_on_agreement = $Application_detail[0]['franchise_application_tor']['payment_on_agreement'];
-            }
-            else
-            {
-                $payment_on_agreement = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['royalty_rate'])) {
+            $royalty_rate = $Application_detail[0]['franchise_application_tor']['royalty_rate'];
+        } else {
+            $royalty_rate = 0;
+        }
+        if (isset($Application_detail[0]['franchise_application_tor']['payment_on_agreement'])) {
+            $payment_on_agreement = $Application_detail[0]['franchise_application_tor']['payment_on_agreement'];
+        } else {
+            $payment_on_agreement = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['amount_received']))
-            {
-                $amount_received = $Application_detail[0]['franchise_application_tor']['amount_received'];
-            }
-            else
-            {
-                $amount_received = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['amount_received'])) {
+            $amount_received = $Application_detail[0]['franchise_application_tor']['amount_received'];
+        } else {
+            $amount_received = 0;
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['remarks']))
-            {
-                $tor_remarks = $Application_detail[0]['franchise_application_tor']['remarks'];
-            }
-            else
-            {
-                $tor_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['remarks'])) {
+            $tor_remarks = $Application_detail[0]['franchise_application_tor']['remarks'];
+        } else {
+            $tor_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['status']))
-            {
-                $tor_status = $Application_detail[0]['franchise_application_tor']['status'];
-            }
-            else
-            {
-                $tor_status = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['status'])) {
+            $tor_status = $Application_detail[0]['franchise_application_tor']['status'];
+        } else {
+            $tor_status = '-';
+        }
 
 
-            if(isset($Application_detail[0]['franchise_application_dd']['remarks']))
-            {
-                $dd_remarks = $Application_detail[0]['franchise_application_dd']['remarks'];
-            }
-            else
-            {
-                $dd_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_dd']['remarks'])) {
+            $dd_remarks = $Application_detail[0]['franchise_application_dd']['remarks'];
+        } else {
+            $dd_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_dd']['status']))
-            {
-                $dd_status = $Application_detail[0]['franchise_application_dd']['status'];
-            }
-            else
-            {
-                $dd_status = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_dd']['status'])) {
+            $dd_status = $Application_detail[0]['franchise_application_dd']['status'];
+        } else {
+            $dd_status = '-';
+        }
 
 
 
@@ -1148,47 +1039,37 @@ class FranchiseApplicationController extends Controller
             ];
 
             return view('franchise_application.franchise_application_iasf_form', $data);
-
     }
 
     public function create_iasf_pdf($franchise_application_id)
     {
-        $Application_detail = FranchiseApplication::where('id','=',$franchise_application_id)->with(['states', 'cities', 'source', 'other_informations','franchise_application_qa','franchise_application_bd','franchise_application_bd.school_type','franchise_application_tor','franchise_application_legal','franchise_application_dd','franchise_application_qa_remarks','franchise_application_bd_remarks','franchise_application_dd_remarks'])->get()->toArray();
+        $Application_detail = FranchiseApplication::where('id', '=', $franchise_application_id)->with(['states', 'cities', 'source', 'other_informations','franchise_application_qa','franchise_application_bd','franchise_application_bd.school_type','franchise_application_tor','franchise_application_legal','franchise_application_dd','franchise_application_qa_remarks','franchise_application_bd_remarks','franchise_application_dd_remarks'])->get()->toArray();
         //dd($Application_detail);
-        $applicant_name = '-'; $applicant_contact =  $bank_acc_detail = null;
+        $applicant_name = '-';
+        $applicant_contact =  $bank_acc_detail = null;
         $id = $Application_detail[0]['id'];
-            if(isset($Application_detail[0]['agreement_type']))
-            {
-                $agreement_type = $Application_detail[0]['agreement_type'];
-            }
-            else
-            {
-                $agreement_type = '-';
-            }
+        if (isset($Application_detail[0]['agreement_type'])) {
+            $agreement_type = $Application_detail[0]['agreement_type'];
+        } else {
+            $agreement_type = '-';
+        }
 
-        if($agreement_type == 'FA')
-        {
+        if ($agreement_type == 'FA') {
             $attachments = FranchiseApplicationsAttachment::where(['franchise_application_id' => $franchise_application_id,'attachment_type_id' => 9])->get()->toArray();
             //dd($attachments[0]['uploaded_date']);
-            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Completed on '.Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
-        }
-        elseif($agreement_type == 'MOU')
-        {
+            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Completed on ' . Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
+        } elseif ($agreement_type == 'MOU') {
             $attachments = FranchiseApplicationsAttachment::where(['franchise_application_id' => $franchise_application_id,'attachment_type_id' => 8])->get()->toArray();
-            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Completed on '.Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
-        }
-        else
-        {
+            $mou_fa_status =  isset($attachments[0]['uploaded_date']) ? 'Completed on ' . Carbon::parse($attachments[0]['uploaded_date'])->format('d-m-Y') : '';
+        } else {
             $mou_fa_status = '';
         }
-            if(isset($Application_detail[0]['appl_name']) && isset($Application_detail[0]['appl_last_name']))
-            {
-                $applicant_name = $Application_detail[0]['appl_name'];
-            }
-            if(isset($Application_detail[0]['appl_last_name']))
-            {
-                $applicant_name .= ' '.$Application_detail[0]['appl_last_name'];
-            }
+        if (isset($Application_detail[0]['appl_name']) && isset($Application_detail[0]['appl_last_name'])) {
+            $applicant_name = $Application_detail[0]['appl_name'];
+        }
+        if (isset($Application_detail[0]['appl_last_name'])) {
+            $applicant_name .= ' ' . $Application_detail[0]['appl_last_name'];
+        }
             // else if(isset($Application_detail[0]['appl_last_name']) && $applicant_name == '')
             // {
             //     $applicant_name = $Application_detail[0]['appl_last_name'];
@@ -1196,251 +1077,171 @@ class FranchiseApplicationController extends Controller
             // else{
             //     $applicant_name = '-';
             // }
-            if(isset($Application_detail[0]['contact_no_1']))
-            {
-                $applicant_contact = $Application_detail[0]['contact_no_1'];
-            }
-            else if(isset($Application_detail[0]['contact_no_2']))
-            {
-                $applicant_contact .= ', '.$Application_detail[0]['contact_no_2'];
-            }
-            else{
-                $applicant_contact = '-';
-            }
-            if(isset($Application_detail[0]['CNIC']))
-            {
-                $cnic = $Application_detail[0]['CNIC'];
-            }
-            if(isset($Application_detail[0]['personal_address']))
-            {
-                $nwa_address = $Application_detail[0]['personal_address'];
-            }
-            if(isset($Application_detail[0]['email']))
-            {
-                $nwa_email = $Application_detail[0]['email'];
-            }
-            if(isset($Application_detail[0]['franchise_application_qa']['proposed_location']))
-            {
-                $proposed_location = $Application_detail[0]['franchise_application_qa']['proposed_location'];
-            }
-            else
-            {
-                $proposed_location = '-';
-            }
-            if(isset($Application_detail[0]['franchise_application_bd']['school_type']['name']))
-            {
-                $school_type = $Application_detail[0]['franchise_application_bd']['school_type']['name'];
-            }
-            else
-            {
-                $school_type = '-';
-            }
+        if (isset($Application_detail[0]['contact_no_1'])) {
+            $applicant_contact = $Application_detail[0]['contact_no_1'];
+        } else if (isset($Application_detail[0]['contact_no_2'])) {
+            $applicant_contact .= ', ' . $Application_detail[0]['contact_no_2'];
+        } else {
+            $applicant_contact = '-';
+        }
+        if (isset($Application_detail[0]['CNIC'])) {
+            $cnic = $Application_detail[0]['CNIC'];
+        }
+        if (isset($Application_detail[0]['personal_address'])) {
+            $nwa_address = $Application_detail[0]['personal_address'];
+        }
+        if (isset($Application_detail[0]['email'])) {
+            $nwa_email = $Application_detail[0]['email'];
+        }
+        if (isset($Application_detail[0]['franchise_application_qa']['proposed_location'])) {
+            $proposed_location = $Application_detail[0]['franchise_application_qa']['proposed_location'];
+        } else {
+            $proposed_location = '-';
+        }
+        if (isset($Application_detail[0]['franchise_application_bd']['school_type']['name'])) {
+            $school_type = $Application_detail[0]['franchise_application_bd']['school_type']['name'];
+        } else {
+            $school_type = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['school_type']['description']))
-            {
-                $school_configuration = $Application_detail[0]['franchise_application_bd']['school_type']['description'];
-            }
-            else
-            {
-                $school_configuration = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['school_type']['description'])) {
+            $school_configuration = $Application_detail[0]['franchise_application_bd']['school_type']['description'];
+        } else {
+            $school_configuration = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['proposed_school_name']))
-            {
-                $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
-            }
-            else
-            {
-                $proposed_school_name = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['proposed_school_name'])) {
+            $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
+        } else {
+            $proposed_school_name = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['proposed_school_name']))
-            {
-                $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
-            }
-            else
-            {
-                $proposed_school_name = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['proposed_school_name'])) {
+            $proposed_school_name = $Application_detail[0]['franchise_application_bd']['proposed_school_name'];
+        } else {
+            $proposed_school_name = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['area_population_half_km_radius']))
-            {
-                $area_population_half_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_half_km_radius'];
-            }
-            else
-            {
-                $area_population_half_km_radius = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['area_population_half_km_radius'])) {
+            $area_population_half_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_half_km_radius'];
+        } else {
+            $area_population_half_km_radius = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['area_population_one_km_radius']))
-            {
-                $area_population_one_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_one_km_radius'];
-            }
-            else
-            {
-                $area_population_one_km_radius = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['area_population_one_km_radius'])) {
+            $area_population_one_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_one_km_radius'];
+        } else {
+            $area_population_one_km_radius = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['area_population_two_km_radius']))
-            {
-                $area_population_two_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_two_km_radius'];
-            }
-            else
-            {
-                $area_population_two_km_radius = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['area_population_two_km_radius'])) {
+            $area_population_two_km_radius = $Application_detail[0]['franchise_application_bd']['area_population_two_km_radius'];
+        } else {
+            $area_population_two_km_radius = '-';
+        }
 
 
 
 
-            if(isset($Application_detail[0]['franchise_application_bd_remarks']))
-            {
-                $bd_remarks = $Application_detail[0]['franchise_application_bd_remarks']['observation'];
-            }
-            else
-            {
-                $bd_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd_remarks'])) {
+            $bd_remarks = $Application_detail[0]['franchise_application_bd_remarks']['observation'];
+        } else {
+            $bd_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_bd']['bd_status']))
-            {
-                $bd_status = $Application_detail[0]['franchise_application_bd']['bd_status'];
-            }
-            else
-            {
-                $bd_status = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_bd']['bd_status'])) {
+            $bd_status = $Application_detail[0]['franchise_application_bd']['bd_status'];
+        } else {
+            $bd_status = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['token_money']))
-            {
-                $token_money = ucfirst($Application_detail[0]['franchise_application_tor']['token_money']);
-            }
-            else
-            {
-                $token_money = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['token_money'])) {
+            $token_money = ucfirst($Application_detail[0]['franchise_application_tor']['token_money']);
+        } else {
+            $token_money = 0;
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['agreement_date']))
-            {
-                $agreement_date = $Application_detail[0]['franchise_application_tor']['agreement_date'];
-            }
-            else
-            {
-                $agreement_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['agreement_date'])) {
+            $agreement_date = $Application_detail[0]['franchise_application_tor']['agreement_date'];
+        } else {
+            $agreement_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['operational_date']))
-            {
-                $operational_date = $Application_detail[0]['franchise_application_tor']['operational_date'];
-            }
-            else
-            {
-                $operational_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['operational_date'])) {
+            $operational_date = $Application_detail[0]['franchise_application_tor']['operational_date'];
+        } else {
+            $operational_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['actual_operational_date']))
-            {
-                $actual_operational_date = Carbon::parse($Application_detail[0]['franchise_application_tor']['actual_operational_date'])->format('d-m-Y');
-            }
-            else
-            {
-                $actual_operational_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['actual_operational_date'])) {
+            $actual_operational_date = Carbon::parse($Application_detail[0]['franchise_application_tor']['actual_operational_date'])->format('d-m-Y');
+        } else {
+            $actual_operational_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['renewal_date']))
-            {
-                $renewal_date = $Application_detail[0]['franchise_application_tor']['renewal_date'];
-            }
-            else
-            {
-                $renewal_date = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['renewal_date'])) {
+            $renewal_date = $Application_detail[0]['franchise_application_tor']['renewal_date'];
+        } else {
+            $renewal_date = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['bank_name']))
-            {
-                $bank_name = $Application_detail[0]['franchise_application_tor']['bank_name'];
-                $bank_acc_detail = $bank_name;
-            }
-            elseif(isset($Application_detail[0]['franchise_application_tor']['bank_account']))
-            {
-                $bank_account = ', Account #:'.$Application_detail[0]['franchise_application_tor']['bank_account'];
-                $bank_acc_detail .= $bank_account;
-            }
-            elseif(isset($Application_detail[0]['franchise_application_tor']['bank_acc_opening_date']))
-            {
-                $bank_acc_opening_date = ', Account Opening Date:'.$Application_detail[0]['franchise_application_tor']['bank_acc_opening_date'];
-                $bank_acc_detail .= $bank_acc_opening_date;
-            }
-            else
-            {
-                $bank_acc_detail = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['bank_name'])) {
+            $bank_name = $Application_detail[0]['franchise_application_tor']['bank_name'];
+            $bank_acc_detail = $bank_name;
+        } elseif (isset($Application_detail[0]['franchise_application_tor']['bank_account'])) {
+            $bank_account = ', Account #:' . $Application_detail[0]['franchise_application_tor']['bank_account'];
+            $bank_acc_detail .= $bank_account;
+        } elseif (isset($Application_detail[0]['franchise_application_tor']['bank_acc_opening_date'])) {
+            $bank_acc_opening_date = ', Account Opening Date:' . $Application_detail[0]['franchise_application_tor']['bank_acc_opening_date'];
+            $bank_acc_detail .= $bank_acc_opening_date;
+        } else {
+            $bank_acc_detail = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['type_of_locality']))
-            {
-                $type_of_locality = $Application_detail[0]['franchise_application_qa']['type_of_locality'];
-            }
-            else
-            {
-                $type_of_locality ='-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['type_of_locality'])) {
+            $type_of_locality = $Application_detail[0]['franchise_application_qa']['type_of_locality'];
+        } else {
+            $type_of_locality = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['qa_status']))
-            {
-                $qa_status = $Application_detail[0]['franchise_application_qa']['qa_status'];
-            }
-            else
-            {
-                $qa_status ='-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['qa_status'])) {
+            $qa_status = $Application_detail[0]['franchise_application_qa']['qa_status'];
+        } else {
+            $qa_status = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['type_of_construction']))
-            {
-                $construction = explode('_',$Application_detail[0]['franchise_application_qa']['type_of_construction']);
-                $type_of_construction = ucfirst($construction[0]).' '.ucfirst($construction[1]);
-            }
-            else
-            {
-                $type_of_construction = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['type_of_construction'])) {
+            $construction = explode('_', $Application_detail[0]['franchise_application_qa']['type_of_construction']);
+            $type_of_construction = ucfirst($construction[0]) . ' ' . ucfirst($construction[1]);
+        } else {
+            $type_of_construction = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_qa']['plot_size_actual']))
-            {
-                $plot_size_actual = $Application_detail[0]['franchise_application_qa']['plot_size_actual'].' '.$Application_detail[0]['franchise_application_qa']['actual_uom'];
-            }
-            else
-            {
-                $plot_size_actual = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa']['plot_size_actual'])) {
+            $plot_size_actual = $Application_detail[0]['franchise_application_qa']['plot_size_actual'] . ' ' . $Application_detail[0]['franchise_application_qa']['actual_uom'];
+        } else {
+            $plot_size_actual = '-';
+        }
 
 
 
-            if(isset($Application_detail[0]['franchise_application_qa_remarks']))
-            {
-                $qa_remarks = $Application_detail[0]['franchise_application_qa_remarks']['observation'];
-            }
-            else
-            {
-                $qa_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_qa_remarks'])) {
+            $qa_remarks = $Application_detail[0]['franchise_application_qa_remarks']['observation'];
+        } else {
+            $qa_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['total_franchise_fee']))
-            {
-                $total_franchise_fee = $Application_detail[0]['franchise_application_tor']['total_franchise_fee'];
-            }
-            else
-            {
-                $total_franchise_fee = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['total_franchise_fee'])) {
+            $total_franchise_fee = $Application_detail[0]['franchise_application_tor']['total_franchise_fee'];
+        } else {
+            $total_franchise_fee = 0;
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['royalty_rate']))
-            {
-                $royalty_rate = $Application_detail[0]['franchise_application_tor']['royalty_rate'];
-            }
-            else
-            {
-                $royalty_rate = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['royalty_rate'])) {
+            $royalty_rate = $Application_detail[0]['franchise_application_tor']['royalty_rate'];
+        } else {
+            $royalty_rate = 0;
+        }
 
             // if(isset($Application_detail[0]['franchise_application_tor']['agreement_type']))
             // {
@@ -1451,60 +1252,42 @@ class FranchiseApplicationController extends Controller
             //     $agreement_type = 0;
             // }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['payment_on_agreement']))
-            {
-                $payment_on_agreement = $Application_detail[0]['franchise_application_tor']['payment_on_agreement'];
-            }
-            else
-            {
-                $payment_on_agreement = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['payment_on_agreement'])) {
+            $payment_on_agreement = $Application_detail[0]['franchise_application_tor']['payment_on_agreement'];
+        } else {
+            $payment_on_agreement = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['amount_received']))
-            {
-                $amount_received = $Application_detail[0]['franchise_application_tor']['amount_received'];
-            }
-            else
-            {
-                $amount_received = 0;
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['amount_received'])) {
+            $amount_received = $Application_detail[0]['franchise_application_tor']['amount_received'];
+        } else {
+            $amount_received = 0;
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['remarks']))
-            {
-                $tor_remarks = $Application_detail[0]['franchise_application_tor']['remarks'];
-            }
-            else
-            {
-                $tor_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['remarks'])) {
+            $tor_remarks = $Application_detail[0]['franchise_application_tor']['remarks'];
+        } else {
+            $tor_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_tor']['status']))
-            {
-                $tor_status = $Application_detail[0]['franchise_application_tor']['status'];
-            }
-            else
-            {
-                $tor_status = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_tor']['status'])) {
+            $tor_status = $Application_detail[0]['franchise_application_tor']['status'];
+        } else {
+            $tor_status = '-';
+        }
 
 
-            if(isset($Application_detail[0]['franchise_application_dd']['remarks']))
-            {
-                $dd_remarks = $Application_detail[0]['franchise_application_dd']['remarks'];
-            }
-            else
-            {
-                $dd_remarks = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_dd']['remarks'])) {
+            $dd_remarks = $Application_detail[0]['franchise_application_dd']['remarks'];
+        } else {
+            $dd_remarks = '-';
+        }
 
-            if(isset($Application_detail[0]['franchise_application_dd']['status']))
-            {
-                $dd_status = $Application_detail[0]['franchise_application_dd']['status'];
-            }
-            else
-            {
-                $dd_status = '-';
-            }
+        if (isset($Application_detail[0]['franchise_application_dd']['status'])) {
+            $dd_status = $Application_detail[0]['franchise_application_dd']['status'];
+        } else {
+            $dd_status = '-';
+        }
 
 
 
@@ -1548,9 +1331,8 @@ class FranchiseApplicationController extends Controller
             ];
 
         // return view('franchise_application.franchise_application_iasf_pdf', $data);
-        $pdf = Pdf::loadView('franchise_application.franchise_application_iasf_pdf', $data);
-        return $pdf->download('franchise_application_iasf.pdf');
-
+            $pdf = Pdf::loadView('franchise_application.franchise_application_iasf_pdf', $data);
+            return $pdf->download('franchise_application_iasf.pdf');
     }
 
     /*public function inquiryEducationalOrganization(Request $request)

@@ -17,7 +17,6 @@ class GeneralBehaviourController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = GeneralBehaviour::with(['parent','com_class']);
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -37,10 +36,10 @@ class GeneralBehaviourController extends Controller
                 ->make(true);
         }
 
-        $data['general_behaviours'] = GeneralBehaviour::where('status','active')->get();
+        $data['general_behaviours'] = GeneralBehaviour::where('status', 'active')->get();
         $data['classes'] = ComClass::OrderBy('sort')->get();
 
-        return view('settings.general_behaviour.index',$data);
+        return view('settings.general_behaviour.index', $data);
     }
 
     /**
@@ -91,11 +90,11 @@ class GeneralBehaviourController extends Controller
      */
     public function edit(GeneralBehaviour $generalBehaviour)
     {
-        $data['general_behaviours'] = GeneralBehaviour::where('status','active')->get();
+        $data['general_behaviours'] = GeneralBehaviour::where('status', 'active')->get();
         $data['generalBehaviour'] = $generalBehaviour;
         $data['classes'] = ComClass::OrderBy('sort')->get();
 
-        return view('settings.general_behaviour.index',$data);
+        return view('settings.general_behaviour.index', $data);
     }
 
     /**

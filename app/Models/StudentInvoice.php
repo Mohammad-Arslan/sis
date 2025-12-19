@@ -9,16 +9,16 @@ use App\Traits\SerializeDateTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Log;
 use Session;
-
 use Illuminate\Support\Str;
-
 
 /**
  * @method static select(string $string)
  */
 class StudentInvoice extends Model
 {
-    use HasFactory, SerializeDateTrait, SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'student_fee_package_id',
@@ -64,35 +64,35 @@ class StudentInvoice extends Model
         static::creating(function ($model) {
             // Try to get student_id from request first (for single invoice creation)
             $studentId = request()->student_id;
-            
+
             // If not in request, try to get from model attributes (for bulk creation)
-            if (!$studentId && isset($model->attributes['student_id'])) {
+            if (! $studentId && isset($model->attributes['student_id'])) {
                 $studentId = $model->attributes['student_id'];
             }
-            
-            if (!$studentId) {
+
+            if (! $studentId) {
                 Log::error('No student_id found in StudentInvoice creation', [
                     'request_student_id' => request()->student_id,
                     'model_student_id' => $model->attributes['student_id'] ?? null
                 ]);
                 return;
             }
-            
+
             $student = Student::find($studentId);
-            
+
             // Check if student exists and has branch_id
-            if (!$student || !$student->branch_id) {
+            if (! $student || ! $student->branch_id) {
                 Log::error('Student not found or missing branch_id in StudentInvoice creation', [
                     'student_id' => $studentId,
                     'student' => $student ? $student->toArray() : null
                 ]);
                 return;
             }
-            
+
             $branch = Branch::find($student->branch_id);
-            
+
             // Check if branch exists
-            if (!$branch) {
+            if (! $branch) {
                 Log::error('Branch not found for student in StudentInvoice creation', [
                     'student_id' => $student->id,
                     'branch_id' => $student->branch_id
@@ -100,7 +100,7 @@ class StudentInvoice extends Model
                 return;
             }
 
-            if (!$model->isDirty('invoice_no')) {
+            if (! $model->isDirty('invoice_no')) {
                 $first_env_no = $branch->branch_code . '0000000001';
 
                 // if ($student->from_branch == null)
@@ -113,31 +113,32 @@ class StudentInvoice extends Model
                 $model->invoice_no = isset($last_inv_no) ? $last_inv_no + 1 : $first_env_no;
             }
 
-            if (!$model->isDirty('royalty_percentage'))
+            if (! $model->isDirty('royalty_percentage')) {
                 $model->royalty_percentage = get_branch_royalty($branch->id);
+            }
         });
     }
 
     public static function apply_monthly_package($student_id)
     {
         $current_student_fee_package = StudentFeePackage::where(['student_id' => $student_id, 'is_valid' => 1])->first();
-        
-        if (!$current_student_fee_package) {
+
+        if (! $current_student_fee_package) {
             \Log::error('No valid fee package found for student', ['student_id' => $student_id]);
             return false;
         }
 
         // Get the student's branch
         $student = Student::find($student_id);
-        if (!$student) {
+        if (! $student) {
             \Log::error('Student not found', ['student_id' => $student_id]);
             return false;
         }
 
         // Get the active academic year for this specific branch using the existing helper function
         $branch_academic_year = get_current_acad_year_by_branch_id($student->branch_id);
-        
-        if (!$branch_academic_year) {
+
+        if (! $branch_academic_year) {
             \Log::error('No active academic year found for branch', [
                 'student_id' => $student_id,
                 'branch_id' => $student->branch_id
@@ -155,7 +156,7 @@ class StudentInvoice extends Model
                 $q->where('name', 'Monthly');
             })->first();
 
-        if (!$fee_package) {
+        if (! $fee_package) {
             \Log::error('No monthly fee package found for branch and academic year', [
                 'branch_id' => $student->branch_id,
                 'academic_year_id' => $branch_academic_year->academic_year_id,
@@ -174,7 +175,7 @@ class StudentInvoice extends Model
         ];
 
         $new_fee_package = StudentFeePackage::create($input);
-        
+
         \Log::info('Monthly package applied successfully', [
             'student_id' => $student_id,
             'branch_id' => $student->branch_id,
@@ -191,21 +192,25 @@ class StudentInvoice extends Model
     {
         session()->forget('paid_data');
 
-        if ($report_for == 'unpaid')
+        if ($report_for == 'unpaid') {
             $where_clause_arr = ['is_paid' => 0, 'bank_payment_status' => 'unpaid'];
-        elseif ($report_for == 'paid')
+        } elseif ($report_for == 'paid') {
             $where_clause_arr = ['is_paid' => 1, 'bank_payment_status' => 'paid'];
+        }
         $branch_id = 0;
-        if (!isSuperAdmin() && !isHeadOfficeEmp())
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
+        }
 
         $data = self::where($where_clause_arr);
 
         $data = $data->whereHas('student', function ($q) use ($branch_id, $report_for) {
-            if ($branch_id)
+            if ($branch_id) {
                 $q->where('branch_id', $branch_id);
-            if ($report_for == 'unpaid')
+            }
+            if ($report_for == 'unpaid') {
                 $q->whereNull('deleted_at');
+            }
         });
         // dd($data);
         $data = $data->with([
@@ -238,31 +243,38 @@ class StudentInvoice extends Model
         }
 
         $data = $data->whereHas('student', function ($query) use ($request) {
-            if ($request->branch_id)
+            if ($request->branch_id) {
                 $query->where('branch_id', $request->branch_id);
-            if ($request->state_id)
+            }
+            if ($request->state_id) {
                 $query->where('state_id', $request->state_id);
-            if ($request->gender)
+            }
+            if ($request->gender) {
                 $query->where('gender', $request->gender);
+            }
         });
 
-        if ($request->academic_year_id)
+        if ($request->academic_year_id) {
             $data = $data->whereHas('student_fee_package', function ($query) use ($request) {
                 $query->where('academic_year_id', $request->academic_year_id);
             });
+        }
 
-        if ($request->section_id)
+        if ($request->section_id) {
             $data = $data->whereHas('student_fee_package', function ($query) use ($request) {
                 $query->where('section_id', $request->section_id);
             });
+        }
 
-        if ($request->class_id)
+        if ($request->class_id) {
             $data = $data->whereHas('student.active_class.branch_class_sections', function ($query) use ($request) {
                 $query->where('class_id', $request->class_id);
             });
+        }
 
-        if ($request->fee_period_id)
+        if ($request->fee_period_id) {
             $data = $data->where('fee_period_id', $request->fee_period_id);
+        }
 
         // Fixed search functionality
         if ($request->searchName && Str::length($request->searchName) > 2) {
@@ -289,24 +301,30 @@ class StudentInvoice extends Model
     {
         ini_set('max_execution_time', 300);
         $invoiceFilters = [];
-        if (!empty($request->filters['payment_status']))
+        if (! empty($request->filters['payment_status'])) {
             $invoiceFilters['bank_payment_status'] = $request->filters['payment_status'];
+        }
 
-        if (!empty($request->filters['fee_period_id']))
+        if (! empty($request->filters['fee_period_id'])) {
             $invoiceFilters['fee_period_id'] = $request->filters['fee_period_id'];
+        }
 
         $classFilters = [];
-        if (!empty($request->filters['class_id']))
+        if (! empty($request->filters['class_id'])) {
             $classFilters['com_class_id'] = $request->filters['class_id'];
-        if (!empty($request->filters['section_id']))
+        }
+        if (! empty($request->filters['section_id'])) {
             $classFilters['section_id'] = $request->filters['section_id'];
-        if (!empty($request->filters['academic_year_id']))
+        }
+        if (! empty($request->filters['academic_year_id'])) {
             $classFilters['academic_year_id'] = $request->filters['academic_year_id'];
+        }
 
         $students = [];
         $students_invoices = StudentInvoice::where($invoiceFilters)->whereHas('student', function ($query) use ($request) {
-            if (!empty($request->filters['branch_id']))
+            if (! empty($request->filters['branch_id'])) {
                 $query->where('branch_id', $request->filters['branch_id']);
+            }
         })->whereHas('student_fee_package', function ($query) use ($classFilters) {
             $query->where($classFilters);
         })->with([
@@ -334,17 +352,17 @@ class StudentInvoice extends Model
                     }
 
                 ]);
-        if (!empty($request->filters['state_id'])) {
+        if (! empty($request->filters['state_id'])) {
             $students_invoices->whereHas('student.branch.contact_information', function ($query1) use ($request) {
                 $query1->where('state_id', $request->filters['state_id']);
             });
         }
 
-        if (isset($request->filters['from_date']) && !empty($request->filters['from_date'])) {
+        if (isset($request->filters['from_date']) && ! empty($request->filters['from_date'])) {
             $students_invoices->whereDate('paid_date', '>=', $request->filters['from_date']);
         }
 
-        if (isset($request->filters['to_date']) && !empty($request->filters['to_date'])) {
+        if (isset($request->filters['to_date']) && ! empty($request->filters['to_date'])) {
             $students_invoices->whereDate('paid_date', '<=', $request->filters['to_date']);
         }
 

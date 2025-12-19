@@ -8,7 +8,9 @@ use App\Traits\SerializeDateTrait;
 
 class Promo extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $dates = ['active_till'];
 
     public function promo_type()

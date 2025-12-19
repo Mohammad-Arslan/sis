@@ -10,8 +10,10 @@ use App\Models\GuardianOtp;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Student; 
-use Log;// Added this import for the new login method
+use App\Models\Student;
+use Log;
+
+// Added this import for the new login method
 
 class GuardianController extends Controller
 {
@@ -24,20 +26,20 @@ class GuardianController extends Controller
         try {
             // First, try to find the guardian with basic info
             $user = Guardian::where('email', $request->email)->first();
-                
-            if (!$user) {
+
+            if (! $user) {
                 return response()->json(['message' => 'No guardian found with this email'], 400);
             }
 
             // Check if any guardian with this email has active students
             $hasActiveStudents = false;
             $activeStudents = collect();
-            
+
             // Get all guardians with the same email
             $allGuardians = Guardian::where('email', $request->email)
                 ->where('deleted_at', null)
                 ->get();
-            
+
             foreach ($allGuardians as $guardian) {
                 // Check direct student relationship (if guardian is directly linked to a student)
                 if ($guardian->student_id) {
@@ -49,7 +51,7 @@ class GuardianController extends Controller
                         $activeStudents->push($directStudent);
                     }
                 }
-                
+
                 // Check family students
                 $familyStudents = $guardian->familyStudents()
                     ->where('status', 'on_roll')
@@ -60,7 +62,7 @@ class GuardianController extends Controller
                 }
             }
 
-            if (!$hasActiveStudents) {
+            if (! $hasActiveStudents) {
                 return response()->json([
                     'message' => 'No active students found for this guardian',
                     'debug_info' => [
@@ -73,20 +75,20 @@ class GuardianController extends Controller
 
             // Load relationships for the response
             $user->load(['relation', 'family.children.student']);
-                
+
             $randomNumber = random_int(1000, 9999);
             $randomNumber = $request->email == 'test@example.com' ? 1234 : $randomNumber;
-            
+
             // Send OTP via email instead of SMS
             $this->sendOTPEmail($user->email, $randomNumber);
-            
+
             $token = $user->createToken('myapptoken')->plainTextToken;
 
-            if($request->email == 'test@example.com'){
-                GuardianOtp::where('guardian_id','=',$user->id)->update([
+            if ($request->email == 'test@example.com') {
+                GuardianOtp::where('guardian_id', '=', $user->id)->update([
                     'status' => 'PENDING'
                 ]);
-            }else{
+            } else {
                 GuardianOtp::create([
                     'guardian_id' => $user->id,
                     'OTP' => $randomNumber,
@@ -105,13 +107,12 @@ class GuardianController extends Controller
                 ]
             ];
             return response()->json($response, 200);
-            
         } catch (Exception $e) {
             Log::error('Guardian login error: ' . $e->getMessage(), [
                 'email' => $request->email,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'message' => 'An error occurred during login',
                 'debug_info' => config('app.debug') ? $e->getMessage() : 'Internal server error'
@@ -126,20 +127,20 @@ class GuardianController extends Controller
             'OTP' => 'required|integer',
         ]);
         $guardian = Guardian::where('id', $user->id)->with('relation')->first();
-        
+
         if ($user) {
             $otp = GuardianOtp::where(['guardian_id' => $user->id, 'otp' => $request->OTP, 'status' => 'PENDING'])->first();
             if ($otp) {
                 // Load family information with proper relationships
                 $childs = FamilyInformation::where('guardian_id', $user->id)
-                    ->with(['children.student' => function($query) {
+                    ->with(['children.student' => function ($query) {
                         $query->where('status', 'on_roll');
                     }, 'children.student.active_class.academic_years', 'children.student.active_class.branch_class_sections.com_classes', 'children.student.active_class.branch_class_sections.branches', 'children.student.active_class.branch_class_sections.sections'])
                     ->get();
-                
+
                 $otp->status = 'COMPLETE';
                 $otp->save();
-                
+
                 return response([
                     'user' => $guardian,
                     'childs' => $childs,
@@ -157,11 +158,11 @@ class GuardianController extends Controller
         if ($user) {
             // Load family information with proper relationships
             $childs = FamilyInformation::where('guardian_id', $user->id)
-                ->with(['children.student' => function($query) {
+                ->with(['children.student' => function ($query) {
                     $query->where('status', 'on_roll');
                 }, 'children.student.active_class.academic_years', 'children.student.active_class.branch_class_sections.com_classes', 'children.student.active_class.branch_class_sections.branches', 'children.student.active_class.branch_class_sections.sections'])
                 ->get();
-            
+
             return response([
                 'user' => $guardian,
                 'childs' => $childs,
@@ -182,10 +183,10 @@ class GuardianController extends Controller
                 }
             }
             $randomNumber = random_int(1000, 9999);
-            
+
             // Send OTP via email instead of SMS
             $this->sendOTPEmail($user->email, $randomNumber);
-            
+
             GuardianOtp::create([
                 'guardian_id' => $user->id,
                 'OTP' => $randomNumber,
@@ -220,7 +221,7 @@ class GuardianController extends Controller
     public function siblings_data(Request $request)
     {
         $guardian = $request->user();
-        $siblings = FamilyInformation::where('guardian_id', $guardian->id)->with(['children.student' => function($query) {
+        $siblings = FamilyInformation::where('guardian_id', $guardian->id)->with(['children.student' => function ($query) {
             $query->where('status', 'on_roll');
         }, 'children.student.active_class.academic_years', 'children.student.active_class.branch_class_sections.com_classes', 'children.student.active_class.branch_class_sections.branches', 'children.student.active_class.branch_class_sections.sections'])->get();
         return response()->json($siblings, 200);
@@ -233,10 +234,10 @@ class GuardianController extends Controller
     {
         $subject = 'Your OTP for New Device Login';
         $message = "Your OTP for New Device Login is: {$otp}";
-        
+
         // You can use Laravel's Mail facade or create a custom email template
         // For now, using a simple approach - you may want to create a proper email template
-        Mail::raw($message, function($message) use ($email, $subject) {
+        Mail::raw($message, function ($message) use ($email, $subject) {
             $message->to($email)
                     ->subject($subject);
         });

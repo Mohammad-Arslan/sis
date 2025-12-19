@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ClassTeacher extends Model
 {
-    use SoftDeletes,HasFactory,SerializeDateTrait;
+    use SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'academic_year_id',

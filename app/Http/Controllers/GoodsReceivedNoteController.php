@@ -25,7 +25,7 @@ class GoodsReceivedNoteController extends Controller
         $grns = GoodsReceivedNote::with(['supplier', 'branch', 'department', 'user', 'receivedBy', 'verifiedBy', 'rejectedBy', 'purchaseOrder'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-        
+
         return view('fixed-assets.grn.index', compact('grns'));
     }
 
@@ -43,11 +43,11 @@ class GoodsReceivedNoteController extends Controller
         $branches = Branch::all();
         $departments = Department::all();
         $categories = AssetCategory::all();
-        
+
         // Generate a unique GRN number
         $latestGrn = GoodsReceivedNote::orderBy('created_at', 'desc')->first();
         $grnNumber = 'GRN-' . date('Ymd') . '-' . sprintf('%03d', $latestGrn ? intval(substr($latestGrn->grn_number, -3)) + 1 : 1);
-        
+
         return view('fixed-assets.grn.create', compact('purchaseOrders', 'suppliers', 'branches', 'departments', 'categories', 'grnNumber'));
     }
 
@@ -127,7 +127,7 @@ class GoodsReceivedNoteController extends Controller
         $grn = GoodsReceivedNote::with(['supplier', 'branch', 'department', 'user', 'receivedBy', 'verifiedBy', 'rejectedBy', 'purchaseOrder'])
             ->findOrFail($id);
         $categories = AssetCategory::all();
-        
+
         return view('fixed-assets.grn.show', compact('grn', 'categories'));
     }
 
@@ -140,13 +140,13 @@ class GoodsReceivedNoteController extends Controller
     public function edit($id)
     {
         $grn = GoodsReceivedNote::findOrFail($id);
-        
+
         // Only allow editing if the GRN is still pending
         if ($grn->status !== 'pending') {
             return redirect()->route('fixed-assets.grn.show', $id)
                 ->with('error', 'Cannot edit a verified or rejected GRN.');
         }
-        
+
         $purchaseOrders = PurchaseOrder::where('status', 'approved')
             ->orWhere('id', $grn->purchase_order_id)
             ->orderBy('created_at', 'desc')
@@ -155,7 +155,7 @@ class GoodsReceivedNoteController extends Controller
         $branches = Branch::all();
         $departments = Department::all();
         $categories = AssetCategory::all();
-        
+
         return view('fixed-assets.grn.edit', compact('grn', 'purchaseOrders', 'suppliers', 'branches', 'departments', 'categories'));
     }
 
@@ -169,13 +169,13 @@ class GoodsReceivedNoteController extends Controller
     public function update(Request $request, $id)
     {
         $grn = GoodsReceivedNote::findOrFail($id);
-        
+
         // Only allow updating if the GRN is still pending
         if ($grn->status !== 'pending') {
             return redirect()->route('fixed-assets.grn.show', $id)
                 ->with('error', 'Cannot update a verified or rejected GRN.');
         }
-        
+
         $request->validate([
             'grn_number' => 'required|unique:goods_received_notes,grn_number,' . $id,
             'received_date' => 'required|date',
@@ -249,13 +249,13 @@ class GoodsReceivedNoteController extends Controller
     public function destroy($id)
     {
         $grn = GoodsReceivedNote::findOrFail($id);
-        
+
         // Only allow deletion if the GRN is still pending
         if ($grn->status !== 'pending') {
             return redirect()->route('fixed-assets.grn.index')
                 ->with('error', 'Cannot delete a verified or rejected GRN.');
         }
-        
+
         DB::beginTransaction();
         try {
             // If this GRN is linked to a purchase order, update the PO status back to approved
@@ -266,9 +266,9 @@ class GoodsReceivedNoteController extends Controller
                     $purchaseOrder->save();
                 }
             }
-            
+
             $grn->delete();
-            
+
             DB::commit();
             return redirect()->route('fixed-assets.grn.index')
                 ->with('success', 'Goods Received Note deleted successfully.');
@@ -288,13 +288,13 @@ class GoodsReceivedNoteController extends Controller
     public function verify($id)
     {
         $grn = GoodsReceivedNote::findOrFail($id);
-        
+
         // Only allow verification if the GRN is still pending
         if ($grn->status !== 'pending') {
             return redirect()->route('fixed-assets.grn.show', $id)
                 ->with('error', 'This GRN has already been verified or rejected.');
         }
-        
+
         DB::beginTransaction();
         try {
             $grn->update([
@@ -302,9 +302,9 @@ class GoodsReceivedNoteController extends Controller
                 'verified_by' => Auth::id(),
                 'verified_at' => now(),
             ]);
-            
+
             // Here you could add code to create assets in the inventory based on the GRN items
-            
+
             DB::commit();
             return redirect()->route('fixed-assets.grn.show', $id)
                 ->with('success', 'Goods Received Note verified successfully.');
@@ -327,15 +327,15 @@ class GoodsReceivedNoteController extends Controller
         $request->validate([
             'rejection_reason' => 'required|string|max:500',
         ]);
-        
+
         $grn = GoodsReceivedNote::findOrFail($id);
-        
+
         // Only allow rejection if the GRN is still pending
         if ($grn->status !== 'pending') {
             return redirect()->route('fixed-assets.grn.show', $id)
                 ->with('error', 'This GRN has already been verified or rejected.');
         }
-        
+
         DB::beginTransaction();
         try {
             $grn->update([
@@ -344,7 +344,7 @@ class GoodsReceivedNoteController extends Controller
                 'rejected_at' => now(),
                 'rejection_reason' => $request->rejection_reason,
             ]);
-            
+
             // If this GRN is linked to a purchase order, update the PO status back to approved
             if ($grn->purchase_order_id) {
                 $purchaseOrder = PurchaseOrder::find($grn->purchase_order_id);
@@ -353,7 +353,7 @@ class GoodsReceivedNoteController extends Controller
                     $purchaseOrder->save();
                 }
             }
-            
+
             DB::commit();
             return redirect()->route('fixed-assets.grn.show', $id)
                 ->with('success', 'Goods Received Note rejected successfully.');
@@ -374,11 +374,11 @@ class GoodsReceivedNoteController extends Controller
     {
         $purchaseOrder = PurchaseOrder::with(['supplier', 'branch', 'department', 'user'])
             ->find($request->purchase_order_id);
-        
-        if (!$purchaseOrder) {
+
+        if (! $purchaseOrder) {
             return response()->json(['error' => 'Purchase order not found'], 404);
         }
-        
+
         return response()->json([
             'purchaseOrder' => $purchaseOrder
         ]);
@@ -393,13 +393,13 @@ class GoodsReceivedNoteController extends Controller
     public function getBranchUsers(Request $request)
     {
         $users = Employee::where('branch_id', $request->branch_id)
-            ->when($request->department_id, function($query) use ($request) {
+            ->when($request->department_id, function ($query) use ($request) {
                 $query->where('department_id', $request->department_id);
             })
             ->get()
-            ->map(function($employee) {
+            ->map(function ($employee) {
                 // If preferred_name exists, use it
-                if (!empty($employee->preferred_name)) {
+                if (! empty($employee->preferred_name)) {
                     return [
                         'id' => $employee->user_id,
                         'name' => $employee->preferred_name
@@ -410,15 +410,15 @@ class GoodsReceivedNoteController extends Controller
                     $employee->first_name,
                     $employee->middle_name,
                     $employee->last_name
-                ], function($part) {
-                    return !empty($part);
+                ], function ($part) {
+                    return ! empty($part);
                 });
                 return [
                     'id' => $employee->user_id,
-                    'name' => !empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User'
+                    'name' => ! empty($nameParts) ? implode(' ', $nameParts) : 'Unknown User'
                 ];
             });
-        
+
         return response()->json([
             'users' => $users
         ]);
@@ -435,7 +435,7 @@ class GoodsReceivedNoteController extends Controller
         $grn = GoodsReceivedNote::with(['supplier', 'branch', 'department', 'user', 'receivedBy', 'verifiedBy', 'purchaseOrder'])
             ->findOrFail($id);
         $categories = AssetCategory::all();
-        
+
         return view('fixed-assets.grn.print', compact('grn', 'categories'));
     }
 }

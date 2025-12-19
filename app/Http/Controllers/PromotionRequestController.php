@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Http\Request;
+
 use function PHPUnit\Framework\isEmpty;
 
 class PromotionRequestController extends Controller
@@ -36,7 +37,6 @@ class PromotionRequestController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             // Start query with eager loading to avoid N+1 problem
             $query = PromotionRequest::with([
                 'prev_branch',
@@ -51,7 +51,7 @@ class PromotionRequestController extends Controller
             ])->orderBy('created_at', 'desc');
 
             // Role-based filtering
-            if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+            if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                 $branchId = get_branch_id();
                 $query->where(function ($q) use ($branchId) {
                     $q->where('prev_branch_id', $branchId)
@@ -108,7 +108,7 @@ class PromotionRequestController extends Controller
         }
 
         // Handle non-AJAX requests (normal view load)
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branchId = get_branch_id();
             $branches = Branch::where('id', $branchId)->get();
             $classes = BranchClass::where('branch_id', $branchId)->with('com_classes')->get();
@@ -135,7 +135,7 @@ class PromotionRequestController extends Controller
      */
     public function create()
     {
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $branches = Branch::where('id', $branch_id)->get();
         } else {
@@ -168,7 +168,7 @@ class PromotionRequestController extends Controller
             return redirect()->back()->with('error', 'Student is not on roll!');
         }
 
-        if ($request->is_promotion && !$this->validateClassProgression($request->class_id, $request->promoted_branch_class_id)) {
+        if ($request->is_promotion && ! $this->validateClassProgression($request->class_id, $request->promoted_branch_class_id)) {
             return redirect()->back()->with('error', 'Invalid class progression! Student can only be promoted to the next higher class (sort order + 1).');
         }
 
@@ -176,13 +176,12 @@ class PromotionRequestController extends Controller
         //     return redirect()->back()->with('error', 'Student has last unpaid amount');
         // }
         try {
-
             $promoted_class_id = null;
             $cur_branch_class_section_id = null;
 
             if ($request->is_promotion && $request->academic_year == $request->promoted_academic_year_id) {
                 return redirect()->back()->with('error', 'Please select higher promoted academic year');
-            } else if (!$request->is_promotion && $request->academic_year != $request->promoted_academic_year_id) {
+            } else if (! $request->is_promotion && $request->academic_year != $request->promoted_academic_year_id) {
                 return redirect()->back()->with('error', 'Please select promoted academic year same as previous');
             }
 
@@ -219,7 +218,7 @@ class PromotionRequestController extends Controller
             }
             return redirect()->back()->with('error', 'Oops! Something went wrong');
         } catch (\Exception $e) {
-            abort(500, );
+            abort(500,);
         }
     }
 
@@ -232,7 +231,7 @@ class PromotionRequestController extends Controller
             return redirect()->back()->with('error', 'Student Promotion Request is already initiated!');
         }
 
-        if ($request->is_promotion && !$this->validateClassProgression($request->class_id, $request->promoted_branch_class_id)) {
+        if ($request->is_promotion && ! $this->validateClassProgression($request->class_id, $request->promoted_branch_class_id)) {
             return redirect()->back()->with('error', 'Invalid class progression! Student can only be promoted to the next higher class (sort order + 1).');
         }
         try {
@@ -242,7 +241,7 @@ class PromotionRequestController extends Controller
 
             if ($request->is_promotion && $request->academic_year_id == $request->promoted_academic_year_id) {
                 return redirect()->back()->with('error', 'Please select higher promoted academic year');
-            } else if (!$request->is_promotion && $request->academic_year_id != $request->promoted_academic_year_id) {
+            } else if (! $request->is_promotion && $request->academic_year_id != $request->promoted_academic_year_id) {
                 return redirect()->back()->with('error', 'Please select promoted academic year same as previous');
             }
             /*
@@ -301,7 +300,7 @@ class PromotionRequestController extends Controller
 
             if ($request->is_promotion && $request->academic_year_id == $request->promoted_academic_year_id) {
                 return redirect()->back()->with('error', 'Please select higher promoted academic year');
-            } else if (!$request->is_promotion && $request->academic_year_id != $request->promoted_academic_year_id) {
+            } else if (! $request->is_promotion && $request->academic_year_id != $request->promoted_academic_year_id) {
                 return redirect()->back()->with('error', 'Please select promoted academic year same as previous');
             }
             /*
@@ -475,7 +474,7 @@ class PromotionRequestController extends Controller
                 })
                 ->get()->pluck('students.id');
             // dd($list->toArray());
-        } else if (!isset($request->sections) && isset($request->classes)) {
+        } else if (! isset($request->sections) && isset($request->classes)) {
             $student_ids = ClassStudent::where('is_valid', 1)->whereHas('branch_class_sections', function ($query) use ($request) {
                 $query->whereHas('com_classes', function ($subquery) use ($request) {
                     $subquery->whereIn('branch_id', $request->branches)->whereIn('class_id', $request->classes);
@@ -502,7 +501,7 @@ class PromotionRequestController extends Controller
         //dd($student_ids);
 
         foreach ($student_ids as $student_id) {
-            if (!empty($student_id)) {
+            if (! empty($student_id)) {
                 $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
                 if ($student_active_class) {
                     $student = Student::where('id', $student_id)->whereHas('student_invoices', function ($query) use ($student_active_class) {
@@ -516,8 +515,9 @@ class PromotionRequestController extends Controller
                     })->with(['active_class.branch_class_sections.sections', 'active_class.branch_class_sections.com_classes'])->first();
                 }
 
-                if (isset($student))
+                if (isset($student)) {
                     $students = array_merge($students, [$student->toArray()]);
+                }
             }
         }
 
@@ -528,20 +528,22 @@ class PromotionRequestController extends Controller
             })
             ->addColumn('invoice_status', function ($row) use ($request) {
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice))
+                if (isset($checkInvoice)) {
                     return '<span class="badge bg-danger">Already Generated</span>';
+                }
                 return '<span class="badge bg-primary">No Invoice</span>';
             })
             ->addColumn('action', function ($row) use ($request) {
-                $check_disable = TRUE;
+                $check_disable = true;
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice))
-                    $check_disable = FALSE;
+                if (isset($checkInvoice)) {
+                    $check_disable = false;
+                }
 
                 return view('students.bulk_invoices.bulk_students_action', ['row' => $row, 'check_disable', $check_disable]);
             })
             ->rawColumns(['full_name', 'invoice_status', 'action'])
-            ->make(TRUE);
+            ->make(true);
     }
 
     /**
@@ -558,7 +560,7 @@ class PromotionRequestController extends Controller
         if (isset($request->academic_years) && isset($request->branches) && isset($request->classes) && isset($request->sections)) {
             $student_ids = ClassStudent::where('is_valid', 1);
 
-            if (!is_null($request->students)) {
+            if (! is_null($request->students)) {
                 $student_ids = $student_ids->whereIn('student_id', $request->students);
             }
 
@@ -605,14 +607,14 @@ class PromotionRequestController extends Controller
                     $query->where('status', '!=', 'left');
                 })
                 ->get()->pluck('students.id');
-        }
+}
         $students = [];
 
-        foreach ($student_ids as $student_id) {
-            if (!empty($student_id)) {
-                $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
-                if ($student_active_class) {
-                    /* dd( Student::where('id', $student_id)->whereHas('student_invoices', function ($q) use ($student_active_class){
+foreach ($student_ids as $student_id) {
+    if (! empty($student_id)) {
+        $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
+        if ($student_active_class) {
+            /* dd( Student::where('id', $student_id)->whereHas('student_invoices', function ($q) use ($student_active_class){
                          $q->where(['is_paid' => 1, 'invoice_frequency' => 'Admission'])->whereHas('student_fee_package', function ($q) use ($student_active_class){
                              $q->where([
                                 // 'academic_year_id' => $student_active_class->active_class->academic_year_id,
@@ -620,26 +622,27 @@ class PromotionRequestController extends Controller
                                  'section_id' => $student_active_class->active_class->branch_class_sections->sections->id
                              ]);
                          });
-                     })->first(),  $student_active_class->active_class->academic_year_id, $student_active_class->active_class->branch_class_sections->com_classes->id,$student_active_class->active_class->branch_class_sections->sections->id, StudentFeePackage::where(['student_id' => $student_id, 'academic_year_id' => $student_active_class->active_class->academic_year_id, 'com_class_id' => $student_active_class->active_class->branch_class_sections->com_classes->id, 'section_id' => $student_active_class->active_class->branch_class_sections->sections->id ])->get() );*/
-                    //  $student = StudentInvoice::where(['student_id'=> $student_id, 'is_paid' => '0'])->get();
-                    //  if(count($student) > 0){
-                    //      continue;
-                    //  }
-                    $student = Student::where('id', $student_id)->whereHas('student_invoices', function ($query) use ($student_active_class) {
-                        $query->where(['is_paid' => 1, 'invoice_frequency' => 'Admission'])->whereHas('student_fee_package', function ($query) use ($student_active_class) {
-                            $query->where([
-                                'academic_year_id' => $student_active_class->active_class->academic_year_id,
-                                'com_class_id' => $student_active_class->active_class->branch_class_sections->com_classes->id,
-                                'section_id' => $student_active_class->active_class->branch_class_sections->sections->id,
-                            ]);
-                        });
-                    })->with(['active_class.branch_class_sections.sections', 'active_class.branch_class_sections.com_classes'])->first();
-                }
-
-                if (isset($student))
-                    $students = array_merge($students, [$student->toArray()]);
-            }
+             })->first(),  $student_active_class->active_class->academic_year_id, $student_active_class->active_class->branch_class_sections->com_classes->id,$student_active_class->active_class->branch_class_sections->sections->id, StudentFeePackage::where(['student_id' => $student_id, 'academic_year_id' => $student_active_class->active_class->academic_year_id, 'com_class_id' => $student_active_class->active_class->branch_class_sections->com_classes->id, 'section_id' => $student_active_class->active_class->branch_class_sections->sections->id ])->get() );*/
+            //  $student = StudentInvoice::where(['student_id'=> $student_id, 'is_paid' => '0'])->get();
+            //  if(count($student) > 0){
+            //      continue;
+            //  }
+            $student = Student::where('id', $student_id)->whereHas('student_invoices', function ($query) use ($student_active_class) {
+                $query->where(['is_paid' => 1, 'invoice_frequency' => 'Admission'])->whereHas('student_fee_package', function ($query) use ($student_active_class) {
+                    $query->where([
+                        'academic_year_id' => $student_active_class->active_class->academic_year_id,
+                        'com_class_id' => $student_active_class->active_class->branch_class_sections->com_classes->id,
+                        'section_id' => $student_active_class->active_class->branch_class_sections->sections->id,
+                    ]);
+                });
+            })->with(['active_class.branch_class_sections.sections', 'active_class.branch_class_sections.com_classes'])->first();
         }
+
+        if (isset($student)) {
+            $students = array_merge($students, [$student->toArray()]);
+        }
+    }
+}
         return DataTables::of($students)
             ->addIndexColumn()
             ->addColumn('invoice_no', function ($row) use ($request) {
@@ -650,8 +653,9 @@ class PromotionRequestController extends Controller
             ->addColumn('invoice_status', function ($row) use ($request) {
                 $checkInvoice = StudentInvoice::select('id', 'student_id', 'bank_payment_status', 'invoice_frequency', 'created_at')->where(['student_id' => $row['id']])->where('invoice_frequency', '=', 'Monthly')->latest()->first();
                 $bank_payment_status = $checkInvoice->bank_payment_status ?? '';
-                if (isset($checkInvoice))
+                if (isset($checkInvoice)) {
                     return '<span class="badge bg-info">' . $bank_payment_status . '</span>';
+                }
                 return '<span class="badge bg-primary">No Invoice</span>';
             })
             ->addColumn('branch_name', function ($row) {
@@ -678,14 +682,14 @@ class PromotionRequestController extends Controller
                 return $promotion_status;
             })
             ->addColumn('action', function ($row) use ($request) {
-                $check_disable = FALSE;
+                $check_disable = false;
                 $checkInvoice = StudentInvoice::select('id', 'student_id', 'bank_payment_status', 'invoice_frequency', 'created_at')->where(['student_id' => $row['id']])->where('invoice_frequency', '=', 'Monthly')->latest()->first();
                 /*if (isset($checkInvoice) && $checkInvoice->bank_payment_status == "paid") $check_disable = true;*/
                 $checked = $request->edit ? 'checked' : '';
                 return view('students.bulk_invoices.bulk_students_action', ['row' => $row/*, 'check_disable' => $check_disable*/]);
             })
             ->rawColumns(['invoice_no', 'full_name', 'invoice_status', 'promotion_status', 'action'])
-            ->make(TRUE);
+            ->make(true);
     }
 
     /**
@@ -733,7 +737,7 @@ class PromotionRequestController extends Controller
             ->get();
 
         $data['html'] = view('promotion_requests.promoted_filters', [
-            'promotion' => TRUE,
+            'promotion' => true,
             'branch' => $branch,
             'academic_years' => $academic_years,
             'branch_classes' => $branch_classes,
@@ -754,7 +758,7 @@ class PromotionRequestController extends Controller
     public function showIndividualPromotion(Request $request)
     {
         $academic_years = AcademicYear::all(['id', 'title']);
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $branches = Branch::where('id', $branch_id)->get();
         } else {
@@ -991,7 +995,7 @@ class PromotionRequestController extends Controller
                         'branch_class_sections.sections'
                     ])->first();
 
-            if (!isset($academic_info)) {
+            if (! isset($academic_info)) {
                 return redirect()->back(302)->with('error', 'Student\'s academic info not found.');
             }
 
@@ -1000,7 +1004,7 @@ class PromotionRequestController extends Controller
             if ($promoRequest->is_promotion) {
                 // Make this working
                 $result = $this->createGradeBookHistory($academic_info, $studentId);
-                if (!$result['status']) {
+                if (! $result['status']) {
                     Session::flash('error', $result['message']);
                     return redirect()->back();
                 }
@@ -1078,7 +1082,7 @@ class PromotionRequestController extends Controller
             ->where('branch_id', '=', $academic_info->branch_class_sections->branch_id)
             ->where('class_id', '=', $academic_info->branch_class_sections->class_id)
             ->where('section_id', '=', $academic_info->branch_class_sections->section_id)->first();
-        if (!$student_behaviour_skill) {
+        if (! $student_behaviour_skill) {
             return array('status' => false, 'message' => 'Student\'s skill behaviour not found for the current academic year, branch, class, and section. Please ensure skill behaviour records are created for the promoted academic year, branch, class, and section before approving the promotion.');
         }
         $student_behaviour_skill_id = $student_behaviour_skill->id;
@@ -1093,7 +1097,7 @@ class PromotionRequestController extends Controller
 
     /**
      * Validate class progression for promotion
-     * 
+     *
      * @param int $currentBranchClassId
      * @param int $promotedBranchClassId
      * @return bool
@@ -1102,13 +1106,13 @@ class PromotionRequestController extends Controller
     {
         // Get current class info
         $currentBranchClass = BranchClass::with('com_classes')->find($currentBranchClassId);
-        if (!$currentBranchClass || !$currentBranchClass->com_classes) {
+        if (! $currentBranchClass || ! $currentBranchClass->com_classes) {
             return false;
         }
 
         // Get promoted class info
         $promotedBranchClass = BranchClass::with('com_classes')->find($promotedBranchClassId);
-        if (!$promotedBranchClass || !$promotedBranchClass->com_classes) {
+        if (! $promotedBranchClass || ! $promotedBranchClass->com_classes) {
             return false;
         }
 
@@ -1122,7 +1126,7 @@ class PromotionRequestController extends Controller
     /**
      * Validate sort progression - simple sort order based validation
      * Only allows promotion to the next higher sort order (current + 1)
-     * 
+     *
      * @param int $currentSort
      * @param int $promotedSort
      * @return bool

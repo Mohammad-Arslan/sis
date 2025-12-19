@@ -33,8 +33,7 @@ class AcademicYearWorkingDaysController extends Controller
             $branch_id = $employee->branch_id;
             $data['states'] = $employee->states->toArray();
             $data['branch'] = $employee->branch->toArray();
-        }
-        elseif ($user->hasRole('network_associate')) {
+        } elseif ($user->hasRole('network_associate')) {
             $employee = NetworkAssociate::where('user_id', $user->id)->with('branches')->first();
             // $branch_id = $employee->branch_id;
             $branch_id = get_branch_id();
@@ -42,8 +41,7 @@ class AcademicYearWorkingDaysController extends Controller
             // dd($branches);
             $data['states'] = State::all();
             $data['branches'] = $employee->branches;
-        }
-         elseif ($user->hasRole('subject_coordinator')) {
+        } elseif ($user->hasRole('subject_coordinator')) {
             $employee = Employee::where('user_id', $user->id)->with(['branch', 'states'])->first();
             // dd();
             $branch_id = $employee->branch_id;
@@ -69,11 +67,11 @@ class AcademicYearWorkingDaysController extends Controller
         if ($request->ajax()) {
             if ($branch_id == 0 && $branches == null) {
                 $data = AcademicYearWorkingDays::with(['state', 'branch', 'academic_year', 'term'])->get();
-            }
-             elseif ($branches != null && count($branches) > 0) {
+            } elseif ($branches != null && count($branches) > 0) {
                 $data = AcademicYearWorkingDays::whereIn('branch_id', $branches)->with(['state', 'branch', 'academic_year', 'term'])->get();
-            } else
+            } else {
                 $data = AcademicYearWorkingDays::where('branch_id', $branch_id)->with(['state', 'branch', 'academic_year', 'term'])->get();
+            }
 
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -130,7 +128,7 @@ class AcademicYearWorkingDaysController extends Controller
             ['term_id', $request['term_id']],
             ['branch_id', $request['branch_id']],
         ])->first();
-        if (!empty($existing_working_days_entry)) {
+        if (! empty($existing_working_days_entry)) {
             return redirect()->back()->with('error', 'Working days already exists');
             // return redirect()->route('academic-year-working-days.index')->with('error', 'Working days already exists');
         } else {

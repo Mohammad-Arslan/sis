@@ -12,7 +12,9 @@ use Illuminate\Queue\SerializesModels;
 
 class EmployeeExportProgress implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     public $exportId;
     public $processed;

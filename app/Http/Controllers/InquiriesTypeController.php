@@ -17,7 +17,6 @@ class InquiriesTypeController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = InquiriesType::get();
             return Datatables::of($data)
                 ->addIndexColumn()
@@ -26,7 +25,6 @@ class InquiriesTypeController extends Controller
                 })
                 ->rawColumns(['action'])
                 ->make(true);
-
         }
         return view('settings.inquiry_types.inquiry_types');
     }
@@ -52,9 +50,8 @@ class InquiriesTypeController extends Controller
         $request->validate([
             'type' => 'required',
         ]);
-        $type = InquiriesType::where('type',$request->type)->get();
-        if(isset($type[0]))
-        {
+        $type = InquiriesType::where('type', $request->type)->get();
+        if (isset($type[0])) {
             return redirect()->route('inquiry-type.index')
             ->with('error', 'Duplicate entries not allowed.');
         }

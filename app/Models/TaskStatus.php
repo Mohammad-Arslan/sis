@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class TaskStatus extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
 
     public function tasks()

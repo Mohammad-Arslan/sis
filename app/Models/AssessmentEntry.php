@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AssessmentEntry extends Model
 {
-    use HasFactory, SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'academic_year_id',
@@ -44,35 +46,43 @@ class AssessmentEntry extends Model
         return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
-    public function term(){
-        return $this->belongsTo(Term::class,'term_id','id');
+    public function term()
+    {
+        return $this->belongsTo(Term::class, 'term_id', 'id');
     }
 
-    public function com_class(){
-        return $this->belongsTo(ComClass::class,'class_id','id');
+    public function com_class()
+    {
+        return $this->belongsTo(ComClass::class, 'class_id', 'id');
     }
 
-    public function section(){
-        return $this->belongsTo(Section::class,'section_id','id');
+    public function section()
+    {
+        return $this->belongsTo(Section::class, 'section_id', 'id');
     }
 
-    public function subject(){
-        return $this->belongsTo(Subject::class,'subject_id','id');
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class, 'subject_id', 'id');
     }
 
-    public function assessment_level_one(){
-        return $this->belongsTo(AssessmentLevel::class,'assessment_level_one_id','id');
+    public function assessment_level_one()
+    {
+        return $this->belongsTo(AssessmentLevel::class, 'assessment_level_one_id', 'id');
     }
 
-    public function assessment_level_two(){
-        return $this->belongsTo(AssessmentLevel::class,'assessment_level_two_id','id');
+    public function assessment_level_two()
+    {
+        return $this->belongsTo(AssessmentLevel::class, 'assessment_level_two_id', 'id');
     }
 
-    public function assessment_level_three(){
-        return $this->belongsTo(AssessmentLevel::class,'assessment_level_three_id','id');
+    public function assessment_level_three()
+    {
+        return $this->belongsTo(AssessmentLevel::class, 'assessment_level_three_id', 'id');
     }
 
-    public function student_assessment_marks(){
-        return $this->hasMany(StudentAssessmentMark::class,'assessment_entry_id','id');
+    public function student_assessment_marks()
+    {
+        return $this->hasMany(StudentAssessmentMark::class, 'assessment_entry_id', 'id');
     }
 }

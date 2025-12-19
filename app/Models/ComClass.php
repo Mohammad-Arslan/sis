@@ -9,7 +9,9 @@ use App\Traits\SerializeDateTrait;
 
 class ComClass extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'class_name',
@@ -45,11 +47,13 @@ class ComClass extends Model
         return $this->belongsToMany(FeePackage::class, 'class_fee_packages', 'class_id', 'fee_package_id');
     }
 
-    public function class_group_class(){
-        return $this->hasOne(ClassGroupClass::class,'class_id','id')->where('status','1');
+    public function class_group_class()
+    {
+        return $this->hasOne(ClassGroupClass::class, 'class_id', 'id')->where('status', '1');
     }
 
-    public function attendance_type(){
-        return $this->belongsTo(AttendanceType::class,'attendance_type_id','id');
+    public function attendance_type()
+    {
+        return $this->belongsTo(AttendanceType::class, 'attendance_type_id', 'id');
     }
 }

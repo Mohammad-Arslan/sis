@@ -22,7 +22,7 @@ class UpdateStudentPreviousSchoolRequest extends FormRequest
     {
         $studentPreviousSchool = $this->route('studentPreviousSchool');
         $studentPreviousSchoolId = $studentPreviousSchool instanceof \App\Models\StudentPreviousSchool ? $studentPreviousSchool->id : $studentPreviousSchool;
-        
+
         return [
             'school_name' => [
                 'required',
@@ -46,4 +46,3 @@ class UpdateStudentPreviousSchoolRequest extends FormRequest
         ];
     }
 }
-

@@ -64,7 +64,7 @@ class StudentInvoiceController extends Controller
                 ->where('student_id', $request->student);
 
             // Filter by academic year if provided
-            if ($request->has('academic_year_id') && !empty($request->academic_year_id)) {
+            if ($request->has('academic_year_id') && ! empty($request->academic_year_id)) {
                 $query->whereHas('student_fee_package', function ($q) use ($request) {
                     $q->where('academic_year_id', $request->academic_year_id);
                 });
@@ -279,20 +279,23 @@ class StudentInvoiceController extends Controller
             return redirect()->back()->with('error', 'Selected month invoice is already generated.');
         }
 
-        if (!isset($request->issue_date) && empty($request->issue_date))
+        if (! isset($request->issue_date) && empty($request->issue_date)) {
             $issue_date = Carbon::now()->startOfMonth();
-        else
+        } else {
             $issue_date = $request->issue_date;
+        }
 
-        if (!isset($request->due_date) && empty($request->due_date))
+        if (! isset($request->due_date) && empty($request->due_date)) {
             $due_date = Carbon::now()->startOfMonth()->addDays(2);
-        else
+        } else {
             $due_date = $request->due_date;
+        }
 
-        if (!isset($request->validity_date) && empty($request->validity_date))
+        if (! isset($request->validity_date) && empty($request->validity_date)) {
             $validity_date = Carbon::now()->startOfMonth()->addDays(2);
-        else
+        } else {
             $validity_date = $request->validity_date;
+        }
 
         $invoice_dates = [
             'issue_date' => $issue_date,
@@ -656,7 +659,7 @@ class StudentInvoiceController extends Controller
                     break;
                 }
             }
-            if (!$temp) {
+            if (! $temp) {
                 $selected = array_merge($charges, ['selected' => false]);
                 $packages_charges = array_merge($packages_charges, [$selected]);
             }
@@ -673,7 +676,7 @@ class StudentInvoiceController extends Controller
                     break;
                 }
             }
-            if (!$temp) {
+            if (! $temp) {
                 $selected = array_merge($charges, ['selected' => false]);
                 $add_packages_charges = array_merge($add_packages_charges, [$selected]);
             }
@@ -788,11 +791,12 @@ class StudentInvoiceController extends Controller
                     $temp = true;
                 }
             }
-            if (!$temp)
+            if (! $temp) {
                 StudentInvoiceItem::where([
                     'fee_charge_id' => $excluded_item,
                     'student_invoice_id' => $studentInvoice->id,
                 ])->delete();
+            }
         }
 
         return redirect(route('students.edit', $request->student_id) . '?tab=invoice')->with('success', 'Invoice updated succesfully.');
@@ -862,8 +866,9 @@ class StudentInvoiceController extends Controller
                     'fee_period'
                 ]);
 
-        if (!$studentInvoice->exists())
+        if (! $studentInvoice->exists()) {
             return $studentInvoice->exists();
+        }
         return $studentInvoice->first();
     }
 
@@ -881,7 +886,7 @@ class StudentInvoiceController extends Controller
             foreach ($studentInvoice['student_invoice_items'] as $student_invoice_item) {
                 $student_item_amount = isset($student_invoice_item['debit']) ? $student_invoice_item['debit'] : $student_invoice_item['credit'];
                 $totalPrice = $totalPrice + $student_item_amount;
-                $non_refund_discountable_charges = $student_invoice_item['fee_charges']['is_discountable'] && !$student_invoice_item['fee_charges']['is_refundable'] ? $non_refund_discountable_charges + $student_item_amount : $non_refund_discountable_charges + 0;
+                $non_refund_discountable_charges = $student_invoice_item['fee_charges']['is_discountable'] && ! $student_invoice_item['fee_charges']['is_refundable'] ? $non_refund_discountable_charges + $student_item_amount : $non_refund_discountable_charges + 0;
             }
         }
 
@@ -890,7 +895,7 @@ class StudentInvoiceController extends Controller
             'non_refund_non_discountable_charges' => $non_refund_discountable_charges
         ];
         // Fee Concession Calculation
-        if (isset($studentInvoice['student_fee_package']['fee_concession']) && !empty($studentInvoice['student_fee_package']['fee_concession'])) {
+        if (isset($studentInvoice['student_fee_package']['fee_concession']) && ! empty($studentInvoice['student_fee_package']['fee_concession'])) {
             $fee_concession = $studentInvoice['student_fee_package']['fee_concession'];
             $concessionDiscount = ($non_refund_discountable_charges / 100) * $fee_concession['concession_percentage'];
 
@@ -905,7 +910,7 @@ class StudentInvoiceController extends Controller
         }
 
         // Promo Discount Calculation
-        if (isset($studentInvoice->promo) && !empty($studentInvoice->promo)) {
+        if (isset($studentInvoice->promo) && ! empty($studentInvoice->promo)) {
             $promoClasses = PromoClass::where('promo_id', $studentInvoice->promo->id)->get();
             // dd($promoClasses->toArray());
 
@@ -944,7 +949,7 @@ class StudentInvoiceController extends Controller
 
 
         $diff_month = 1;
-        if (isset($studentInvoice['fee_period']) && !empty($studentInvoice['fee_period']['to_date']) && !empty($studentInvoice['fee_period']['from_date'])) {
+        if (isset($studentInvoice['fee_period']) && ! empty($studentInvoice['fee_period']['to_date']) && ! empty($studentInvoice['fee_period']['from_date'])) {
             $to_date = Carbon::parse($studentInvoice['fee_period']['to_date'])->addDays(2);
             $diff_month = Carbon::parse($studentInvoice['fee_period']['from_date'])->diffInMonths($to_date);
         }
@@ -983,7 +988,7 @@ class StudentInvoiceController extends Controller
             $data['studentInvoice'] = $studentInvoice;
 
             // Check if bank accounts exist
-            if (!$studentInvoice->student?->branch?->bank_accounts?->count()) {
+            if (! $studentInvoice->student?->branch?->bank_accounts?->count()) {
                 return redirect()->back()->with('error', 'Bank Account Not Available');
             }
 
@@ -1003,7 +1008,6 @@ class StudentInvoiceController extends Controller
             $filename = ($studentInvoice->student->last_name ?? 'student') . ' Challan.pdf';
 
             return $pdf->stream($filename);
-
         } catch (Exception $e) {
             Log::error('Challan generation failed: ' . $e->getMessage(), [
                 'invoice_id' => $studentInvoice->id,
@@ -1026,7 +1030,7 @@ class StudentInvoiceController extends Controller
             'total_royalty' => 0,
             'nwa_amount' => 0,
         ];
-        if (!empty($request->filters['state_id'])) {
+        if (! empty($request->filters['state_id'])) {
             $return_data = StudentInvoice::royaltyComputation($request);
             $students = $return_data['students'];
             $total_fee_charges = $return_data['total_fee_charges'];
@@ -1231,13 +1235,15 @@ class StudentInvoiceController extends Controller
                 })
                 ->addColumn('total_fees', function ($row) {
                     $totalFees = 0;
-                    if (count($row->students) == 0)
+                    if (count($row->students) == 0) {
                         return 0;
+                    }
 
                     foreach ($row->students as $student => $value) {
                         $invoice = $this->getStudentInvoice($value->id);
-                        if ($invoice == false)
+                        if ($invoice == false) {
                             return 0;
+                        }
                         $calculation = calculate_total_price_by_invoice($invoice);
                         $totalFees += $calculation['total'];
                     }
@@ -1245,13 +1251,15 @@ class StudentInvoiceController extends Controller
                 })
                 ->addColumn('total_tax', function ($row) {
                     $totalTax = 0;
-                    if (count($row->students) == 0)
+                    if (count($row->students) == 0) {
                         return 0;
+                    }
 
                     foreach ($row->students as $student => $value) {
                         $invoice = $this->getStudentInvoice($value->id);
-                        if ($invoice == false)
+                        if ($invoice == false) {
                             return 0;
+                        }
                         $calculation = calculate_total_price_by_invoice($invoice);
                         $totalTax += $calculation['total'];
                     }
@@ -1259,13 +1267,15 @@ class StudentInvoiceController extends Controller
                 })
                 ->addColumn('total_royalty', function ($row) {
                     $totalRoyalty = 0;
-                    if (count($row->students) == 0)
+                    if (count($row->students) == 0) {
                         return 0;
+                    }
 
                     foreach ($row->students as $student => $value) {
                         $invoice = $this->getStudentInvoice($value->id);
-                        if ($invoice == false)
+                        if ($invoice == false) {
                             return 0;
+                        }
                         $calculation = calculate_total_price_by_invoice($invoice);
                         $totalRoyalty += $calculation['royalty_amount'];
                     }
@@ -1403,7 +1413,7 @@ class StudentInvoiceController extends Controller
                 if ($studentInvoice->invoice_frequency == 'Admission') {
                     // Use the new helper method for consistent admission to monthly transition
                     $transitionResult = $this->handleAdmissionToMonthlyTransition($studentInvoice->student_id, $studentInvoice->id);
-                    
+
                     if ($transitionResult['success']) {
                         Log::info('Admission to monthly transition completed successfully in updatePaymentStatus', [
                             'student_id' => $studentInvoice->student_id,
@@ -1418,7 +1428,6 @@ class StudentInvoiceController extends Controller
                         ]);
                     }
                 }
-
             } elseif ($request->payment_status == 'cancelled') {
                 // Update invoice status to cancelled
                 $studentInvoice->update([
@@ -1440,7 +1449,6 @@ class StudentInvoiceController extends Controller
                     'cleared_date' => null,
                     'cleared_by_payment_id' => null,
                 ]);
-
             } else {
                 // For other statuses (like 'unpaid'), just update the invoice
                 $studentInvoice->update([
@@ -1453,7 +1461,6 @@ class StudentInvoiceController extends Controller
 
             \DB::commit();
             return 'Payment Updated Successfully.';
-
         } catch (Exception $e) {
             \DB::rollback();
             return 'Error updating payment: ' . $e->getMessage();
@@ -1527,10 +1534,11 @@ class StudentInvoiceController extends Controller
         if (Auth::user()->hasRole('super_admin') && $isAdminInterface) {
             // Show admin interface for changing invoice status
             $branches = Branch::with('students')->get();
-            if ($branch_id = get_branch_id())
+            if ($branch_id = get_branch_id()) {
                 $classes = get_branch_classes($branch_id);
-            else
+            } else {
                 $classes = ComClass::all();
+            }
 
             $academic_years = AcademicYear::all();
             $data = [
@@ -1541,10 +1549,11 @@ class StudentInvoiceController extends Controller
             return view('students.bulk_invoices.admin_bulk_invoices', $data);
         } else {
             $branches = Branch::with('students')->get();
-            if ($branch_id = get_branch_id())
+            if ($branch_id = get_branch_id()) {
                 $classes = get_branch_classes($branch_id);
-            else
+            } else {
                 $classes = ComClass::all();
+            }
 
             $data = [
                 'branches' => $branches,
@@ -1558,8 +1567,9 @@ class StudentInvoiceController extends Controller
             $active_academic_year = AcademicYear::where('active', 1)->first();
             $academic_year = $active_academic_year->id;
             //dd($academic_year);
-            if (!isset($academic_year))
+            if (! isset($academic_year)) {
                 $academic_year = BranchAcademicYear::where('start_date', '>', Carbon::now())->orderBy('start_date', 'asc')->first();
+            }
 
             $fee_packages = [];
             $fee_periods = [];
@@ -1588,10 +1598,11 @@ class StudentInvoiceController extends Controller
     {
         // Super Admin specific method for bulk invoice generation (not status change)
         $branches = Branch::with('students')->get();
-        if ($branch_id = get_branch_id())
+        if ($branch_id = get_branch_id()) {
             $classes = get_branch_classes($branch_id);
-        else
+        } else {
             $classes = ComClass::all();
+        }
 
         $data = [
             'branches' => $branches,
@@ -1602,8 +1613,9 @@ class StudentInvoiceController extends Controller
         $active_academic_year = AcademicYear::where('active', 1)->first();
         $academic_year = $active_academic_year->id;
         //dd($academic_year);
-        if (!isset($academic_year))
+        if (! isset($academic_year)) {
             $academic_year = BranchAcademicYear::where('start_date', '>', Carbon::now())->orderBy('start_date', 'asc')->first();
+        }
 
         $fee_packages = [];
         $fee_periods = [];
@@ -1654,7 +1666,7 @@ class StudentInvoiceController extends Controller
         })->get()->pluck('students.id');
         $students = [];
         foreach ($student_ids as $student_id) {
-            if (!empty($student_id)) {
+            if (! empty($student_id)) {
                 $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
 
                 $student = Student::where('id', $student_id)->whereHas('student_invoices', function ($query) use ($student_active_class) {
@@ -1667,8 +1679,9 @@ class StudentInvoiceController extends Controller
                     });
                 })->with(['active_class.branch_class_sections.sections', 'active_class.branch_class_sections.com_classes'])->first();
 
-                if (isset($student))
+                if (isset($student)) {
                     $students = array_merge($students, [$student->toArray()]);
+                }
             }
         }
         return DataTables::of($students)
@@ -1678,21 +1691,24 @@ class StudentInvoiceController extends Controller
             })
             ->addColumn('invoice_status', function ($row) use ($request) {
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice))
+                if (isset($checkInvoice)) {
                     return '<span class="badge bg-danger">Already Generated</span>';
+                }
                 return '<span class="badge bg-primary">No Invoice</span>';
             })
             ->addColumn('invoice_no', function ($row) use ($request) {
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice))
+                if (isset($checkInvoice)) {
                     return view('students.invoice_list_link', ['row' => $checkInvoice]);
+                }
                 return '-';
             })
             ->addColumn('action', function ($row) use ($request) {
                 $check_disable = true;
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice))
+                if (isset($checkInvoice)) {
                     $check_disable = false;
+                }
 
                 return view('students.bulk_invoices.admin_bulk_students_action', ['row' => $row, 'check_disable', $check_disable]);
             })
@@ -1718,14 +1734,15 @@ class StudentInvoiceController extends Controller
                 //'student_fee_package_id' => $request->student_fee_package_id,
                 'fee_period_id' => $request->fee_period,
             ])->where('bank_payment_status', '!=', 'cancelled')->first();
-            if ($studentInvoice)
+            if ($studentInvoice) {
                 $studentInvoice->update([
                     'bank_payment_status' => 'paid',
                     'is_paid' => 1,
                     'paid_date' => $paidDate
                 ]);
-            else
+            } else {
                 dump("Hello");
+            }
         }
         ;
     }
@@ -1754,7 +1771,7 @@ class StudentInvoiceController extends Controller
                 'fee_period_id' => $request->fee_period,
             ])->where('bank_payment_status', '!=', 'cancelled')->first();
 
-            if (!$check_existing_invoice) {
+            if (! $check_existing_invoice) {
                 $student_active_class = ClassStudent::where([
                     'academic_year_id' => $academic_year,
                     'student_id' => $student,
@@ -1935,8 +1952,8 @@ class StudentInvoiceController extends Controller
     {
         // Ensure Super Admin and other authorized roles have access
         if (
-            !Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
-            !Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
+            ! Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
+            ! Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
         ) {
             abort(403, 'Unauthorized access to bulk challan generation.');
         }
@@ -1961,8 +1978,8 @@ class StudentInvoiceController extends Controller
     {
         // Ensure Super Admin and other authorized roles have access
         if (
-            !Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
-            !Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
+            ! Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
+            ! Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
         ) {
             abort(403, 'Unauthorized access to enhanced bulk challan generation.');
         }
@@ -2013,7 +2030,7 @@ class StudentInvoiceController extends Controller
                         ->findOrFail($studentId);
 
                     // Check if student has active class
-                    if (!$student->active_class) {
+                    if (! $student->active_class) {
                         $errors[] = "Student {$student->full_name} has no active class.";
                         continue;
                     }
@@ -2032,7 +2049,7 @@ class StudentInvoiceController extends Controller
                     // Handle fee package assignment - check if student needs new package
                     $studentFeePackage = $this->assignOrUpdateFeePackage($student, $feePackage, $academicYear);
 
-                    if (!$studentFeePackage) {
+                    if (! $studentFeePackage) {
                         $errors[] = "Failed to assign fee package to student {$student->full_name}.";
                         continue;
                     }
@@ -2165,7 +2182,6 @@ class StudentInvoiceController extends Controller
 
                     $generatedInvoices[] = $studentInvoice->id;
                     $successCount++;
-
                 } catch (Exception $e) {
                     $errors[] = "Error processing student ID {$studentId}: " . $e->getMessage();
                     Log::error('Bulk challan generation error for student ' . $studentId, [
@@ -2187,7 +2203,6 @@ class StudentInvoiceController extends Controller
                 'success_count' => $successCount,
                 'error_count' => count($errors)
             ]);
-
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Bulk challan generation failed', [
@@ -2234,7 +2249,6 @@ class StudentInvoiceController extends Controller
                 'section_id' => $student->active_class->branch_class_sections->sections->id,
                 'is_valid' => 1
             ]);
-
         } catch (Exception $e) {
             Log::error('Error assigning fee package to student', [
                 'student_id' => $student->id,
@@ -2311,7 +2325,7 @@ class StudentInvoiceController extends Controller
                 ->where('status', '!=', 'left');
 
             // Filter by classes if provided - aligned with studentListingQuery
-            if (!empty($request->class_id)) {
+            if (! empty($request->class_id)) {
                 $studentQuery->whereHas('active_class.branch_class_sections', function ($query) use ($request) {
                     $query->where('class_id', $request->class_id);
                 });
@@ -2338,13 +2352,13 @@ class StudentInvoiceController extends Controller
             }
 
             // Filter by sections if provided - aligned with studentListingQuery
-            if (!empty($request->section_id)) {
+            if (! empty($request->section_id)) {
                 $studentQuery->whereHas('class_students', function ($query) use ($request, $academicYear) {
                     $query->whereHas('branch_class_sections', function ($subQuery) use ($request) {
                         $subQuery->where('section_id', $request->section_id);
 
                         // If class_id is provided, also filter by class
-                        if (!empty($request->class_id)) {
+                        if (! empty($request->class_id)) {
                             $subQuery->where('class_id', $request->class_id);
                         }
                     });
@@ -2385,7 +2399,7 @@ class StudentInvoiceController extends Controller
                     // For Monthly/Other packages: show students with any status EXCEPT 'processing' and null
                     $isProcessing = strtolower($studentStatus) === 'processing';
                     $isNull = $studentStatus === null;
-                    return !($isProcessing || $isNull);
+                    return ! ($isProcessing || $isNull);
                 }
             });
 
@@ -2420,7 +2434,7 @@ class StudentInvoiceController extends Controller
                     'active_class_info' => $activeClassInfo,
                     'current_package' => $packageName,
                     'has_active_package' => $hasActivePackage,
-                    'needs_package_assignment' => !$hasActivePackage,
+                    'needs_package_assignment' => ! $hasActivePackage,
                     'status' => $student->status
                 ];
             });
@@ -2448,7 +2462,6 @@ class StudentInvoiceController extends Controller
             ]);
 
             return response()->json($response);
-
         } catch (Exception $e) {
             Log::error('Error fetching students for fee package', [
                 'error' => $e->getMessage(),
@@ -2476,8 +2489,8 @@ class StudentInvoiceController extends Controller
     {
         // Ensure Super Admin and other authorized roles have access
         if (
-            !Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
-            !Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
+            ! Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
+            ! Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
         ) {
             abort(403, 'Unauthorized access to enhanced bulk challan generation.');
         }
@@ -2536,7 +2549,6 @@ class StudentInvoiceController extends Controller
                 'success' => true,
                 'fee_packages' => $feePackages
             ]);
-
         } catch (Exception $e) {
             Log::error('Error fetching fee packages', [
                 'error' => $e->getMessage(),
@@ -2563,7 +2575,7 @@ class StudentInvoiceController extends Controller
         try {
             // Use the branch_id from the request
             $branchId = $request->branch_id;
-            
+
             // Get fee periods for the academic year
             $feePeriods = FeePeriod::where('academic_year_id', $request->academic_year_id)
                 ->where('branch_id', $branchId)
@@ -2575,7 +2587,6 @@ class StudentInvoiceController extends Controller
                 'success' => true,
                 'fee_periods' => $feePeriods
             ]);
-
         } catch (Exception $e) {
             Log::error('Error fetching fee periods', [
                 'error' => $e->getMessage(),
@@ -2625,7 +2636,6 @@ class StudentInvoiceController extends Controller
                 'classes' => $classes,
                 'package_name' => $feePackage->package_name
             ]);
-
         } catch (Exception $e) {
             Log::error('Error fetching classes for fee package', [
                 'error' => $e->getMessage(),
@@ -2653,7 +2663,7 @@ class StudentInvoiceController extends Controller
         try {
             // Use the branch_id from the request
             $branchId = $request->branch_id;
-            
+
             $sections = BranchClassSection::with('sections')
                 ->where('class_id', $request->class_id)
                 ->where('branch_id', $branchId)
@@ -2667,7 +2677,6 @@ class StudentInvoiceController extends Controller
                 'success' => true,
                 'sections' => $sections
             ]);
-
         } catch (Exception $e) {
             Log::error('Error fetching sections for class', [
                 'error' => $e->getMessage(),
@@ -2772,7 +2781,7 @@ class StudentInvoiceController extends Controller
                 $hasActivePackage = $currentPackage && $currentPackage->is_valid;
 
                 // Handle fee package assignment based on business logic
-                if (!$hasActivePackage) {
+                if (! $hasActivePackage) {
                     // Student has no active package - assign the selected package
                     $studentFeePackage = $this->assignOrUpdateFeePackageForStudent($student, $feePackage, $academicYear);
                     $packageAssignments[] = "Student ID {$student->id}: Assigned package '{$feePackage->package_name}'";
@@ -2940,7 +2949,6 @@ class StudentInvoiceController extends Controller
 
                 $generatedInvoices[] = $studentInvoice->id;
                 $successCount++;
-
             } catch (Exception $e) {
                 $errors[] = [
                     'student_id' => $student->id,
@@ -2962,13 +2970,13 @@ class StudentInvoiceController extends Controller
             // Prepare detailed response for AJAX
             $createdChallans = [];
             $failedStudents = [];
-            
+
             // Get details of created challans
             if ($successCount > 0) {
                 $createdInvoices = StudentInvoice::with(['student:id,first_name,middle_name,last_name,active_class'])
                     ->whereIn('id', $generatedInvoices)
                     ->get();
-                
+
                 foreach ($createdInvoices as $invoice) {
                     $createdChallans[] = [
                         'student_id' => $invoice->student->id,
@@ -2979,7 +2987,7 @@ class StudentInvoiceController extends Controller
                     ];
                 }
             }
-            
+
             // Prepare failed students list
             foreach ($errors as $error) {
                 if (is_array($error)) {
@@ -2992,7 +3000,7 @@ class StudentInvoiceController extends Controller
                     ];
                 }
             }
-            
+
             // Prepare skipped students list
             $skippedStudentsList = [];
             foreach ($skippedStudents as $skipped) {
@@ -3052,12 +3060,12 @@ class StudentInvoiceController extends Controller
         }
 
         // Validate that student has an active class with proper relationships
-        if (!$student->active_class || !$student->active_class->branch_class_sections) {
+        if (! $student->active_class || ! $student->active_class->branch_class_sections) {
             throw new Exception("Student ID {$student->id} does not have an active class or branch class section assigned.");
         }
 
         // Validate that the branch class section has the required relationships
-        if (!$student->active_class->branch_class_sections->com_classes || !$student->active_class->branch_class_sections->sections) {
+        if (! $student->active_class->branch_class_sections->com_classes || ! $student->active_class->branch_class_sections->sections) {
             throw new Exception("Student ID {$student->id} has incomplete class/section information. Please ensure the student is properly assigned to a class and section.");
         }
 
@@ -3078,7 +3086,7 @@ class StudentInvoiceController extends Controller
 
     /**
      * Handle admission to monthly package transition and status change to 'on_roll'
-     * 
+     *
      * @param int $studentId
      * @param int $invoiceId
      * @return array
@@ -3104,22 +3112,22 @@ class StudentInvoiceController extends Controller
             if ($paidAdmissionInvoiceCount == 1) {
                 // Apply monthly package transition
                 $monthlyPackageResult = StudentInvoice::apply_monthly_package($studentId);
-                
+
                 if ($monthlyPackageResult) {
                     // Update student status to 'on_roll'
                     $student = Student::find($studentId);
                     if ($student && in_array($student->status, ['processing', 'registered'])) {
                         $oldStatus = $student->status;
                         $student->update(['status' => 'on_roll']);
-                        
+
                         // Update system ID and roll number if not already set
-                        if (!$student->system_id) {
+                        if (! $student->system_id) {
                             Student::update_student_id($studentId);
                         }
-                        if (!$student->roll_no) {
+                        if (! $student->roll_no) {
                             Student::update_roll_no($studentId);
                         }
-                        
+
                         $result = [
                             'success' => true,
                             'message' => 'Student status changed to on_roll and monthly package applied successfully',
@@ -3128,7 +3136,7 @@ class StudentInvoiceController extends Controller
                             'old_status' => $oldStatus,
                             'new_status' => 'on_roll'
                         ];
-                        
+
                         Log::info('Student status changed to on_roll and monthly package applied', [
                             'student_id' => $studentId,
                             'invoice_id' => $invoiceId,
@@ -3176,7 +3184,7 @@ class StudentInvoiceController extends Controller
             'fee_packages_fee_charges.fee_charges.fee_charges_type'
         ])->find($request->fee_package_id);
 
-        if (!$feePackage) {
+        if (! $feePackage) {
             return response()->json(['error' => 'Fee package not found'], 404);
         }
 
@@ -3197,8 +3205,8 @@ class StudentInvoiceController extends Controller
     {
         // Ensure Super Admin and other authorized roles have access
         if (
-            !Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
-            !Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
+            ! Auth::user()->hasRole(['super_admin', 'network_associate', 'finance-manager', 'accountant']) &&
+            ! Auth::user()->hasPermission(['list-generate-invoice', 'list-preview-invoice'])
         ) {
             abort(403, 'Unauthorized access to bulk mark as paid.');
         }
@@ -3329,11 +3337,11 @@ class StudentInvoiceController extends Controller
                     // Handle student status updates based on invoice type and payment
                     if ($studentInvoice->bank_payment_status === 'paid') {
                         $student = $studentInvoice->student;
-                        
+
                         if ($studentInvoice->invoice_frequency === 'Admission') {
                             // Handle admission to monthly package transition and status change to 'on_roll'
                             $transitionResult = $this->handleAdmissionToMonthlyTransition($studentInvoice->student_id, $studentInvoice->id);
-                            
+
                             if ($transitionResult['success']) {
                                 Log::info('Admission to monthly transition completed successfully', [
                                     'student_id' => $studentInvoice->student_id,
@@ -3352,15 +3360,15 @@ class StudentInvoiceController extends Controller
                             if ($student && $student->status === 'registered') {
                                 $oldStatus = $student->status;
                                 $student->update(['status' => 'on_roll']);
-                                
+
                                 // Update system ID and roll number if not already set
-                                if (!$student->system_id) {
+                                if (! $student->system_id) {
                                     Student::update_student_id($student->id);
                                 }
-                                if (!$student->roll_no) {
+                                if (! $student->roll_no) {
                                     Student::update_roll_no($student->id);
                                 }
-                                
+
                                 Log::info('Student status changed to on_roll for monthly invoice payment', [
                                     'student_id' => $student->id,
                                     'invoice_id' => $studentInvoice->id,
@@ -3374,7 +3382,6 @@ class StudentInvoiceController extends Controller
 
                     $successCount++;
                     $processedStudents[] = $studentInvoice->student_id;
-
                 } catch (Exception $e) {
                     $errors[] = "Error processing invoice ID {$invoiceId}: Processing failed";
                     Log::error('Bulk mark as paid error for invoice ' . $invoiceId, [
@@ -3394,7 +3401,6 @@ class StudentInvoiceController extends Controller
                 'errors' => $errors,
                 'processed_students' => array_unique($processedStudents)
             ]);
-
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Bulk mark as paid failed', [
@@ -3417,7 +3423,7 @@ class StudentInvoiceController extends Controller
         $students = Student::where('status', '=', 'on_roll')
             ->orderByDesc('id')
             ->get();
-            
+
         return view('students.import_previous_data', compact('students'));
     }
 
@@ -3435,7 +3441,7 @@ class StudentInvoiceController extends Controller
         try {
             // Check if student is on_roll
             $student = Student::find($request->student_id);
-            if (!$student || $student->status !== 'on_roll') {
+            if (! $student || $student->status !== 'on_roll') {
                 return redirect()->back()->with('error', 'Student is not currently enrolled (on_roll status required).');
             }
 
@@ -3475,7 +3481,7 @@ class StudentInvoiceController extends Controller
                 ->whereNull('cleared_date')
                 ->first();
 
-            $message = $existingArrears ? 
+            $message = $existingArrears ?
                 'Previous arrears updated successfully. Amount: ' . number_format($request->arrears_amount, 2) :
                 'Previous arrears imported successfully. Amount: ' . number_format($request->arrears_amount, 2);
 
@@ -3499,7 +3505,7 @@ class StudentInvoiceController extends Controller
         try {
             // Check if student is on_roll
             $student = Student::find($request->student_id);
-            if (!$student || $student->status !== 'on_roll') {
+            if (! $student || $student->status !== 'on_roll') {
                 return redirect()->back()->with('error', 'Student is not currently enrolled (on_roll status required).');
             }
 
@@ -3541,7 +3547,7 @@ class StudentInvoiceController extends Controller
                 ->where('amount', '<', 0)
                 ->first();
 
-            $message = $existingAdvance ? 
+            $message = $existingAdvance ?
                 'Previous advance payment updated successfully. Amount: ' . number_format($request->advance_amount, 2) :
                 'Previous advance payment imported successfully. Amount: ' . number_format($request->advance_amount, 2);
 
@@ -3563,7 +3569,7 @@ class StudentInvoiceController extends Controller
         try {
             $file = $request->file('arrears_file');
             $extension = $file->getClientOriginalExtension();
-            
+
             $imported = 0;
             $errors = [];
             $successRows = [];
@@ -3572,11 +3578,11 @@ class StudentInvoiceController extends Controller
             if ($extension === 'csv') {
                 $data = array_map('str_getcsv', file($file->getPathname()));
                 $headers = array_shift($data); // Remove header row
-                
+
                 foreach ($data as $index => $row) {
                     $rowNumber = $index + 1;
                     $rowData = array_combine($headers, $row);
-                    
+
                     try {
                         $wasUpdated = $this->processArrearsRow($rowData);
                         $imported++;
@@ -3600,13 +3606,13 @@ class StudentInvoiceController extends Controller
                 $spreadsheet = $reader->load($file->getPathname());
                 $worksheet = $spreadsheet->getActiveSheet();
                 $data = $worksheet->toArray();
-                
+
                 $headers = array_shift($data); // Remove header row
-                
+
                 foreach ($data as $index => $row) {
                     $rowNumber = $index + 1;
                     $rowData = array_combine($headers, $row);
-                    
+
                     try {
                         $wasUpdated = $this->processArrearsRow($rowData);
                         $imported++;
@@ -3667,7 +3673,7 @@ class StudentInvoiceController extends Controller
         }
 
         // Validate CNIC format (5 digits-7 digits-1 digit)
-        if (!preg_match('/^\d{5}-\d{7}-\d$/', $rowData['cnic'])) {
+        if (! preg_match('/^\d{5}-\d{7}-\d$/', $rowData['cnic'])) {
             throw new Exception("Invalid CNIC format: {$rowData['cnic']}. Expected format: 35201-1234567-1");
         }
 
@@ -3675,7 +3681,7 @@ class StudentInvoiceController extends Controller
         $student = Student::where('cnic', $rowData['cnic'])
                          ->where('status', 'on_roll')
                          ->first();
-        if (!$student) {
+        if (! $student) {
             // Check if student exists but has different status
             $studentExists = Student::where('cnic', $rowData['cnic'])->first();
             if ($studentExists) {
@@ -3686,16 +3692,16 @@ class StudentInvoiceController extends Controller
         }
 
         // Validate amount
-        if (!is_numeric($rowData['amount']) || $rowData['amount'] <= 0) {
+        if (! is_numeric($rowData['amount']) || $rowData['amount'] <= 0) {
             throw new Exception("Invalid amount: {$rowData['amount']}");
         }
 
         // Validate date format and ensure it's in the past
         $inputDate = DateTime::createFromFormat('m/d/Y', $rowData['date']);
-        if (!$inputDate) {
+        if (! $inputDate) {
             // Try alternative format Y-m-d
             $inputDate = DateTime::createFromFormat('Y-m-d', $rowData['date']);
-            if (!$inputDate) {
+            if (! $inputDate) {
                 throw new Exception("Invalid date format: {$rowData['date']}. Please use MM/DD/YYYY or YYYY-MM-DD format.");
             }
         }
@@ -3703,7 +3709,7 @@ class StudentInvoiceController extends Controller
         // Ensure the date is in the past
         $today = new DateTime();
         $today->setTime(23, 59, 59); // End of today
-        
+
         if ($inputDate > $today) {
             throw new Exception("Date must be in the past: {$rowData['date']}");
         }
@@ -3738,7 +3744,7 @@ class StudentInvoiceController extends Controller
                 ]);
             }
         });
-        
+
         return $wasUpdated;
     }
 
@@ -3754,7 +3760,7 @@ class StudentInvoiceController extends Controller
         try {
             $file = $request->file('advance_file');
             $extension = $file->getClientOriginalExtension();
-            
+
             $imported = 0;
             $errors = [];
             $successRows = [];
@@ -3763,11 +3769,11 @@ class StudentInvoiceController extends Controller
             if ($extension === 'csv') {
                 $data = array_map('str_getcsv', file($file->getPathname()));
                 $headers = array_shift($data);
-                
+
                 foreach ($data as $index => $row) {
                     $rowNumber = $index + 1;
                     $rowData = array_combine($headers, $row);
-                    
+
                     try {
                         $wasUpdated = $this->processAdvanceRow($rowData);
                         $imported++;
@@ -3790,13 +3796,13 @@ class StudentInvoiceController extends Controller
                 $spreadsheet = $reader->load($file->getPathname());
                 $worksheet = $spreadsheet->getActiveSheet();
                 $data = $worksheet->toArray();
-                
+
                 $headers = array_shift($data);
-                
+
                 foreach ($data as $index => $row) {
                     $rowNumber = $index + 1;
                     $rowData = array_combine($headers, $row);
-                    
+
                     try {
                         $wasUpdated = $this->processAdvanceRow($rowData);
                         $imported++;
@@ -3857,7 +3863,7 @@ class StudentInvoiceController extends Controller
         }
 
         // Validate CNIC format (5 digits-7 digits-1 digit)
-        if (!preg_match('/^\d{5}-\d{7}-\d$/', $rowData['cnic'])) {
+        if (! preg_match('/^\d{5}-\d{7}-\d$/', $rowData['cnic'])) {
             throw new Exception("Invalid CNIC format: {$rowData['cnic']}. Expected format: 35201-1234567-1");
         }
 
@@ -3865,7 +3871,7 @@ class StudentInvoiceController extends Controller
         $student = Student::where('cnic', $rowData['cnic'])
                          ->where('status', 'on_roll')
                          ->first();
-        if (!$student) {
+        if (! $student) {
             // Check if student exists but has different status
             $studentExists = Student::where('cnic', $rowData['cnic'])->first();
             if ($studentExists) {
@@ -3876,16 +3882,16 @@ class StudentInvoiceController extends Controller
         }
 
         // Validate amount
-        if (!is_numeric($rowData['amount']) || $rowData['amount'] <= 0) {
+        if (! is_numeric($rowData['amount']) || $rowData['amount'] <= 0) {
             throw new Exception("Invalid amount: {$rowData['amount']}");
         }
 
         // Validate date format and ensure it's in the past
         $inputDate = DateTime::createFromFormat('m/d/Y', $rowData['date']);
-        if (!$inputDate) {
+        if (! $inputDate) {
             // Try alternative format Y-m-d
             $inputDate = DateTime::createFromFormat('Y-m-d', $rowData['date']);
-            if (!$inputDate) {
+            if (! $inputDate) {
                 throw new Exception("Invalid date format: {$rowData['date']}. Please use MM/DD/YYYY or YYYY-MM-DD format.");
             }
         }
@@ -3893,7 +3899,7 @@ class StudentInvoiceController extends Controller
         // Ensure the date is in the past
         $today = new DateTime();
         $today->setTime(23, 59, 59); // End of today
-        
+
         if ($inputDate > $today) {
             throw new Exception("Date must be in the past: {$rowData['date']}");
         }
@@ -3930,7 +3936,7 @@ class StudentInvoiceController extends Controller
                 ]);
             }
         });
-        
+
         return $wasUpdated;
     }
 
@@ -3940,7 +3946,7 @@ class StudentInvoiceController extends Controller
      */
     public function downloadTemplate($type)
     {
-        if (!in_array($type, ['arrears', 'advance'])) {
+        if (! in_array($type, ['arrears', 'advance'])) {
             return redirect()->back()->with('error', 'Invalid template type.');
         }
 
@@ -3950,20 +3956,19 @@ class StudentInvoiceController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($type) {
+        $callback = function () use ($type) {
             $file = fopen('php://output', 'w');
-            
+
             // Add headers with new column structure
             fputcsv($file, ['first_name', 'middle_name', 'last_name', 'cnic', 'amount', 'date']);
-            
+
             // Add sample data with MM/DD/YYYY format
             fputcsv($file, ['Ahmed', 'Ali', 'Khan', '35201-1234567-1', '5000.00', '01/15/2024']);
             fputcsv($file, ['Fatima', 'Bibi', 'Hussain', '35201-1234567-2', '3000.00', '02/01/2024']);
-            
+
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
     }
-
 }

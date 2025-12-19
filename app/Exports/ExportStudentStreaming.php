@@ -28,7 +28,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
     private $guardians = [];
     private $addresses = [];
     private $classes = [];
-    
+
     public function __construct($request = null)
     {
         $this->request = $request;
@@ -46,7 +46,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
         $this->countries = Country::select('id', 'country_name')->pluck('country_name', 'id')->toArray();
         $this->states = State::select('id', 'state_name')->pluck('state_name', 'id')->toArray();
         $this->cities = City::select('id', 'city_name')->pluck('city_name', 'id')->toArray();
-        
+
         // Pre-load all guardians data
         $this->guardians = DB::table('guardians')
             ->leftJoin('relations', 'guardians.relation_id', '=', 'relations.id')
@@ -63,7 +63,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
             ->get()
             ->keyBy('student_id')
             ->toArray();
-        
+
         // Pre-load all addresses data
         $this->addresses = DB::table('student_addresses')
             ->select([
@@ -86,7 +86,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
             ->get()
             ->keyBy('student_id')
             ->toArray();
-        
+
         // Pre-load all class data
         $this->classes = DB::table('class_students')
             ->leftJoin('branch_class_sections', 'class_students.branch_class_section_id', '=', 'branch_class_sections.id')
@@ -109,7 +109,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
     public function generator(): Generator
     {
         $query = $this->buildQuery();
-        
+
         // Process in chunks to avoid memory issues
         $query->chunk(500, function ($students) {
             foreach ($students as $student) {
@@ -127,7 +127,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
             ->select([
                 'students.id',
                 'students.first_name',
-                'students.middle_name', 
+                'students.middle_name',
                 'students.last_name',
                 'students.gender',
                 'students.email',
@@ -207,7 +207,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
 
         if ($this->request->branch_id && $this->request->branch_id > 0) {
             $query->where('students.branch_id', $this->request->branch_id);
-        } elseif (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        } elseif (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $query->where('students.branch_id', get_branch_id());
         }
 
@@ -254,7 +254,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
      */
     private function safeArrayGet($array, $key, $default = '')
     {
-        if (!$array || !is_array($array) || !isset($array[$key])) {
+        if (! $array || ! is_array($array) || ! isset($array[$key])) {
             return $default;
         }
         return $array[$key] ?? $default;
@@ -266,10 +266,10 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
     private function mapStudent($student)
     {
         $studentId = $student->id;
-        
+
         // Get guardian information from preloaded data
         $guardian = $this->guardians[$studentId] ?? null;
-        
+
         // Convert to array if it's an object for consistent access
         if ($guardian && is_object($guardian)) {
             $guardian = (array) $guardian;
@@ -281,25 +281,25 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
         $relation_name = $this->safeArrayGet($guardian, 'relation_name');
         $is_parent = $this->safeArrayGet($guardian, 'is_parent', 'no');
         $employee_no = $this->safeArrayGet($guardian, 'employee_no');
-        
+
         // Get address information from preloaded data
         $address = $this->addresses[$studentId] ?? null;
-        
+
         // Convert to array if it's an object for consistent access
         if ($address && is_object($address)) {
             $address = (array) $address;
         }
-        
+
         // Get class information from preloaded data
         $classInfo = $this->classes[$studentId] ?? null;
-        
+
         // Convert to array if it's an object for consistent access
         if ($classInfo && is_object($classInfo)) {
             $classInfo = (array) $classInfo;
         }
         $class_name = $this->safeArrayGet($classInfo, 'class_name');
         $section_name = $this->safeArrayGet($classInfo, 'section_name');
-        
+
         return [
             // Student Personal Information
             $student->first_name ?? '',
@@ -431,7 +431,7 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
                 // Get the highest row number
                 $highestRow = $event->sheet->getHighestRow();
                 $highestColumn = $event->sheet->getHighestColumn();
-                
+
                 // Style the header row
                 $headerRange = 'A1:' . $highestColumn . '1';
                 $event->sheet->getDelegate()->getStyle($headerRange)->applyFromArray([
@@ -477,4 +477,4 @@ class ExportStudentStreaming implements FromGenerator, WithHeadings, ShouldAutoS
             },
         ];
     }
-} 
+}

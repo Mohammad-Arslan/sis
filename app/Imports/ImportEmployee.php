@@ -45,18 +45,18 @@ use Illuminate\Support\Str;
 class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBatchInserts, WithChunkReading, SkipsOnError, SkipsEmptyRows, SkipsOnFailure
 {
     use SkipsFailures;
-    
+
     public $importedCount = 0;
     public $skippedCount = 0;
     public $errors = [];
     public $currentRowNumber = 0; // Track current row number
     public $totalRowsProcessed = 0; // Track total rows including headers and empty rows
-    
+
     // Import tracking
     protected $importId;
     protected $importProgress;
     protected $userId;
-    
+
     // Cache for lookup tables to avoid repeated database queries
     private $countryCache = [];
     private $stateCache = [];
@@ -70,7 +70,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     private $designationCache = [];
     private $existingEmailCache = [];
     private $existingCnicCache = [];
-    
+
     // Progress callback
     private $progressCallback = null;
 
@@ -78,21 +78,21 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     {
         $this->importId = $importId;
         $this->userId = $userId;
-        
+
         // Set dynamic PHP configuration for large imports
         $this->setDynamicConfiguration();
-        
+
         // Pre-load all lookup tables into memory for faster access
         $this->preloadLookupTables();
-        
+
         // Initialize import progress tracking
         if ($this->importId) {
             $this->importProgress = ImportProgress::where('import_id', $this->importId)->first();
-            
+
             // Clear previous error logs for this import
             ImportErrorLog::truncateForImport($this->importId);
         }
-        
+
         // Reset row counter
         $this->currentRowNumber = 0;
     }
@@ -106,43 +106,43 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         $currentMemoryLimit = ini_get('memory_limit');
         $currentMemoryBytes = $this->convertToBytes($currentMemoryLimit);
         $requiredMemoryBytes = 2 * 1024 * 1024 * 1024; // 2GB
-        
+
         if ($currentMemoryBytes < $requiredMemoryBytes) {
             ini_set('memory_limit', '2G');
         }
-        
+
         // Increase max execution time (30 minutes)
         ini_set('max_execution_time', 1800);
-        
+
         // Increase input time limit
         ini_set('max_input_time', 1800);
-        
+
         // Increase post max size for large file uploads
         $currentPostMaxSize = ini_get('post_max_size');
         $currentPostMaxBytes = $this->convertToBytes($currentPostMaxSize);
         $requiredPostMaxBytes = 100 * 1024 * 1024; // 100MB
-        
+
         if ($currentPostMaxBytes < $requiredPostMaxBytes) {
             ini_set('post_max_size', '100M');
         }
-        
+
         // Increase upload max filesize
         $currentUploadMaxSize = ini_get('upload_max_filesize');
         $currentUploadMaxBytes = $this->convertToBytes($currentUploadMaxSize);
         $requiredUploadMaxBytes = 100 * 1024 * 1024; // 100MB
-        
+
         if ($currentUploadMaxBytes < $requiredUploadMaxBytes) {
             ini_set('upload_max_filesize', '100M');
         }
-        
+
         // Disable output buffering for better memory management
         if (ob_get_level()) {
             ob_end_clean();
         }
-        
+
         // Set garbage collection to run more frequently
         gc_enable();
-        
+
         Log::info('Dynamic configuration set for large import', [
             'memory_limit' => ini_get('memory_limit'),
             'max_execution_time' => ini_get('max_execution_time'),
@@ -159,7 +159,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         $sizeStr = trim($sizeStr);
         $last = strtolower($sizeStr[strlen($sizeStr) - 1]);
         $size = (int) $sizeStr;
-        
+
         switch ($last) {
             case 'g':
                 $size *= 1024;
@@ -168,7 +168,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             case 'k':
                 $size *= 1024;
         }
-        
+
         return $size;
     }
 
@@ -178,11 +178,11 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     private function formatBytes($bytes, $precision = 2)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
+
         return round($bytes, $precision) . ' ' . $units[$i];
     }
 
@@ -283,7 +283,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         if ($this->progressCallback && $this->totalRowsProcessed % 10 === 0) {
             call_user_func($this->progressCallback, $this->getImportStats());
         }
-        
+
         // Update database progress
         if ($this->importProgress) {
             $this->importProgress->updateProgress([
@@ -303,7 +303,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     private function addError(array $errorData): void
     {
         $this->errors[] = $errorData;
-        
+
         // Store error in ImportErrorLog table
         if ($this->importId && $this->userId) {
             ImportErrorLog::create([
@@ -319,7 +319,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'occurred_at' => now(),
             ]);
         }
-        
+
         // Also update ImportProgress for backward compatibility
         if ($this->importProgress) {
             $this->importProgress->addError($errorData);
@@ -350,7 +350,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         // If it's already a string, try to parse it
         if (is_string($value)) {
             $value = trim($value);
-            
+
             // Try different date formats - PRIORITIZE d-m-Y format (export format)
             $formats = [
                 'd-m-Y',     // Export format - try this first
@@ -393,7 +393,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
 
         if (is_string($value)) {
             $value = trim($value);
-            
+
             // PRIORITIZE d-m-Y format (export format)
             $formats = [
                 'd-m-Y',     // Export format - try this first
@@ -460,28 +460,28 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     {
         // Increment row number for tracking (this happens for every row)
         $this->currentRowNumber++;
-        
+
         // Trigger progress callback
         $this->triggerProgressCallback();
-        
+
         try {
             // Skip the 'total_service' field from export (it's a calculated field, not for import)
             if (isset($row['total_service'])) {
                 unset($row['total_service']);
             }
-            
+
             // Clean all row values (convert '-' to null)
             foreach ($row as $key => $value) {
                 if ($value === '-') {
                     $row[$key] = null;
                 }
             }
-            
+
             // Handle full_name field by splitting it into first_name and last_name
-            if (isset($row['full_name']) && !empty($row['full_name']) && (empty($row['first_name']) || empty($row['last_name']))) {
+            if (isset($row['full_name']) && ! empty($row['full_name']) && (empty($row['first_name']) || empty($row['last_name']))) {
                 $fullName = trim($row['full_name']);
                 $nameParts = explode(' ', $fullName, 2);
-                
+
                 if (count($nameParts) >= 1) {
                     $row['first_name'] = $nameParts[0];
                     if (count($nameParts) >= 2) {
@@ -491,43 +491,49 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     }
                 }
             }
-            
+
             // Skip header row (check if first_name contains header-like text)
             if (isset($row['first_name']) && in_array(strtolower(trim($row['first_name'])), ['first_name', 'first name', 'name', 'prefix', 'last_name', 'last name', 'full_name', 'full name'])) {
                 return null; // Skip header row silently
             }
-            
+
             // Skip if essential fields are missing or if row is completely empty
             // Check if we have either first_name or full_name (already handled '-' conversion above)
-            $hasName = !empty($row['first_name']) || !empty($row['full_name']);
-            $hasEmail = !empty($row['email']);
-            $hasCnic = !empty($row['cnic']);
-            
-            if (!$hasName || !$hasEmail || !$hasCnic) {
+            $hasName = ! empty($row['first_name']) || ! empty($row['full_name']);
+            $hasEmail = ! empty($row['email']);
+            $hasCnic = ! empty($row['cnic']);
+
+            if (! $hasName || ! $hasEmail || ! $hasCnic) {
                 // Check if this is a completely empty row
                 $hasAnyData = false;
                 foreach ($row as $value) {
-                    if (!empty($value) && $value !== null && $value !== '') {
+                    if (! empty($value) && $value !== null && $value !== '') {
                         $hasAnyData = true;
                         break;
                     }
                 }
-                
-                if (!$hasAnyData) {
+
+                if (! $hasAnyData) {
                     // Completely empty row, skip silently
                     return null;
                 }
-                
+
                 // Row has some data but missing essential fields
                 $this->skippedCount++;
                 Log::warning("Skipping row due to missing essential fields", ['row' => $row]);
-                
+
                 // Add error to database
                 $missingFields = [];
-                if (!$hasName) $missingFields[] = 'first_name or full_name';
-                if (!$hasEmail) $missingFields[] = 'email';
-                if (!$hasCnic) $missingFields[] = 'cnic';
-                
+                if (! $hasName) {
+                    $missingFields[] = 'first_name or full_name';
+                }
+                if (! $hasEmail) {
+                    $missingFields[] = 'email';
+                }
+                if (! $hasCnic) {
+                    $missingFields[] = 'cnic';
+                }
+
                 $this->addError([
                     'type' => 'missing_fields',
                     'row' => $this->currentRowNumber,
@@ -536,7 +542,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     'value' => 'first_name: ' . ($row['first_name'] ?? 'empty') . ', full_name: ' . ($row['full_name'] ?? 'empty') . ', email: ' . ($row['email'] ?? 'empty') . ', cnic: ' . ($row['cnic'] ?? 'empty'),
                     'timestamp' => now()->toDateTimeString(),
                 ]);
-                
+
                 return null;
             }
 
@@ -563,9 +569,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
+
                 // For married people, number of children is required (can be 0)
-                if (!isset($row['no_of_children']) || $row['no_of_children'] === '' || $row['no_of_children'] === null || !is_numeric($row['no_of_children'])) {
+                if (! isset($row['no_of_children']) || $row['no_of_children'] === '' || $row['no_of_children'] === null || ! is_numeric($row['no_of_children'])) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -577,9 +583,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
+
                 // For married people, children in UCS is required (can be 0)
-                if (!isset($row['children_in_ucs']) || $row['children_in_ucs'] === '' || $row['children_in_ucs'] === null || !is_numeric($row['children_in_ucs'])) {
+                if (! isset($row['children_in_ucs']) || $row['children_in_ucs'] === '' || $row['children_in_ucs'] === null || ! is_numeric($row['children_in_ucs'])) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -593,7 +599,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 }
             } else {
                 // For single/unmarried people, marriage-related fields should be empty
-                if (!empty($row['date_of_marriage'])) {
+                if (! empty($row['date_of_marriage'])) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -605,8 +611,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
-                if (!empty($row['no_of_children']) && $row['no_of_children'] != 0) {
+
+                if (! empty($row['no_of_children']) && $row['no_of_children'] != 0) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -618,8 +624,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
-                if (!empty($row['children_in_ucs']) && $row['children_in_ucs'] != 0) {
+
+                if (! empty($row['children_in_ucs']) && $row['children_in_ucs'] != 0) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -682,9 +688,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $passportNumber = trim($row['passport_number'] ?? '');
             $issueDate = $row['issue_date'] ?? '';
             $expiryDate = $row['expiry_date'] ?? '';
-            
+
             // If passport number is provided, issue_date and expiry_date are required
-            if (!empty($passportNumber)) {
+            if (! empty($passportNumber)) {
                 if (empty($issueDate)) {
                     $this->addError([
                         'type' => 'validation_error',
@@ -697,7 +703,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
+
                 if (empty($expiryDate)) {
                     $this->addError([
                         'type' => 'validation_error',
@@ -711,9 +717,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     return null;
                 }
             }
-            
+
             // If issue_date or expiry_date is provided, passport_number is required
-            if (!empty($issueDate) || !empty($expiryDate)) {
+            if (! empty($issueDate) || ! empty($expiryDate)) {
                 if (empty($passportNumber)) {
                     $this->addError([
                         'type' => 'validation_error',
@@ -732,10 +738,10 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $jobStatus = trim($row['job_status'] ?? '');
             $probationEndDate = $row['probation_end_date'] ?? '';
             $probationExtended = trim($row['probation_extended'] ?? '');
-            
+
             // If job status is Regular, probation fields should be empty
             if (strtolower($jobStatus) === 'regular') {
-                if (!empty($probationEndDate)) {
+                if (! empty($probationEndDate)) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -747,8 +753,8 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
-                if (!empty($probationExtended)) {
+
+                if (! empty($probationExtended)) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -761,7 +767,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     return null;
                 }
             }
-            
+
             // If job status is Probation, probation fields are required
             if (strtolower($jobStatus) === 'probation') {
                 if (empty($probationEndDate)) {
@@ -776,7 +782,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
+
                 if (empty($probationExtended)) {
                     $this->addError([
                         'type' => 'validation_error',
@@ -789,9 +795,9 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                     $this->skippedCount++;
                     return null;
                 }
-                
+
                 // Validate probation_extended values (case insensitive)
-                if (!empty($probationExtended) && !in_array(strtolower($probationExtended), ['yes', 'no'])) {
+                if (! empty($probationExtended) && ! in_array(strtolower($probationExtended), ['yes', 'no'])) {
                     $this->addError([
                         'type' => 'validation_error',
                         'row' => $this->currentRowNumber,
@@ -822,7 +828,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $designationId = $this->getLookupId($this->designationCache, $row['designation'] ?? '', 'designation');
 
             // Log errors for missing lookup records
-            if (!$nationalityId && !empty($row['nationality'])) {
+            if (! $nationalityId && ! empty($row['nationality'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -833,7 +839,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$religionId && !empty($row['religion'])) {
+            if (! $religionId && ! empty($row['religion'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -844,7 +850,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$countryId && !empty($row['country'])) {
+            if (! $countryId && ! empty($row['country'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -855,7 +861,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$stateId && !empty($row['state'])) {
+            if (! $stateId && ! empty($row['state'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -866,7 +872,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$cityId && !empty($row['city'])) {
+            if (! $cityId && ! empty($row['city'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -877,7 +883,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$companyId && !empty($row['company'])) {
+            if (! $companyId && ! empty($row['company'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -888,7 +894,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$regionId && !empty($row['region'])) {
+            if (! $regionId && ! empty($row['region'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -899,7 +905,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$branchId && !empty($row['branch'])) {
+            if (! $branchId && ! empty($row['branch'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -910,7 +916,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$departmentId && !empty($row['department'])) {
+            if (! $departmentId && ! empty($row['department'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -921,7 +927,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 ]);
             }
 
-            if (!$designationId && !empty($row['designation'])) {
+            if (! $designationId && ! empty($row['designation'])) {
                 $this->addError([
                     'type' => 'lookup_error',
                     'row' => $this->currentRowNumber,
@@ -947,7 +953,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
 
             // Check if user exists
             $user = User::where('email', $email)->orWhere('CNIC', $cnic)->first();
-            $isNewUser = !$user;
+            $isNewUser = ! $user;
 
             if ($user) {
                 // Update existing user
@@ -1012,17 +1018,17 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 }
             }
 
-            if (!empty($row['pin_code'])) {
+            if (! empty($row['pin_code'])) {
                 $employeeData['pin_code'] = trim($row['pin_code']);
             }
 
-            if (!empty($row['card_no'])) {
+            if (! empty($row['card_no'])) {
                 $employeeData['card_no'] = trim($row['card_no']);
             }
-            
+
             // Upsert employee (update if exists, create if not)
             $employee = Employee::where('user_id', $user->id)->first();
-            
+
             if ($employee) {
                 // Update existing employee
                 $employee->update($employeeData);
@@ -1031,14 +1037,14 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 // Generate employee ID for new employee
                 $maxEmployeeId = Employee::max('employee_id');
                 $employeeData['employee_id'] = $maxEmployeeId ? $maxEmployeeId + 1 : 1001;
-                
+
                 // Create new employee
                 $employee = Employee::create($employeeData);
-                
+
                 // Assign leave quotas for new employees only
-                if (!empty($employeeData['designation_id'])) {
+                if (! empty($employeeData['designation_id'])) {
                     $designationLeaveQuotas = DesignationLeaveQuota::where('designation_id', $employeeData['designation_id'])->get();
-                    
+
                     foreach ($designationLeaveQuotas as $quota) {
                         EmployeeLeaveQuota::updateOrCreate(
                             [
@@ -1066,7 +1072,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             if ($this->importedCount % 100 === 0) {
                 // Force garbage collection every 100 records
                 gc_collect_cycles();
-                
+
                 // Log memory usage for monitoring
                 $memoryUsage = memory_get_usage(true);
                 $memoryPeak = memory_get_peak_usage(true);
@@ -1078,18 +1084,17 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             }
 
             return $employee;
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->skippedCount++;
-            
+
             $errorMessage = "Error importing employee row: " . $e->getMessage();
             Log::error($errorMessage, [
                 'row' => $row,
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             // Add error to database
             $this->addError([
                 'type' => 'import_error',
@@ -1099,7 +1104,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'value' => 'Row data: ' . json_encode(array_slice($row, 0, 5)), // Show first 5 fields
                 'timestamp' => now()->toDateTimeString(),
             ]);
-            
+
             $this->errors[] = [
                 'row' => $this->currentRowNumber,
                 'error' => $errorMessage
@@ -1125,52 +1130,52 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             'card_no' => ['nullable', 'string', 'max:50'],
             'mobile_number' => ['nullable', 'string', 'max:20', 'regex:/^[\+]?[0-9\s\-\(\)]{7,20}$/'],
             'date_of_birth' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Date of birth must be a valid date format.');
                 }
             }],
             'hiring_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Hiring date must be a valid date format.');
                 }
             }],
             'confirm_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Confirm date must be a valid date format.');
                 }
             }],
             'regular_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Regular date must be a valid date format.');
                 }
             }],
             'left_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Left date must be a valid date format.');
                 }
             }],
             'probation_end_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Probation end date must be a valid date format.');
                 }
             }],
             'cnic_expiry' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('CNIC expiry date must be a valid date format.');
                 }
             }],
             'date_of_marriage' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Date of marriage must be a valid date format.');
                 }
             }],
             'issue_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Issue date must be a valid date format.');
                 }
             }],
             'expiry_date' => ['nullable', function ($attribute, $value, $fail) {
-                if (!empty($value) && !$this->isValidDateString($value)) {
+                if (! empty($value) && ! $this->isValidDateString($value)) {
                     $fail('Expiry date must be a valid date format.');
                 }
             }],
@@ -1179,7 +1184,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 if ($value === '-' || $value === null || $value === '') {
                     return;
                 }
-                if (!is_numeric($value) || (int)$value < 0) {
+                if (! is_numeric($value) || (int)$value < 0) {
                     $fail('Number of children must be a whole number (0 or greater).');
                 }
             }],
@@ -1188,7 +1193,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 if ($value === '-' || $value === null || $value === '') {
                     return;
                 }
-                if (!is_numeric($value) || (int)$value < 0) {
+                if (! is_numeric($value) || (int)$value < 0) {
                     $fail('Children in UCS must be a whole number (0 or greater).');
                 }
             }],
@@ -1244,7 +1249,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         // Optimize batch size based on available memory
         $memoryLimit = ini_get('memory_limit');
         $memoryBytes = $this->convertToBytes($memoryLimit);
-        
+
         // For large memory (2GB+), use larger batches
         if ($memoryBytes >= 2 * 1024 * 1024 * 1024) {
             return 200; // 200 records per batch
@@ -1263,7 +1268,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
         // Optimize chunk size based on available memory
         $memoryLimit = ini_get('memory_limit');
         $memoryBytes = $this->convertToBytes($memoryLimit);
-        
+
         // For large memory (2GB+), use larger chunks
         if ($memoryBytes >= 2 * 1024 * 1024 * 1024) {
             return 500; // 500 records per chunk
@@ -1280,23 +1285,23 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     public function onError(\Throwable $e)
     {
         $this->skippedCount++;
-        
+
         $errorMessage = "Error importing employee row: " . $e->getMessage();
         Log::error($errorMessage, [
             'row' => $this->currentRowNumber,
             'exception' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ]);
-        
+
         // Extract the problematic row data for better error reporting
         $rowData = $e->getTrace()[0]['args'][0] ?? [];
         $problematicValue = 'N/A';
-        
+
         // Try to identify the specific field that caused the error
         $fieldName = null;
         $cleanErrorMessage = $errorMessage;
         $problematicValue = 'N/A';
-        
+
         if (strpos($errorMessage, 'Undefined variable') !== false) {
             // Extract variable name from error message
             preg_match('/Undefined variable \$(\w+)/', $errorMessage, $matches);
@@ -1337,7 +1342,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             $cleanErrorMessage = "Error processing row data";
             $problematicValue = "Check all required fields";
         }
-        
+
         // Add error to database
         $this->addError([
             'type' => 'import_error',
@@ -1347,7 +1352,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
             'value' => $problematicValue,
             'timestamp' => now()->toDateTimeString(),
         ]);
-        
+
         $this->errors[] = [
             'error' => $errorMessage,
             'row' => $this->currentRowNumber
@@ -1395,7 +1400,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
     {
         foreach ($failures as $failure) {
             $this->skippedCount++;
-            
+
             $errorMessage = "Validation failed: " . implode(', ', $failure->errors());
             Log::warning($errorMessage, [
                 'row' => $this->currentRowNumber, // Use custom counter instead of failure->row()
@@ -1403,7 +1408,7 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'errors' => $failure->errors(),
                 'values' => $failure->values()
             ]);
-            
+
             // Add error to database
             $this->addError([
                 'type' => 'validation_error',
@@ -1413,11 +1418,11 @@ class ImportEmployee implements ToModel, WithHeadingRow, WithValidation, WithBat
                 'value' => $failure->values()[$failure->attribute()] ?? 'N/A',
                 'timestamp' => now()->toDateTimeString(),
             ]);
-            
+
             $this->errors[] = [
                 'row' => $this->currentRowNumber, // Use custom counter instead of failure->row()
                 'error' => $errorMessage
             ];
         }
     }
-} 
+}

@@ -43,10 +43,9 @@ class EmployeeOfficialLeaveDayController extends Controller
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('leave_date', function ($row) {
-                    $leave_date = NULL;
-                    if(isset($row->leave_date))
-                    {
-                        $leave_date = date('d-M-Y',strtotime($row->leave_date));
+                    $leave_date = null;
+                    if (isset($row->leave_date)) {
+                        $leave_date = date('d-M-Y', strtotime($row->leave_date));
                     }
                     return $leave_date;
                 })
@@ -55,19 +54,19 @@ class EmployeeOfficialLeaveDayController extends Controller
                     return $ShiftTiming;
                 })
                 ->addColumn('status', function ($row) {
-                    if($row->official_leave->status == '1'){
+                    if ($row->official_leave->status == '1') {
                         $LeaveStatus =  "Eid al-Fitar";
-                    }else if($row->official_leave->status == '2'){
+                    } else if ($row->official_leave->status == '2') {
                         $LeaveStatus =  "Eid al-Adha";
-                    }else if($row->official_leave->status == '3'){
+                    } else if ($row->official_leave->status == '3') {
                         $LeaveStatus =  "Pakistan Day";
-                    }else if($row->official_leave->status == '4'){
+                    } else if ($row->official_leave->status == '4') {
                         $LeaveStatus =  "Independence Day";
-                    }else if($row->official_leave->status == '5'){
+                    } else if ($row->official_leave->status == '5') {
                         $LeaveStatus =  "Quaid-e-Azam Day";
-                    }else if($row->official_leave->status == '6'){
+                    } else if ($row->official_leave->status == '6') {
                         $LeaveStatus =  "Labour Day";
-                    }else if($row->official_leave->status == '7'){
+                    } else if ($row->official_leave->status == '7') {
                         $LeaveStatus =  "Muharram";
                     }
                     return $LeaveStatus;
@@ -81,7 +80,7 @@ class EmployeeOfficialLeaveDayController extends Controller
         $working_days = WorkingDay::all();
         $official_leaves = OfficialLeaveDay::all();
 
-        return view('employees.employee_official_leaves',[
+        return view('employees.employee_official_leaves', [
             'working_days' => $working_days,
             'official_leaves' => $official_leaves
         ]);
@@ -108,13 +107,12 @@ class EmployeeOfficialLeaveDayController extends Controller
 
         $AssigendLeaveDays = EmployeeOfficialLeaveDay::where([['employee_id','=' ,$request->employee_id],['working_day_id','=',$request->working_day_id],['official_leave_id','=',$request->official_leave_id],['leave_date','=',$request->leave_date]])->first(['employee_id','working_day_id','official_leave_id','leave_date']);
 
-        $error= NULL;
+        $error = null;
         $attendance = [];
-        if(isset($AssigendLeaveDays) && !is_null($AssigendLeaveDays))
-        {
-            $error=1;
-        }else{
-            $academic_year = AcademicYear::where('active',1)->first('id');
+        if (isset($AssigendLeaveDays) && ! is_null($AssigendLeaveDays)) {
+            $error = 1;
+        } else {
+            $academic_year = AcademicYear::where('active', 1)->first('id');
             EmployeeOfficialLeaveDay::create($request->all());
             $attendance['employee_id'] = $request->employee_id;
             $attendance['time_in'] = '00:00:00';
@@ -166,12 +164,10 @@ class EmployeeOfficialLeaveDayController extends Controller
             'official_leaves' => $official_leaves,
             'employee' => $employee[0]
         ];
-        if($error)
-        {
+        if ($error) {
             //return redirect(route('edit-employee', $data['id']) . '?tab=working_shifts')->with('success', 'Dependent added successfully.');
             return redirect(route('edit-employee', $data['id']) . '?tab=official_leaves')->with('error', 'Duplicate entry not allowed, selected leave is already assigned to the employee.');
-        }
-        else{
+        } else {
             return redirect(route('edit-employee', $data['id']) . '?tab=official_leaves')->with('success', 'Employee official leave record has been created successfully.');
         }
     }
@@ -193,7 +189,7 @@ class EmployeeOfficialLeaveDayController extends Controller
      * @param  \App\Models\EmployeeOfficialLeaveDay  $employeeOfficialLeaveDay
      * @return \Illuminate\Http\Response
      */
-    public function edit(Request $request,EmployeeOfficialLeaveDay $employeeOfficialLeaveDay)
+    public function edit(Request $request, EmployeeOfficialLeaveDay $employeeOfficialLeaveDay)
     {
         $countries = Country::all();
         $states = State::all();
@@ -240,7 +236,7 @@ class EmployeeOfficialLeaveDayController extends Controller
             'employeeOfficialLeaveDay' => $employeeOfficialLeaveDay
         ];
        // dd($data);
-        return redirect(route('edit-employee', $data['id']) . '?leave_record_id='.$request->id.'&tab=official_leaves');
+        return redirect(route('edit-employee', $data['id']) . '?leave_record_id=' . $request->id . '&tab=official_leaves');
         //return view('employees.employee_working_shifts', ['employeeWorkingDay' => $employeeWorkingDay]);
     }
 
@@ -261,11 +257,10 @@ class EmployeeOfficialLeaveDayController extends Controller
         ]);
         $AssigendLeaveDays = EmployeeOfficialLeaveDay::where([['employee_id','=' ,$employeeOfficialLeaveDay->employee_id],['working_day_id','=',$employeeOfficialLeaveDay->working_day_id],['official_leave_id','=',$employeeOfficialLeaveDay->official_leave_id],['id','!=',$employeeOfficialLeaveDay->id]])->get(['employee_id','working_day_id','official_leave_id']);
 
-        $error= NULL;
-        if(isset($AssigendLeaveDays[0]) && !is_null($AssigendLeaveDays[0]))
-        {
-            $error=1;
-        }else{
+        $error = null;
+        if (isset($AssigendLeaveDays[0]) && ! is_null($AssigendLeaveDays[0])) {
+            $error = 1;
+        } else {
             $employeeOfficialLeaveDay->update($request->all());
         }
         $countries = Country::all();
@@ -310,10 +305,9 @@ class EmployeeOfficialLeaveDayController extends Controller
             'employeeWorkingDay' => $employeeWorkingDay,
             'employeeOfficialLeaveDay' => $employeeOfficialLeaveDay
         ];
-        if($error)
-        {
-            return redirect(route('edit-employee', $data['id']) . '?leave_record_id='.$request->id.'&tab=official_leaves')->with('error', 'Duplicate entry not allowed, selected leave is already assigned to the employee.');
-        }else{
+        if ($error) {
+            return redirect(route('edit-employee', $data['id']) . '?leave_record_id=' . $request->id . '&tab=official_leaves')->with('error', 'Duplicate entry not allowed, selected leave is already assigned to the employee.');
+        } else {
             return redirect(route('edit-employee', $data['id']) . '?tab=official_leaves')->with('success', 'Employee leave record has been updated successfully.');
         }
     }

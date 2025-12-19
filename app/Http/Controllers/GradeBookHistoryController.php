@@ -16,23 +16,34 @@ class GradeBookHistoryController extends Controller
     public function index(Request $request)
     {
         $data = [];
-        if($request->student_id !== 0){
+        if ($request->student_id !== 0) {
             $data = GradeBookHistory::with([
-                'student' => function($q) { $q->select('id') ->addSelect(DB::raw("CONCAT(first_name,' ',COALESCE(middle_name,''),' ',last_name) AS full_name"));},
-                'student_behaviour_skill.academic_year' => function($q){ $q->select('id', 'title');},
-                'student_behaviour_skill.branch' => function($q){ $q->select('id','br_name');},
-                'student_behaviour_skill.com_class' => function($q){ $q->select('id','class_name');},
-                'student_behaviour_skill.section' => function($q) { $q->select('id', 'section_name');},
-                'student_behaviour_skill.term' => function($q) { $q->select('id', 'name');},
-            ])->where('student_id','=', $request->student_id)->get();
+                'student' => function ($q) {
+                    $q->select('id') ->addSelect(DB::raw("CONCAT(first_name,' ',COALESCE(middle_name,''),' ',last_name) AS full_name"));
+                },
+                'student_behaviour_skill.academic_year' => function ($q) {
+                    $q->select('id', 'title');
+                },
+                'student_behaviour_skill.branch' => function ($q) {
+                    $q->select('id', 'br_name');
+                },
+                'student_behaviour_skill.com_class' => function ($q) {
+                    $q->select('id', 'class_name');
+                },
+                'student_behaviour_skill.section' => function ($q) {
+                    $q->select('id', 'section_name');
+                },
+                'student_behaviour_skill.term' => function ($q) {
+                    $q->select('id', 'name');
+                },
+            ])->where('student_id', '=', $request->student_id)->get();
         }
 
         if ($request->ajax()) {
-
             return Datatables::of($data)
                 ->addIndexColumn()
                 ->addColumn('action', function ($data) {
-                    return view('gradebook_history.action',['data'=> $data]);
+                    return view('gradebook_history.action', ['data' => $data]);
                 })
                 ->rawColumns(['action'])
                 ->make(true);

@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\Mail;
 
 class ProcessGuardianNotification implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $guardian, $data;
     /**
@@ -48,29 +51,29 @@ class ProcessGuardianNotification implements ShouldQueue
      */
     private function sendNotificationToGuardian(): void
     {
-        if ( $this -> data[ 'type' ] == 'SMS' ) {
+        if ($this -> data[ 'type' ] == 'SMS') {
             $api_response = sendOTPCode($this -> data['message'], $this->guardian -> mobile);
             Log::info('(---SMS--) Log Successfully created at ' . Carbon::now() . '. Here is the API Response :' . $api_response);
 
             // $guardian->notify(new SendPushNotification('Notification', $message));
         }
 
-        if ( $this -> data[ 'type' ] == 'Push Notification' ) {
+        if ($this -> data[ 'type' ] == 'Push Notification') {
             $this->guardian -> notify(new SendPushNotification('Notification', $this -> data['message']));
             Log::info('(---Push Notification--) Log Successfully created at ' . Carbon::now());
         }
 
-        if ( $this -> data[ 'type' ] == 'Email' ) {
+        if ($this -> data[ 'type' ] == 'Email') {
             // $notification = new SendNotification($this -> data['header'], $this -> data['message'], $this -> data['salutation'],$this->guardian);
             // $this->guardian->notify($notification);
             $subject = $this->data['header'];
             $receiver_name = $this->guardian->guardian_name;
             $message = $this->data['message'];
-            Mail::to($this->guardian->email)->send(new NotifyMail($subject,$receiver_name,$message));
+            Mail::to($this->guardian->email)->send(new NotifyMail($subject, $receiver_name, $message));
             Log::info('(---Email--) Log Successfully created at ' . Carbon::now());
         }
 
-        if ( $this -> data[ 'type' ] == 'SMS, Email, Push Notification' ) {
+        if ($this -> data[ 'type' ] == 'SMS, Email, Push Notification') {
             sendOTPCode($this -> data['message'], $this->guardian -> mobile);
             Log::info('(---SMS--) Log Successfully created at ' . Carbon::now() . '. Here is the API Response :' . $api_response);
 
@@ -80,7 +83,7 @@ class ProcessGuardianNotification implements ShouldQueue
             $receiver_name = $this->guardian->guardian_name;
             $message = $this->data['message'];
 
-            Mail::to($this->guardian->email)->send(new NotifyMail($subject,$receiver_name,$message));
+            Mail::to($this->guardian->email)->send(new NotifyMail($subject, $receiver_name, $message));
             Log::info('(---Email--) Log Successfully created at ' . Carbon::now());
 
             $this->guardian -> notify(new SendPushNotification('Notification', $this -> data['message']));

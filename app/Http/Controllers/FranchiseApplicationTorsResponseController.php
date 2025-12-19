@@ -22,16 +22,15 @@ class FranchiseApplicationTorsResponseController extends Controller
     {
         $data['franchise_application_id'] = $request->franchise_application_id;
         if ($request->ajax()) {
-
             $query = FranchiseApplicationTorsResponse::with([
                 'reviewBy',
                 'forwardedTo',
                 'franchise_application.recommendedBy'
-            ])->where('franchise_application_id',$data['franchise_application_id'])->get();
+            ])->where('franchise_application_id', $data['franchise_application_id'])->get();
 
             return Datatables::of($query)
                 ->addIndexColumn()
-                ->addColumn('review_by', function($row){
+                ->addColumn('review_by', function ($row) {
                     return ucwords($row['reviewBy']['name']);
                 })
                 ->addColumn('review_date', function ($row) {
@@ -40,19 +39,19 @@ class FranchiseApplicationTorsResponseController extends Controller
                 ->addColumn('approval_date', function ($row) {
                     return isset($row->approval_date) ? Carbon::parse($row->approval_date)->format('d-m-Y') : '-';
                 })
-                ->addColumn('status', function($row){
+                ->addColumn('status', function ($row) {
                     return ucwords(str_replace('_', ' ', $row['status']));
                 })
-                ->addColumn('forwarded_to', function($row){
+                ->addColumn('forwarded_to', function ($row) {
                     return ucwords($row['forwardedTo']['name']);
                 })
-                ->addColumn('recommended_by', function($row){
+                ->addColumn('recommended_by', function ($row) {
                     return isset($row['franchise_application']['recommendedBy']) ? ucwords($row['franchise_application']['recommendedBy']['name']) : '';
                 })
                 ->addColumn('created_at', function ($row) {
                     return Carbon::parse($row->created_at)->format('d-m-Y');
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return view('franchise_application.tor_response_action', ['row' => $row]);
                 })
                 ->rawColumns(['recommended_by','action'])
@@ -67,11 +66,11 @@ class FranchiseApplicationTorsResponseController extends Controller
      */
     public function create($franchise_application_id)
     {
-        $data['franchise_application'] = FranchiseApplication::with(['franchise_application_qa'])->where('id',$franchise_application_id)->first();
-        $data['review_by'] = Employee::with('user')->where('department_id',5)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
-        $data['forward_to'] = Employee::with('user')->where('branch_id',2)->whereIn('department_id',[4,8,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['franchise_application'] = FranchiseApplication::with(['franchise_application_qa'])->where('id', $franchise_application_id)->first();
+        $data['review_by'] = Employee::with('user')->where('department_id', 5)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['forward_to'] = Employee::with('user')->where('branch_id', 2)->whereIn('department_id', [4,8,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
         //dd($data['review_by']);
-        return view('franchise_application.franchise_application_tors_response',$data);
+        return view('franchise_application.franchise_application_tors_response', $data);
     }
 
     /**
@@ -97,8 +96,8 @@ class FranchiseApplicationTorsResponseController extends Controller
 
         if ($request->ajax()) {
             return $franchise_application_tors;
-        }else{
-            return redirect()->back()->with('success','Application/Form submitted successfully');
+        } else {
+            return redirect()->back()->with('success', 'Application/Form submitted successfully');
         }
     }
 
@@ -121,12 +120,12 @@ class FranchiseApplicationTorsResponseController extends Controller
      */
     public function edit(FranchiseApplicationTorsResponse $franchiseApplicationTor)
     {
-        $data['franchise_application'] = FranchiseApplication::with(['franchise_application_qa'])->where('id',$franchiseApplicationTor->franchise_application_id)->first();
-        $data['review_by'] = Employee::with('user')->where('department_id',5)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
-        $data['forward_to'] = Employee::with('user')->where('branch_id',2)->whereIn('department_id',[4,8,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['franchise_application'] = FranchiseApplication::with(['franchise_application_qa'])->where('id', $franchiseApplicationTor->franchise_application_id)->first();
+        $data['review_by'] = Employee::with('user')->where('department_id', 5)->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['forward_to'] = Employee::with('user')->where('branch_id', 2)->whereIn('department_id', [4,8,9])->whereNull('left_date')->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
         $data['franchiseApplicationTors'] = $franchiseApplicationTor;
 
-        return view('franchise_application.franchise_application_tors_response',$data);
+        return view('franchise_application.franchise_application_tors_response', $data);
     }
 
     /**
@@ -142,8 +141,8 @@ class FranchiseApplicationTorsResponseController extends Controller
 
         if ($request->ajax()) {
             return $franchiseApplicationTor;
-        }else{
-            return redirect()->back()->with('success','Application/Form Updated successfully');
+        } else {
+            return redirect()->back()->with('success', 'Application/Form Updated successfully');
         }
     }
 

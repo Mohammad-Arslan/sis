@@ -18,7 +18,7 @@ class ImportCity implements ToModel
             'city_name' => $row[0],
             'abbreviation' => $row[1],
             'state_id' => $row[2],
-            'created_at'=>$row[3]
+            'created_at' => $row[3]
         ]);
     }
 }

@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SystemNotification extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'country_id',
@@ -60,6 +61,6 @@ class SystemNotification extends Model
 
     public function guardians()
     {
-        return $this->hasMany(Guardian::class,'id','user_id')->with('students');
-    }   
+        return $this->hasMany(Guardian::class, 'id', 'user_id')->with('students');
+    }
 }

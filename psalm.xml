@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="4"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="false"
+    findUnusedCode="false"
+    findUnusedVariablesAndParams="false"
+    phpVersion="8.5"
+>
+    <projectFiles>
+        <directory name="app" />
+        <directory name="routes" />
+        <directory name="database" />
+        <directory name="config" />
+        <ignoreFiles>
+            <directory name="vendor" />
+            <directory name="storage" />
+            <directory name="public" />
+            <directory name="bootstrap/cache" />
+            <directory name="node_modules" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <!-- Laravel magic methods are handled by the Laravel plugin -->
+        <!-- Add specific suppressions here if needed -->
+    </issueHandlers>
+
+    <!-- Laravel plugin not yet compatible with Laravel 12 -->
+    <!-- <plugins>
+        <pluginClass class="Psalm\LaravelPlugin\Plugin" />
+    </plugins> -->
+</psalm>

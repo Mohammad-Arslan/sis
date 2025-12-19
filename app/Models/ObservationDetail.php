@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ObservationDetail extends Model
 {
     use SoftDeletes;
+
     protected $table = 'observation_details';
 
     protected $fillable = [
@@ -56,6 +57,4 @@ class ObservationDetail extends Model
     {
         return $this->hasMany(Rating::class, 'observation_detail_id');
     }
-
-
 }

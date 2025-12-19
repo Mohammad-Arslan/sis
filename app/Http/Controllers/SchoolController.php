@@ -267,7 +267,6 @@ class SchoolController extends Controller
         // $record = FeeStructureDetail::find($request->id);
         FeeStructureDetail::updateOrCreate(
             ['id' => $request->id],
-
             // Update based on this condition
             [
 
@@ -286,8 +285,6 @@ class SchoolController extends Controller
                 'approval_date' => $request->approval_date,
                 'remarks' => $request->fee_details_remarks,
             ]
-
-
         );
 
 
@@ -311,24 +308,24 @@ class SchoolController extends Controller
     }
 
     public function changeStatus(Request $request)
-{
-    $record = FeeStructureDetail::find($request->id);
-    $newStatus = $request->value;
+    {
+        $record = FeeStructureDetail::find($request->id);
+        $newStatus = $request->value;
 
     // Check if the status is changing to "Approved" or "Cancelled"
-    if ($newStatus === 'Approved' || $newStatus === 'Cancelled') {
-        // Update the status_approval_date to the current date and time
-        $record->status_approval_date = now();
-    } else {
-        // If not "Approved" or "Cancelled," set status_approval_date to null
-        $record->status_approval_date = null;
+        if ($newStatus === 'Approved' || $newStatus === 'Cancelled') {
+            // Update the status_approval_date to the current date and time
+            $record->status_approval_date = now();
+        } else {
+            // If not "Approved" or "Cancelled," set status_approval_date to null
+            $record->status_approval_date = null;
+        }
+
+        $record->fee_status_by_dd = $newStatus;
+        $record->save();
+
+        return response()->json(['success' => true, 'data' => $record, 'message' => 'Status updated']);
     }
-
-    $record->fee_status_by_dd = $newStatus;
-    $record->save();
-
-    return response()->json(['success' => true, 'data' => $record, 'message' => 'Status updated']);
-}
 
 
     // public function viewDetail(Request $request){
@@ -399,6 +396,4 @@ class SchoolController extends Controller
 
     //     return redirect()->route('fee_structure.index')->with('success', 'Fee Structure updated successfully');
     // }
-
-
 }

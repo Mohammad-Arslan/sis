@@ -43,15 +43,15 @@ class EmployeeSalaryStructure extends Model
 
     public function calculateGrossSalary()
     {
-        return $this->basic_salary + $this->house_rent_allowance + 
-               $this->medical_allowance + $this->transport_allowance + 
+        return $this->basic_salary + $this->house_rent_allowance +
+               $this->medical_allowance + $this->transport_allowance +
                $this->other_allowances;
     }
 
     public function isEffectiveForDate($date = null)
     {
         $date = $date ? Carbon::parse($date) : Carbon::now();
-        
+
         return $date->between($this->effective_from, $this->effective_to ?? Carbon::now()->addYear());
     }
 
@@ -63,9 +63,9 @@ class EmployeeSalaryStructure extends Model
     public function scopeForDate($query, $date = null)
     {
         $date = $date ? Carbon::parse($date) : Carbon::now();
-        
+
         return $query->where('effective_from', '<=', $date)
-                    ->where(function($q) use ($date) {
+                    ->where(function ($q) use ($date) {
                         $q->whereNull('effective_to')
                           ->orWhere('effective_to', '>=', $date);
                     });

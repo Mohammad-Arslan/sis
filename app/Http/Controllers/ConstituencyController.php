@@ -84,16 +84,17 @@ class ConstituencyController extends Controller
         //
     }
 
-    public function get_state_constituencies(Request $request){
+    public function get_state_constituencies(Request $request)
+    {
 
         try {
-            if (isset($request->id))
-                $data = Constituency::where('state_id',$request->id)->get();
-            else
+            if (isset($request->id)) {
+                $data = Constituency::where('state_id', $request->id)->get();
+            } else {
                 $data = Constituency::all();
+            }
 
             return response()->json(['code' => 200, 'status' => 'success', 'message' => 'Data Sent Successfully','data' => $data]);
-
         } catch (\Exception $exception) {
             return response()->json(['code' => 422, 'status' => 'false', 'message' => $exception->getMessage(), 'data' => []]);
         }

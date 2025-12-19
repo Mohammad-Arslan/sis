@@ -57,7 +57,7 @@ class EmploymentLetterRequest extends Model
     // Accessors
     public function getStatusBadgeAttribute()
     {
-        switch($this->status) {
+        switch ($this->status) {
             case 'pending':
                 return '<span class="badge bg-warning">Pending</span>';
             case 'approved':

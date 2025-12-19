@@ -17,7 +17,6 @@ class GradingCriteriaController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = GradingCriteria::with(['classes'])->get();
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -25,7 +24,7 @@ class GradingCriteriaController extends Controller
                     return $row->status == 'active' ? '<span class="badge bg-success">Active</span>' : ($row->status == 'inactive' ? '<span class="badge bg-danger">In Active</span>' : $row->status);
                 })
                 ->addColumn('classes', function ($row) {
-                    return $row['classes'] ? implode(',',$row['classes']->pluck('class_name')->toArray()) : '';
+                    return $row['classes'] ? implode(',', $row['classes']->pluck('class_name')->toArray()) : '';
                 })
                 ->addColumn('action', function ($row) {
                     return view('settings.grading_criteria.action', ['row' => $row]);
@@ -34,10 +33,10 @@ class GradingCriteriaController extends Controller
                 ->make(true);
         }
 
-        $data['grading_criterias'] = GradingCriteria::where('status','active')->get();
+        $data['grading_criterias'] = GradingCriteria::where('status', 'active')->get();
         $data['classes'] = ComClass::all();
 
-        return view('settings.grading_criteria.index',$data);
+        return view('settings.grading_criteria.index', $data);
     }
 
     /**
@@ -135,10 +134,10 @@ class GradingCriteriaController extends Controller
     public function edit(GradingCriteria $gradingCriterion)
     {
         $data['gradingCriteria'] = $gradingCriterion;
-        $data['grading_criterias'] = GradingCriteria::with(['classes'])->where('status','active')->get();
+        $data['grading_criterias'] = GradingCriteria::with(['classes'])->where('status', 'active')->get();
         $data['classes'] = ComClass::all();
 
-        return view('settings.grading_criteria.index',$data);
+        return view('settings.grading_criteria.index', $data);
     }
 
     /**

@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmployeeAttendance extends Model
 {
-    use HasFactory,SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
+
     protected $guarded = [];
 
     public function academic_year()
@@ -21,6 +24,4 @@ class EmployeeAttendance extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
-
-
 }

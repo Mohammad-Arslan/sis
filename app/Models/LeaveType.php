@@ -8,6 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class LeaveType extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $guarded = [];
 }

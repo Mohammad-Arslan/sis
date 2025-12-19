@@ -16,20 +16,20 @@ class WeekSeeder extends Seeder
     public function run()
     {
         $dataToInsert = array();
-        for ($i = 1;$i<=30;$i++)
-        {
+        for ($i = 1; $i <= 30; $i++) {
             $checkStatus = Week::find($i);
-            if(empty($checkStatus)){
+            if (empty($checkStatus)) {
                 $dataToInsert[] = [
-                    'name' => 'Week '.$i,
-                    'description' => 'Week '.$i,
+                    'name' => 'Week ' . $i,
+                    'description' => 'Week ' . $i,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ];
             }
         }
 
-        if (sizeof($dataToInsert))
+        if (sizeof($dataToInsert)) {
             Week::insert($dataToInsert);
+        }
     }
 }

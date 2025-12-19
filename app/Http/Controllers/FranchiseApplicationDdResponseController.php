@@ -21,25 +21,24 @@ class FranchiseApplicationDdResponseController extends Controller
     {
         $data['franchise_application_id'] = $request->franchise_application_id;
         if ($request->ajax()) {
-
-            $query = FranchiseApplicationDdResponse::with(['user'])->where('franchise_application_id',$data['franchise_application_id'])->get();
+            $query = FranchiseApplicationDdResponse::with(['user'])->where('franchise_application_id', $data['franchise_application_id'])->get();
 
             return Datatables::of($query)
                 ->addIndexColumn()
-                ->addColumn('review_by', function($row){
+                ->addColumn('review_by', function ($row) {
                     return $row['user']['name'];
                 })
-                ->addColumn('status', function($row){
-                    return ucwords(str_replace('_',' ',$row['status']));
+                ->addColumn('status', function ($row) {
+                    return ucwords(str_replace('_', ' ', $row['status']));
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     return view('franchise_application.dd_response_action', ['row' => $row]);
                 })
                 ->rawColumns(['action'])
                 ->make(true);
         }
 
-        return view('franchise_application.franchise_application_dd_response' ,$data);
+        return view('franchise_application.franchise_application_dd_response', $data);
     }
 
     /**
@@ -51,10 +50,10 @@ class FranchiseApplicationDdResponseController extends Controller
     {
         $data['franchise_application_id'] = $franchise_application_id;
         $data['franchise_application'] = FranchiseApplication::find($data['franchise_application_id']);
-        $data['review_by'] = Employee::with('user')->where('department_id','=',4)->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['review_by'] = Employee::with('user')->where('department_id', '=', 4)->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
         //$data['users'] = User::all();
 
-        return view('franchise_application.franchise_application_dd_response',$data);
+        return view('franchise_application.franchise_application_dd_response', $data);
     }
 
     /**
@@ -69,8 +68,8 @@ class FranchiseApplicationDdResponseController extends Controller
 
         if ($request->ajax()) {
             return $franchise_application_dd;
-        }else{
-            return redirect()->back()->with('success','Application/Form submitted successfully');
+        } else {
+            return redirect()->back()->with('success', 'Application/Form submitted successfully');
         }
     }
 
@@ -95,10 +94,10 @@ class FranchiseApplicationDdResponseController extends Controller
     {
         $data['franchise_application_id'] = $franchiseApplicationDd->franchise_application_id;
         $data['franchise_application'] = FranchiseApplication::find($data['franchise_application_id']);
-        $data['review_by'] = Employee::with('user')->where('department_id','=',4)->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
+        $data['review_by'] = Employee::with('user')->where('department_id', '=', 4)->orderBy('preferred_name')->get(['user_id','preferred_name'])->toArray();
         $data['franchiseApplicationDd'] = $franchiseApplicationDd;
 
-        return view('franchise_application.franchise_application_dd_response',$data);
+        return view('franchise_application.franchise_application_dd_response', $data);
     }
 
     /**
@@ -114,8 +113,8 @@ class FranchiseApplicationDdResponseController extends Controller
 
         if ($request->ajax()) {
             return $franchiseApplicationDd;
-        }else{
-            return redirect()->route('franchise-application-dd.create',$franchiseApplicationDd->franchise_application_id)->with('success','Application/Form Updated successfully');
+        } else {
+            return redirect()->route('franchise-application-dd.create', $franchiseApplicationDd->franchise_application_id)->with('success', 'Application/Form Updated successfully');
         }
     }
 

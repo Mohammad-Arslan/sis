@@ -18,7 +18,7 @@ class BiometricAttendanceController extends Controller
     public function store(Request $request)
     {
         $data = json_decode($request->getContent());
-        if (!$data || !is_array($data)) {
+        if (! $data || ! is_array($data)) {
             return response()->json(['status' => 'error', 'message' => 'Invalid or empty JSON provided'], 400);
         }
 
@@ -74,7 +74,7 @@ class BiometricAttendanceController extends Controller
                 $studentLogData = $logData;
                 $studentLogData['student_id'] = $student->id;
                 $studentLogData['employee_id'] = null;
-                
+
                 // Save to PullLog table
                 DB::table('PullLog')->insert($studentLogData);
 
@@ -93,7 +93,7 @@ class BiometricAttendanceController extends Controller
                         'online_attendance' => false,
                     ]
                 );
-                
+
                 $studentCount++;
                 $processedCount++;
                 continue;
@@ -109,14 +109,14 @@ class BiometricAttendanceController extends Controller
                 $employeeLogData = $logData;
                 $employeeLogData['employee_id'] = $employee->id;
                 $employeeLogData['student_id'] = null;
-                
+
                 // Save to employee_pull_logs table
                 DB::table('employee_pull_logs')->insert($employeeLogData);
 
                 // Mark employee attendance
                 $currentDate = now()->toDateString();
                 $currentTime = now()->format('H:i:s');
-                
+
                 // Check if employee already has attendance for today
                 $existingAttendance = EmployeeAttendance::where('employee_id', $employee->id)
                     ->whereDate('created_at', $currentDate)
@@ -141,7 +141,7 @@ class BiometricAttendanceController extends Controller
                         'status' => 'present',
                     ]);
                 }
-                
+
                 $employeeCount++;
                 $processedCount++;
                 continue;
@@ -153,7 +153,7 @@ class BiometricAttendanceController extends Controller
                 'card_no' => $log->CardNo,
                 'time' => $log->LTime
             ]);
-            
+
             // Since both employees and students use the same digit pattern for PIN/card,
             // we'll log unmatched entries to both tables for manual review
             DB::table('unmatched_attendance_logs')->insert([
@@ -163,7 +163,7 @@ class BiometricAttendanceController extends Controller
                 'raw_data' => json_encode($log),
                 'created_at' => now(),
             ]);
-            
+
             DB::table('unmatched_employee_attendance_logs')->insert([
                 'pin_code' => $log->Pin,
                 'card_no' => $log->CardNo,
@@ -171,12 +171,12 @@ class BiometricAttendanceController extends Controller
                 'raw_data' => json_encode($log),
                 'created_at' => now(),
             ]);
-            
+
             $unmatchedCount++;
         }
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'Logs processed successfully.',
             'summary' => [
                 'total_processed' => $processedCount,
@@ -186,5 +186,4 @@ class BiometricAttendanceController extends Controller
             ]
         ]);
     }
-
 }

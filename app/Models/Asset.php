@@ -41,7 +41,7 @@ class Asset extends Model
 
     /**
      * Generate a new unique asset tag
-     * 
+     *
      * @return string
      */
     public static function generateAssetTag()
@@ -62,7 +62,7 @@ class Asset extends Model
 
     /**
      * Generate QR code for the asset
-     * 
+     *
      * @return string
      */
     public function generateQrCode()

@@ -42,27 +42,30 @@ class StudentBehaviourSkillController extends Controller
                     'com_class',
                 ]);
 
-                if (isset($request->academic_year_id))
+                if (isset($request->academic_year_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('academic_year_id', $request->academic_year_id);
                         $q->orWhereNull('academic_year_id');
                     });
+                }
 
-                if (isset($request->branch_id))
+                if (isset($request->branch_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('student_behaviour_skills.branch_id', $request->branch_id);
                         $q->orWhereNull('student_behaviour_skills.branch_id');
                     });
+                }
 
-                if (isset($request->term_id))
+                if (isset($request->term_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('student_behaviour_skills.term_id', $request->term_id);
                         $q->orWhereNull('student_behaviour_skills.term_id');
                     });
+                }
 
                 if (isset($request->class_id)) {
                     $branch_class = BranchClass::find($request->class_id);
-                    $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+                    $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
                     $query = $query->where(function ($q) use ($class_id) {
                         $q->where('class_id', $class_id);
                         $q->orWhereNull('class_id');
@@ -71,7 +74,7 @@ class StudentBehaviourSkillController extends Controller
 
                 if (isset($request->section_id)) {
                     $branch_class_section = BranchClassSection::find($request->section_id);
-                    $section_id = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+                    $section_id = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
                     $query = $query->where(function ($q) use ($section_id) {
                         $q->where('section_id', $section_id);
                         $q->orWhereNull('section_id');
@@ -97,8 +100,9 @@ class StudentBehaviourSkillController extends Controller
             $employee = NetworkAssociate::where('user_id', $user->id)->with('branches')->first();
             // dd($employee->branches->toArray());
             $data['branches'] = $employee->branches;
-        } else
+        } else {
             $data['branches'] = Branch::all();
+        }
         $data['terms'] = Term::all();
 
         return view('assessment.skill_behaviour.index', $data);
@@ -213,69 +217,72 @@ class StudentBehaviourSkillController extends Controller
     //     DB::commit();
 
     //     return response()->json(['success' => 'Data Saved Successfully.']);
-    DB::beginTransaction();
+        DB::beginTransaction();
 
-    $branch_class = BranchClass::find($request->class_id);
-    $branch_class_section = BranchClassSection::find($request->section_id);
-    $input['class_id'] = !empty($branch_class) ? $branch_class->class_id : 0;
-    $input['section_id'] = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+        $branch_class = BranchClass::find($request->class_id);
+        $branch_class_section = BranchClassSection::find($request->section_id);
+        $input['class_id'] = ! empty($branch_class) ? $branch_class->class_id : 0;
+        $input['section_id'] = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
 
-    $skill_behaviour = StudentBehaviourSkill::where([
+        $skill_behaviour = StudentBehaviourSkill::where([
         ['academic_year_id', $request->academic_year_id],
         ['branch_id', $request->branch_id],
         ['term_id', $request->term_id],
         ['class_id', $input['class_id']],
         ['section_id', $input['section_id']],
-    ])->first();
+        ])->first();
 
-    if (empty($skill_behaviour))
-        $skill_behaviour = new StudentBehaviourSkill();
-
-    $skill_behaviour->academic_year_id = $request->academic_year_id;
-    $skill_behaviour->branch_id = $request->branch_id;
-    $skill_behaviour->term_id = $request->term_id;
-    $skill_behaviour->class_id = $input['class_id'];
-    $skill_behaviour->section_id = $input['section_id'];
-    $skill_behaviour->save();
-
-    $skill_behaviour_remarks = null;
-    if (!empty($skill_behaviour->student_behaviour_skill_remark))
-        $skill_behaviour_remarks = $skill_behaviour->student_behaviour_skill_remark->where('student_id', $request->student_id)->first();
-    $skill_behaviour_remarks = !empty($skill_behaviour_remarks) ? $skill_behaviour_remarks : new StudentBehaviourSkillRemark();
-    $skill_behaviour_remarks->student_behaviour_skill_id = $skill_behaviour->id;
-    $skill_behaviour_remarks->student_id = $request->student_id;
-    $skill_behaviour_remarks->teacher_comments = $request->teacher_comments;
-    $skill_behaviour_remarks->schoolhead_comments = $request->schoolhead_comments;
-    $skill_behaviour_remarks->is_promoted = $request->is_promoted;
-    $skill_behaviour_remarks->parent_meeting_attended = $request->parent_meeting_attended;
-    $skill_behaviour_remarks->save();
-
-    $skill_behaviour_deletion = $skill_behaviour->student_behaviour_skill_marks();
-    if ($request->submission_type == 'behaviour')
-        $skill_behaviour_deletion->where('student_id', $request->student_id)->whereNull('skill_id')->delete();
-    elseif ($request->submission_type == 'skill')
-        $skill_behaviour_deletion->where('student_id', $request->student_id)->whereNull('general_behaviour_id')->delete();
-
-    foreach ($request->skill_behaviours as $skill_behaviour_id => $grade) {
-        if ($grade) {
-            $student_behaviour_mark = new StudentBehaviourSkillMark();
-            $student_behaviour_mark->student_behaviour_skill_id = $skill_behaviour->id;
-
-            if ($request->submission_type == 'behaviour')
-                $student_behaviour_mark->general_behaviour_id = $skill_behaviour_id;
-            else
-                $student_behaviour_mark->skill_id = $skill_behaviour_id;
-
-            $student_behaviour_mark->student_id = $request->student_id;
-            $student_behaviour_mark->grade = $grade;
-            $student_behaviour_mark->save();
+        if (empty($skill_behaviour)) {
+            $skill_behaviour = new StudentBehaviourSkill();
         }
-    }
 
-    DB::commit();
+        $skill_behaviour->academic_year_id = $request->academic_year_id;
+        $skill_behaviour->branch_id = $request->branch_id;
+        $skill_behaviour->term_id = $request->term_id;
+        $skill_behaviour->class_id = $input['class_id'];
+        $skill_behaviour->section_id = $input['section_id'];
+        $skill_behaviour->save();
 
-    return response()->json(['success' => 'Data Saved Successfully.']);
+        $skill_behaviour_remarks = null;
+        if (! empty($skill_behaviour->student_behaviour_skill_remark)) {
+            $skill_behaviour_remarks = $skill_behaviour->student_behaviour_skill_remark->where('student_id', $request->student_id)->first();
+        }
+        $skill_behaviour_remarks = ! empty($skill_behaviour_remarks) ? $skill_behaviour_remarks : new StudentBehaviourSkillRemark();
+        $skill_behaviour_remarks->student_behaviour_skill_id = $skill_behaviour->id;
+        $skill_behaviour_remarks->student_id = $request->student_id;
+        $skill_behaviour_remarks->teacher_comments = $request->teacher_comments;
+        $skill_behaviour_remarks->schoolhead_comments = $request->schoolhead_comments;
+        $skill_behaviour_remarks->is_promoted = $request->is_promoted;
+        $skill_behaviour_remarks->parent_meeting_attended = $request->parent_meeting_attended;
+        $skill_behaviour_remarks->save();
 
+        $skill_behaviour_deletion = $skill_behaviour->student_behaviour_skill_marks();
+        if ($request->submission_type == 'behaviour') {
+            $skill_behaviour_deletion->where('student_id', $request->student_id)->whereNull('skill_id')->delete();
+        } elseif ($request->submission_type == 'skill') {
+            $skill_behaviour_deletion->where('student_id', $request->student_id)->whereNull('general_behaviour_id')->delete();
+        }
+
+        foreach ($request->skill_behaviours as $skill_behaviour_id => $grade) {
+            if ($grade) {
+                $student_behaviour_mark = new StudentBehaviourSkillMark();
+                $student_behaviour_mark->student_behaviour_skill_id = $skill_behaviour->id;
+
+                if ($request->submission_type == 'behaviour') {
+                    $student_behaviour_mark->general_behaviour_id = $skill_behaviour_id;
+                } else {
+                    $student_behaviour_mark->skill_id = $skill_behaviour_id;
+                }
+
+                $student_behaviour_mark->student_id = $request->student_id;
+                $student_behaviour_mark->grade = $grade;
+                $student_behaviour_mark->save();
+            }
+        }
+
+        DB::commit();
+
+        return response()->json(['success' => 'Data Saved Successfully.']);
     }
 
     /**
@@ -342,8 +349,8 @@ class StudentBehaviourSkillController extends Controller
         // dd($student_id);
         $branch_class = BranchClass::find($request->class_id);
         $branch_class_section = BranchClassSection::find($request->section_id);
-        $input['class_id'] = !empty($branch_class) ? $branch_class->class_id : 0;
-        $input['section_id'] = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+        $input['class_id'] = ! empty($branch_class) ? $branch_class->class_id : 0;
+        $input['section_id'] = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
 
         $data['grading_keys'] = GradingCriteria::whereHas('classes', function ($q) use ($input) {
             $q->where('com_classes.id', $input['class_id']);
@@ -368,8 +375,9 @@ class StudentBehaviourSkillController extends Controller
             ['section_id', $input['section_id']],
         ])->first();
 
-        if (!empty($data['student_skill']['student_behaviour_skill_marks']))
+        if (! empty($data['student_skill']['student_behaviour_skill_marks'])) {
             $data['student_skill']['student_behaviour_skill_marks'] = $data['student_skill']['student_behaviour_skill_marks']->keyBy('skill_id');
+        }
 
         $student_skills['html'] = view('assessment.skill_behaviour.skills', $data)->render();
         return response()->json($student_skills);
@@ -380,8 +388,8 @@ class StudentBehaviourSkillController extends Controller
 
         $branch_class = BranchClass::find($request->class_id);
         $branch_class_section = BranchClassSection::find($request->section_id);
-        $input['class_id'] = !empty($branch_class) ? $branch_class->class_id : 0;
-        $input['section_id'] = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+        $input['class_id'] = ! empty($branch_class) ? $branch_class->class_id : 0;
+        $input['section_id'] = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
 
         $data['grading_keys'] = GradingCriteria::whereHas('classes', function ($q) use ($input) {
             $q->where('com_classes.id', $input['class_id']);
@@ -401,8 +409,9 @@ class StudentBehaviourSkillController extends Controller
             ['section_id', $input['section_id']],
         ])->first();
 
-        if (!empty($data['student_behaviour']['student_behaviour_skill_marks']))
+        if (! empty($data['student_behaviour']['student_behaviour_skill_marks'])) {
             $data['student_behaviour']['student_behaviour_skill_marks'] = $data['student_behaviour']['student_behaviour_skill_marks']->keyBy('general_behaviour_id');
+        }
 
         $student_behaviours['html'] = view('assessment.skill_behaviour.behaviours', $data)->render();
         return response()->json($student_behaviours);

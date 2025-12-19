@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmployeeWorkingDay extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'employee_id',
@@ -24,17 +26,17 @@ class EmployeeWorkingDay extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'employee_id','id');
+        return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
 
     public function working_day()
     {
-        return $this->belongsTo(WorkingDay::class, 'working_day_id','id');
+        return $this->belongsTo(WorkingDay::class, 'working_day_id', 'id');
     }
 
     public function working_shift()
     {
-        return $this->belongsTo(WorkingShift::class, 'working_shift_id','id');
+        return $this->belongsTo(WorkingShift::class, 'working_shift_id', 'id');
     }
 
     public function workingShift()

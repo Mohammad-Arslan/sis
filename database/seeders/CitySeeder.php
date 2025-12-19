@@ -48,12 +48,14 @@ class CitySeeder extends Seeder
         if (isset($cities)) {
             foreach ($cities as $city) {
                 $checkStatus = City::where('city_name', $city['city_name'])->first();
-                if (empty($checkStatus))
+                if (empty($checkStatus)) {
                     $dataToInsert[] = $city;
+                }
             }
 
-            if (sizeof($dataToInsert))
+            if (sizeof($dataToInsert)) {
                 City::insert($dataToInsert);
+            }
         }
     }
 }

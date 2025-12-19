@@ -34,8 +34,7 @@ class BranchSecurityController extends Controller
             }
 
             if ($request->searchName && $request->searchName != null) {
-
-                $data = $data->where(function($query) use ($request){
+                $data = $data->where(function ($query) use ($request) {
                     $query->orWhere('amount', 'like', '%' . $request->searchName . '%');
                     $query->orWhere('created_at', 'like', '%' . $request->searchName . '%');
                 });
@@ -105,10 +104,9 @@ class BranchSecurityController extends Controller
             'created_by' => 'required',
         ]);
 
-        $pre_exist = NULL;
+        $pre_exist = null;
         $pre_exist = branch_security::where('branch_id', $request->branch_id)->where('academic_year_id', $request->academic_year_id)->first();
-        if(isset($pre_exist->branch_id) && isset($pre_exist->academic_year_id))
-        {
+        if (isset($pre_exist->branch_id) && isset($pre_exist->academic_year_id)) {
             return redirect()->route('branch-securities.index')
             ->with('error', 'Branch security already exist for selected academic year! Duplicates not allowed.');
         }
@@ -168,7 +166,6 @@ class BranchSecurityController extends Controller
 
         return redirect()->route('branch-securities.index')
             ->with('success', 'Branch security charges updated successfully.');
-
     }
 
     /**

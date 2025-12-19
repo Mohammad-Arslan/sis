@@ -32,7 +32,9 @@ use App\Models\BranchClassSection;
 use App\Models\ClassStudentSubject;
 use App\Models\StudentAssessmentMark;
 use App\Models\StudentBehaviourSkill;
+
 use function PHPUnit\Framework\isEmpty;
+
 use Yajra\DataTables\Facades\DataTables;
 
 class CommonController extends Controller
@@ -148,8 +150,8 @@ class CommonController extends Controller
         if (isset($request->id)) {
             $classdata = BranchClass::where('branch_id', $request->id)->with(['com_classes'])->get();
 
-            $i=0;
-            foreach ($classdata as $class){
+            $i = 0;
+            foreach ($classdata as $class) {
                 $data[$i]['id'] = $class->class_id;
                 $data[$i]['class_name'] = $class->com_classes->class_name;
                 $i++;
@@ -188,8 +190,8 @@ class CommonController extends Controller
 
         if (isset($request)) {
             $sectiondata = StudentBehaviourSkill::where(['branch_id' => $request->query('branch_id'), 'class_id' => $request->query('class_id')])->with(['branch', 'com_class', 'section'])->get();
-            $i=0;
-            foreach ($sectiondata as $section){
+            $i = 0;
+            foreach ($sectiondata as $section) {
                 $data[$i]['id'] = $section->section->id;
                 $data[$i]['section_name'] = $section->section->section_name;
                 $i++;
@@ -221,7 +223,7 @@ class CommonController extends Controller
     {
         //in load select, mostly places we're using branchClass ID, so made this function by using branch class ID
         $branch_class = BranchClass::find($request->id);
-        $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+        $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
         $subjects = getClassSubjects($class_id, $branch_id);
 
         return response()->json($subjects);
@@ -239,7 +241,7 @@ class CommonController extends Controller
 
         if ($request->id) {
             $branch_class = BranchClass::find($request->id);
-            $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+            $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
             $subjects = getClassSubjects($class_id, $branch_id);
             $sections = BranchClassSection::where(['branch_id' => $branch_class->branch_id, 'class_id' => $branch_class->class_id])->with(['sections'])->get();
 
@@ -288,7 +290,7 @@ class CommonController extends Controller
                     $query->where('status', '!=', 'left');
                 })
                 ->get()->pluck('students.id');
-        } else if (!isset($request->sections) && isset($request->classes)) {
+        } else if (! isset($request->sections) && isset($request->classes)) {
             $student_ids = ClassStudent::where('academic_year_id', $request->academic_year_id[0])->where('is_valid', 1)->whereHas('branch_class_sections', function ($query) use ($request) {
                 $query->whereHas('com_classes', function ($subquery) use ($request) {
                     $subquery->whereIn('branch_id', $request->branches)->whereIn('class_id', $request->classes);
@@ -309,14 +311,13 @@ class CommonController extends Controller
                     $query->where('status', '!=', 'left');
                 })
                 ->get()->pluck('students.id');
-
         }
         // dd($student_ids);
         $students = [];
         //dd($student_ids);
 
         foreach ($student_ids as $student_id) {
-            if (!empty($student_id)) {
+            if (! empty($student_id)) {
                 $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
 
                 if ($student_active_class) {
@@ -345,7 +346,9 @@ class CommonController extends Controller
                     // }
                 }
 
-                if (isset($student)) $students = array_merge($students, [$student->toArray()]);
+                if (isset($student)) {
+                    $students = array_merge($students, [$student->toArray()]);
+                }
             }
         }
 
@@ -369,18 +372,24 @@ class CommonController extends Controller
             })
             ->addColumn('invoice_status', function ($row) use ($request) {
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice)) return '<span class="badge bg-danger">Already Generated</span>';
+                if (isset($checkInvoice)) {
+                    return '<span class="badge bg-danger">Already Generated</span>';
+                }
                 return '<span class="badge bg-primary">No Invoice</span>';
             })
             ->addColumn('invoice_no', function ($row) use ($request) {
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice)) return view('students.invoice_list_link', ['row' => $checkInvoice]);
+                if (isset($checkInvoice)) {
+                    return view('students.invoice_list_link', ['row' => $checkInvoice]);
+                }
                 return '-';
             })
             ->addColumn('action', function ($row) use ($request) {
                 $check_disable = true;
                 $checkInvoice = StudentInvoice::where(['student_id' => $row['id'], 'fee_period_id' => $request['filters']['feePeriodInput']])->where('bank_payment_status', '!=', 'cancelled')->first();
-                if (isset($checkInvoice)) $check_disable = false;
+                if (isset($checkInvoice)) {
+                    $check_disable = false;
+                }
 
                 return view('students.bulk_invoices.bulk_students_action', ['row' => $row, 'check_disable', $check_disable]);
             })
@@ -393,7 +402,7 @@ class CommonController extends Controller
         // dd($request->sections);
         if (isset($request->sections)) {
             $student_ids = ClassStudent::where('is_valid', 1)->whereIn('branch_class_section_id', $request->sections)->get()->pluck('students.id');
-        } else if (!isset($request->sections) && isset($request->classes)) {
+        } else if (! isset($request->sections) && isset($request->classes)) {
             $student_ids = ClassStudent::where('is_valid', 1)->whereHas('branch_class_sections', function ($query) use ($request) {
                 $query->whereHas('com_classes', function ($subquery) use ($request) {
                     $subquery->whereIn('branch_id', $request->branches)->whereIn('class_id', $request->classes);
@@ -409,7 +418,7 @@ class CommonController extends Controller
 
         $invoices = [];
         foreach ($student_ids as $student_id) {
-            if (!empty($student_id)) {
+            if (! empty($student_id)) {
                 $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
 
                 $whereClause = [
@@ -441,7 +450,9 @@ class CommonController extends Controller
                         'section_id' => $student_active_class->active_class ? $student_active_class->active_class->branch_class_sections->sections->id : 0
                     ]);
                 })->latest('created_at')->first();
-                if (isset($invoice)) $invoices = array_merge($invoices, [$invoice->toArray()]);
+                if (isset($invoice)) {
+                    $invoices = array_merge($invoices, [$invoice->toArray()]);
+                }
             }
         }
 
@@ -488,12 +499,11 @@ class CommonController extends Controller
     public function NWAlistInvoices(Request $request)
     {
         ini_set('max_execution_time', 180);
-        $academic_year = AcademicYear::where('active',1)->first();
-        if($request->academic_year_id != $academic_year->id)
-        {
+        $academic_year = AcademicYear::where('active', 1)->first();
+        if ($request->academic_year_id != $academic_year->id) {
             if (isset($request->sections)) {
                 $student_ids = ClassStudent::where('academic_year_id', $request->academic_year_id)->whereIn('branch_class_section_id', $request->sections)->get()->pluck('students.id');
-            } elseif (!isset($request->sections) && isset($request->classes)) {
+            } elseif (! isset($request->sections) && isset($request->classes)) {
                 $student_ids = ClassStudent::where('academic_year_id', $request->academic_year_id)->whereHas('branch_class_sections', function ($query) use ($request) {
                     $query->whereHas('com_classes', function ($subquery) use ($request) {
                         $subquery->whereIn('branch_id', $request->branches)->whereIn('class_id', $request->classes);
@@ -509,7 +519,7 @@ class CommonController extends Controller
             //dd($student_ids->toArray());
             $invoices = [];
             foreach ($student_ids as $student_id) {
-                if (!empty($student_id)) {
+                if (! empty($student_id)) {
                     $student_active_class = Student::where('id', $student_id)->with('invoice_active_class.branch_class_sections')->first();
                     //dd($student_active_class->toArray());
                     $whereClause = [
@@ -570,11 +580,10 @@ class CommonController extends Controller
                     }
                 }
             }
-        }
-        else{
+        } else {
             if (isset($request->sections)) {
                 $student_ids = ClassStudent::where('is_valid', 1)->whereIn('branch_class_section_id', $request->sections)->get()->pluck('students.id');
-            } else if (!isset($request->sections) && isset($request->classes)) {
+            } else if (! isset($request->sections) && isset($request->classes)) {
                 $student_ids = ClassStudent::where('is_valid', 1)->whereHas('branch_class_sections', function ($query) use ($request) {
                     $query->whereHas('com_classes', function ($subquery) use ($request) {
                         $subquery->whereIn('branch_id', $request->branches)->whereIn('class_id', $request->classes);
@@ -590,7 +599,7 @@ class CommonController extends Controller
 
             $invoices = [];
             foreach ($student_ids as $student_id) {
-                if (!empty($student_id)) {
+                if (! empty($student_id)) {
                     $student_active_class = Student::where('id', $student_id)->with('active_class.branch_class_sections')->first();
 
                     $whereClause = [
@@ -622,7 +631,9 @@ class CommonController extends Controller
                             'section_id' => $student_active_class->active_class ? $student_active_class->active_class->branch_class_sections->sections->id : 0
                         ]);
                     })->latest('created_at')->first();
-                    if (isset($invoice)) $invoices = array_merge($invoices, [$invoice->toArray()]);
+                    if (isset($invoice)) {
+                        $invoices = array_merge($invoices, [$invoice->toArray()]);
+                    }
                 }
             }
         }
@@ -707,7 +718,7 @@ class CommonController extends Controller
         ]);
 
         $fee_periods = FeePeriod::where([
-            'branch_id' => $request->branch_id, 
+            'branch_id' => $request->branch_id,
             'academic_year_id' => $request->academic_year_id
         ])->get();
 
@@ -728,12 +739,11 @@ class CommonController extends Controller
         $data['student'] = $student = Student::where('roll_no', $request->id)->with(
             'active_class.branch_class_sections.com_classes',
             'active_class.branch_class_sections.sections',
-			'active_class.academic_years',
+            'active_class.academic_years',
             'branch'
         )->first();
-        if($data['student']->security_amount == null)
-        {
-            $data['student']->security_amount = get_student_security($data['student']->branch_id,$data['student']->admission_year_id);
+        if ($data['student']->security_amount == null) {
+            $data['student']->security_amount = get_student_security($data['student']->branch_id, $data['student']->admission_year_id);
         }
         $lastPaidInvoice = StudentInvoice::with([
             'student_fee_package.fee_package',
@@ -856,7 +866,9 @@ class CommonController extends Controller
 
         //dd($lastUnpaidInvoice);
 
-        if (empty($data['student'])) return response()->json(['status' => 404, 'error' => 'No student found!']);
+        if (empty($data['student'])) {
+            return response()->json(['status' => 404, 'error' => 'No student found!']);
+        }
         return response()->json($data);
     }
 
@@ -867,7 +879,9 @@ class CommonController extends Controller
 
         $studentGuardian = Guardian::where('student_id', $studentId)->where('relation_id', $relationId)->first();
 
-        if (empty($studentGuardian)) return response()->json(['status' => 404, 'error' => 'No guardian found!']);
+        if (empty($studentGuardian)) {
+            return response()->json(['status' => 404, 'error' => 'No guardian found!']);
+        }
         return response()->json($studentGuardian);
     }
 
@@ -906,7 +920,7 @@ class CommonController extends Controller
      */
     public function showProgressReport($student_id)
     {
-        if (!is_null($student_id)) {
+        if (! is_null($student_id)) {
             $assessment_entries_subject_wise = AssessmentEntry::get()->groupBy('subject_id')->whereNotNull('assessment_level_three_id');
             $assessment_level = 'assessment_level_three_id';
 
@@ -933,7 +947,7 @@ class CommonController extends Controller
 
             $all_assessment_data = $this->removeDuplicateAssessment($assessment_data);
             //            dd($all_assessment_data, $assessment_names, $assessment_weightage);
-            return view('students.progress_reports.term1_progress_reports', compact('all_assessment_data',  'assessment_weightage'));
+            return view('students.progress_reports.term1_progress_reports', compact('all_assessment_data', 'assessment_weightage'));
         }
 
         abort(404);
@@ -971,8 +985,7 @@ class CommonController extends Controller
         $next_ele = $previous_ele = null;
         $j = 0;
         foreach ($assessment_data as $key => $assessment_marks) {
-
-            if (!is_null($previous_ele) && $previous_ele['subject_name'] == $assessment_marks['subject_name']) {
+            if (! is_null($previous_ele) && $previous_ele['subject_name'] == $assessment_marks['subject_name']) {
                 unset($assessment_data[$key - 1]);
                 ++$j;
                 $single_subject_assessments_marks = $previous_ele;

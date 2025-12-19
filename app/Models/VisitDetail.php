@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\SerializeDateTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 class VisitDetail extends Model
 {
-    use HasFactory,SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -58,6 +61,6 @@ class VisitDetail extends Model
 
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by','id');
+        return $this->belongsTo(User::class, 'approved_by', 'id');
     }
 }

@@ -19,7 +19,6 @@ class SubjectController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Subject::with(['subject_group', 'language'])->get();
             return Datatables::of($data)
                 ->addIndexColumn()

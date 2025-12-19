@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentPromotionRequest extends Model
 {
-    use HasFactory, SoftDeletes, SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'student_id',
@@ -22,7 +24,8 @@ class StudentPromotionRequest extends Model
         'deleted_at',
     ];
 
-    public function student(){
+    public function student()
+    {
         return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 

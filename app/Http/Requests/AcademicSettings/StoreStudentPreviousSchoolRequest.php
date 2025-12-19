@@ -37,4 +37,3 @@ class StoreStudentPreviousSchoolRequest extends FormRequest
         ];
     }
 }
-

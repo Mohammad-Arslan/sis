@@ -155,7 +155,7 @@ class ExtraCurriculumController extends Controller
 
     public function eca_index()
     {
-        if (!isSuperAdmin() && !isHeadOfficeEmp() || auth()->user()->hasRole('teacher')) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp() || auth()->user()->hasRole('teacher')) {
             $branch_id = get_branch_id();
             $branches = Branch::where('id', $branch_id)->get();
         } else {
@@ -166,7 +166,7 @@ class ExtraCurriculumController extends Controller
 
     public function getStudentClassSection(Request $request)
     {
-        if ($request->has('branch_id') && !$request->has('class_id')) {
+        if ($request->has('branch_id') && ! $request->has('class_id')) {
             // Get classes for selected branch
             $classes = BranchClass::with('com_classes')
                 ->where('branch_id', $request->branch_id)
@@ -178,7 +178,7 @@ class ExtraCurriculumController extends Controller
             return response()->json(['classes' => $classes]);
         }
 
-        if ($request->has('branch_id') && $request->has('class_id') && !$request->has('section_id')) {
+        if ($request->has('branch_id') && $request->has('class_id') && ! $request->has('section_id')) {
             // Get sections for selected branch and class
             $sections = BranchClassSection::with('sections')
                 ->where('branch_id', $request->branch_id)
@@ -365,7 +365,7 @@ class ExtraCurriculumController extends Controller
                     'created_at',
                     'student_id',
                 ])->find($id);
-        if (!isSuperAdmin() && !isHeadOfficeEmp() || auth()->user()->hasRole('teacher')) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp() || auth()->user()->hasRole('teacher')) {
             $branch_id = get_branch_id();
             $branches = Branch::where('id', $branch_id)->get();
         } else {
@@ -447,5 +447,4 @@ class ExtraCurriculumController extends Controller
 
         return redirect()->back()->with('success', 'Extra curriculum info updated successfully.');
     }
-
 }

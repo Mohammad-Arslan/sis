@@ -50,27 +50,30 @@ class GradeBookController extends Controller
                     'com_class',
                 ]);
 
-                if (isset($request->academic_year_id))
+                if (isset($request->academic_year_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('academic_year_id', $request->academic_year_id);
                         $q->orWhereNull('academic_year_id');
                     });
+                }
 
-                if (isset($request->branch_id))
+                if (isset($request->branch_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('student_behaviour_skills.branch_id', $request->branch_id);
                         $q->orWhereNull('student_behaviour_skills.branch_id');
                     });
+                }
 
-                if (isset($request->term_id))
+                if (isset($request->term_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('student_behaviour_skills.term_id', $request->term_id);
                         $q->orWhereNull('student_behaviour_skills.term_id');
                     });
+                }
 
                 if (isset($request->class_id)) {
                     $branch_class = BranchClass::find($request->class_id);
-                    $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+                    $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
                     $query = $query->where(function ($q) use ($class_id) {
                         $q->where('class_id', $class_id);
                         $q->orWhereNull('class_id');
@@ -79,7 +82,7 @@ class GradeBookController extends Controller
 
                 if (isset($request->section_id)) {
                     $branch_class_section = BranchClassSection::find($request->section_id);
-                    $section_id = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+                    $section_id = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
                     $query = $query->where(function ($q) use ($section_id) {
                         $q->where('section_id', $section_id);
                         $q->orWhereNull('section_id');
@@ -93,7 +96,7 @@ class GradeBookController extends Controller
                     return view('assessment.grade_book.action', ['row' => $row]);
                 })
                 ->rawColumns(['action'])
-                ->make(TRUE);
+                ->make(true);
         }
         $user = \Auth::user();
         $data['academic_years'] = AcademicYear::all();
@@ -105,8 +108,9 @@ class GradeBookController extends Controller
             $employee = NetworkAssociate::where('user_id', $user->id)->with('branches')->first();
             // dd($employee->branches->toArray());
             $data['branches'] = $employee->branches;
-        } else
+        } else {
             $data['branches'] = Branch::all();
+        }
         $data['terms'] = Term::all();
 
         return view('assessment.grade_book.index', $data);
@@ -271,8 +275,9 @@ class GradeBookController extends Controller
             ['section_id', $data['student_behaviour_skill']['section_id']],
         ])->first();
 
-        if (!empty($data['student_skill']['student_behaviour_skill_marks']))
+        if (! empty($data['student_skill']['student_behaviour_skill_marks'])) {
             $data['student_skill']['student_behaviour_skill_marks'] = $data['student_skill']['student_behaviour_skill_marks']->keyBy('skill_id');
+        }
 
         $student_id = (int)$data['student_id'];
         $branch_id = $data['student_behaviour_skill']['branch_id'];
@@ -311,7 +316,7 @@ class GradeBookController extends Controller
 
         $branch_class_section_id = BranchClassSection::where([['branch_id', $branch_id], ['class_id', $class_id], ['section_id', $section_id]])->first()->id;
 
-        if (!is_null($student_id)) {
+        if (! is_null($student_id)) {
             $data['total_no_of_working_days'] = getBranchWorkingDays($branch_id, $term_id, $academic_year_id);
             $data = $this->getStudentAttendanceData($academic_year_id, $branch_class_section_id, $student_id, $term_start_date, $term_end_date, $data);
 
@@ -356,19 +361,18 @@ class GradeBookController extends Controller
              //dd($subject_assessment_remarks);
 
             foreach ($assessment_entries_subject_wise as $single_subject_assessment_entries) {
-
                 $single_subject_assessments_levels_wise = $single_subject_assessment_entries->groupBy('assessment_level_two_id');
 
                 foreach ($single_subject_assessments_levels_wise as $single_subject_single_level_all_assessment => $assessment) {
                     if (is_null($assessment->first()->assessment_level_three_id)) {
-                        if (!is_null($assessment->first()->student_assessment_marks->where('student_id', $student_id)->first())) {
+                        if (! is_null($assessment->first()->student_assessment_marks->where('student_id', $student_id)->first())) {
                             $student_assessment_name = $assessment->first()->student_assessment_marks->where('student_id', $student_id)->first()->assessment_entry->assessment_level_two->name;
                             $student_assessment_weight = $assessment->first()->student_assessment_marks->where('student_id', $student_id)->first()->assessment_entry->assessment_weightage;
                             $assessment_weightage[$student_assessment_name] = $student_assessment_weight;
                         }
                         $assessment_level = 'assessment_level_two';
                     } else {
-                        if (!is_null($assessment->first()->student_assessment_marks->where('student_id', $student_id)->first())) {
+                        if (! is_null($assessment->first()->student_assessment_marks->where('student_id', $student_id)->first())) {
                             $student_assessment_name = $assessment->first()->student_assessment_marks->where('student_id', $student_id)->first()->assessment_entry->assessment_level_three->name;
                             $student_assessment_weight = $assessment->first()->student_assessment_marks->where('student_id', $student_id)->first()->assessment_entry->assessment_weightage;
                             $assessment_weightage[$student_assessment_name] = $student_assessment_weight;
@@ -377,7 +381,7 @@ class GradeBookController extends Controller
                     }
                     // dd($assessment->toArray());
                     $marks_percentage_result = $this->calculateMarksPercentage($student_id, $assessment, $assessment_level);
-                    (!is_null($marks_percentage_result)) ? $assessment_data[] = $marks_percentage_result : '';
+                    (! is_null($marks_percentage_result)) ? $assessment_data[] = $marks_percentage_result : '';
                 }
             }
 
@@ -406,8 +410,9 @@ class GradeBookController extends Controller
                 ['section_id', $data['student_behaviour_skill']['section_id']],
             ])->first();
 
-            if (!empty($data['student_behaviour']['student_behaviour_skill_marks']))
+            if (! empty($data['student_behaviour']['student_behaviour_skill_marks'])) {
                 $data['student_behaviour']['student_behaviour_skill_marks'] = $data['student_behaviour']['student_behaviour_skill_marks']->keyBy('general_behaviour_id');
+            }
 
             return $data;
         }
@@ -439,11 +444,11 @@ class GradeBookController extends Controller
     public function get_school_head_name($data)
     {
 
-        $role = Role :: where('name' , 'school_head')->first()->toArray();
+        $role = Role :: where('name', 'school_head')->first()->toArray();
         $designation = Designation::where('designation_name', $role['display_name'])->first()->toArray();
         // dd($designation);
-        $school_head = Employee:: where('designation_id' , $designation['id'])->where('branch_id', $data['student_behaviour_skill']['branch_id'])->get()->toArray();
-        $school_head_name = !empty($school_head) ? $school_head[0]['preferred_name'] : '';
+        $school_head = Employee:: where('designation_id', $designation['id'])->where('branch_id', $data['student_behaviour_skill']['branch_id'])->get()->toArray();
+        $school_head_name = ! empty($school_head) ? $school_head[0]['preferred_name'] : '';
         // dd($school_head_name);
         return isset($school_head_name) ? $school_head_name : '';
     }
@@ -459,7 +464,6 @@ class GradeBookController extends Controller
 
         if (count($assessment_entries)) {
             foreach ($assessment_entries as $assessment) {
-
                 $assessment_obtained_marks += (float)$assessment->student_assessment_marks->where('student_id', $student_id)->sum('obtained_marks_grades');
             }
             $assessment_total_marks = $assessment_entries->sum('grade_marks');
@@ -470,7 +474,7 @@ class GradeBookController extends Controller
 
             return $data;
         }
-        return NULL;
+        return null;
     }
 
     public function getSubjectAssessmentRemark($assessment_entries, $student_id)
@@ -485,14 +489,12 @@ class GradeBookController extends Controller
     {
         $single_subject_assessments_marks = array();
         $all_subject_assessments_data = array();
-        $next_ele = $previous_ele = NULL;
+        $next_ele = $previous_ele = null;
         $j = 0;
         $i = 0;
         //        dd($assessment_data);
         foreach ($assessment_data as $key => $assessment_marks) {
-
-            if (!is_null($previous_ele) && $previous_ele['subject_name'] === $assessment_marks['subject_name']) {
-
+            if (! is_null($previous_ele) && $previous_ele['subject_name'] === $assessment_marks['subject_name']) {
                 unset($assessment_data[$key - 1]);
                 ++$j;
                 $single_subject_assessments_marks = $previous_ele;
@@ -525,7 +527,7 @@ class GradeBookController extends Controller
                  }
                 unset($assessment_data[$key]);*/
                 continue;
-            } else if (!is_null($previous_ele) && $j >= 1) {
+            } else if (! is_null($previous_ele) && $j >= 1) {
                 $all_subject_assessments_data[] = $single_subject_assessments_marks;
             }
             if (array_key_exists($key + 1, $assessment_data) && $assessment_marks['subject_name'] !== $assessment_data[$key + 1]['subject_name']) {

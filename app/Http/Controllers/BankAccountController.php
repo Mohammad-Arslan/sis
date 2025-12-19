@@ -20,18 +20,18 @@ class BankAccountController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = null;
-            
-            if (isset($request->company_id))
+
+            if (isset($request->company_id)) {
                 $data = Company::find($request->company_id);
-            elseif (isset($request->branch_id))
+            } elseif (isset($request->branch_id)) {
                 $data = Branch::find($request->branch_id);
-            elseif (isset($request->network_associate_id))
+            } elseif (isset($request->network_associate_id)) {
                 $data = NetworkAssociate::find($request->network_associate_id);
+            }
 
             // If no valid data found, return empty collection
-            if (!$data) {
+            if (! $data) {
                 return DataTables::of(collect([]))->make(true);
             }
 
@@ -81,12 +81,13 @@ class BankAccountController extends Controller
 
         $input = $request->all();
 
-        if (isset($request->company_id))
+        if (isset($request->company_id)) {
             $data = Company::where('id', $request->company_id)->first();
-        else if (isset($request->branch_id))
+        } else if (isset($request->branch_id)) {
             $data = Branch::where('id', $request->branch_id)->first();
-        else if (isset($request->nwa_id))
+        } else if (isset($request->nwa_id)) {
             $data = NetworkAssociate::where('id', $request->nwa_id)->first();
+        }
 
         $input['is_default'] = $data->bank_accounts()->exists() ? 0 : 1;
 
@@ -118,7 +119,7 @@ class BankAccountController extends Controller
         $method = ($model_type == 'App\Models\Company' ? 'companies.edit' : ($model_type == 'App\Models\Branch' ? 'branches.edit' : ($model_type == 'App\Models\NetworkAssociate' ? 'network-associates.edit' : '')));
 
         // dd($method);
-        return redirect(route($method,  $bank_account->bank_accountable_id) . '?tab=bank')->with(['bank_account' => $bank_account]);
+        return redirect(route($method, $bank_account->bank_accountable_id) . '?tab=bank')->with(['bank_account' => $bank_account]);
     }
 
     /**

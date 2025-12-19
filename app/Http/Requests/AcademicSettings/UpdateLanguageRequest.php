@@ -22,7 +22,7 @@ class UpdateLanguageRequest extends FormRequest
     {
         $language = $this->route('language');
         $languageId = $language instanceof \App\Models\Language ? $language->id : $language;
-        
+
         return [
             'language_name' => [
                 'required',
@@ -44,4 +44,3 @@ class UpdateLanguageRequest extends FormRequest
         ];
     }
 }
-

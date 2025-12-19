@@ -58,7 +58,7 @@ class LeaveApplicationController extends Controller
         LeaveApplication::create($inputs);
 
         if (isset($inputs['leave_type_id'])) {
-            $leave_acquired = NULL;
+            $leave_acquired = null;
 
             $EmployeeLeaveQouta = EmployeeLeaveQuota::where('employee_id', $inputs['employee_id'])->where('leave_type_id', $inputs['leave_type_id'])->first();
             //($EmployeeLeaveQouta->no_of_balanced_leaves);
@@ -87,7 +87,7 @@ class LeaveApplicationController extends Controller
     {
         if ($request->ajax()) {
             $applicationType = ApplicationType::find($request->application_type_id);
-            if (!empty($applicationType)) {
+            if (! empty($applicationType)) {
                 $applicationTypeID = $applicationType->id;
                 if ($applicationType->name == 'Leave') {
                     return view('employees.leave_applications.forms.leave', compact('applicationTypeID'));
@@ -115,7 +115,7 @@ class LeaveApplicationController extends Controller
     {
         if ($id != null) {
             $employee = Employee::find($id);
-            if (!empty($employee)) {
+            if (! empty($employee)) {
                 return view('employees.leave_applications.applied_applications_listing', compact('employee'));
             }
         }
@@ -209,7 +209,7 @@ class LeaveApplicationController extends Controller
                 if ($application_detail[0]['category'] == 'Half Day Toil') {
                     $time_out = Carbon::createFromFormat('H:i:s', $adjustment_attendance->time_out)->addHours(4);
                     $adjustment_attendance->time_out = date('H:i:s', strtotime($time_out));
-                    $off_day_attendance->time_out = NULL;
+                    $off_day_attendance->time_out = null;
                 } else {
                     $time_out = Carbon::createFromFormat('H:i:s', $adjustment_attendance->time_out)->addHours(8);
                     $adjustment_attendance->time_out = date('H:i:s', strtotime($time_out));
@@ -251,7 +251,7 @@ class LeaveApplicationController extends Controller
                 $attendance['attendance_type'] = 1;
                 $attendance['created_at'] = $attendance_date->format("Y-m-d");
                 EmployeeAttendance::create($attendance);
-                $attendance[] = NULL;
+                $attendance[] = null;
             }
             //approve leave.
             LeaveApplication::where('id', $request->application_id)->update(['status' => $request->status]);
@@ -274,8 +274,7 @@ class LeaveApplicationController extends Controller
             $applicationTypeName = ApplicationType::where('id', $request->application_type_id)->get('name')->toArray();
 
             $leaveQuotas = EmployeeLeaveQuota::where('employee_id', $request->employee_id)->where('leave_type_id', $request->leave_type_id)->first();
-            if ($applicationTypeName[0]['name'] != "Leave" && !isset($leaveQuotas)) {
-
+            if ($applicationTypeName[0]['name'] != "Leave" && ! isset($leaveQuotas)) {
                 //dd($applicationTypeName[0]['name']);
                 if (isset($request->num_of_days) && $request->num_of_days >= 1 && $applicationTypeName[0]['name'] != 'Attendance not Marked') {
                     if (isset($request->from_date)) {
@@ -284,21 +283,25 @@ class LeaveApplicationController extends Controller
                     if (isset($request->to_date)) {
                         $to_date = date('Y-m-d', strtotime($request->to_date));
                     }
-                    if (LeaveApplication::where([
+                    if (
+                        LeaveApplication::where([
                         'employee_id' => $employeeID,
                         'from_date' => $from_date,
                         'to_date' => $to_date,
                         'status' => 0
-                    ])->exists()) {
+                        ])->exists()
+                    ) {
                         $applicationExists = 1;
                     }
                 } else {
-                    if (LeaveApplication::where([
+                    if (
+                        LeaveApplication::where([
                         'employee_id' => $employeeID,
                         'application_type_id' => $applicationTypeID,
                         'attendance_not_marked_date' => $request->attendance_not_marked_date,
                         'status' => 0
-                    ])->exists()) {
+                        ])->exists()
+                    ) {
                         $applicationExists = 1;
                     }
                 }
@@ -310,21 +313,25 @@ class LeaveApplicationController extends Controller
                     if (isset($request->to_date)) {
                         $to_date = date('Y-m-d', strtotime($request->to_date));
                     }
-                    if (LeaveApplication::where([
+                    if (
+                        LeaveApplication::where([
                         'employee_id' => $employeeID,
                         'from_date' => $from_date,
                         'to_date' => $to_date,
                         'status' => 0
-                    ])->exists()) {
+                        ])->exists()
+                    ) {
                         $applicationExists = 1;
                     }
                 } else {
-                    if (LeaveApplication::where([
+                    if (
+                        LeaveApplication::where([
                         'employee_id' => $employeeID,
                         'application_type_id' => $applicationTypeID,
                         'attendance_not_marked_date' => $request->attendance_not_marked_date,
                         'status' => 0
-                    ])->exists()) {
+                        ])->exists()
+                    ) {
                         $applicationExists = 1;
                     }
                 }

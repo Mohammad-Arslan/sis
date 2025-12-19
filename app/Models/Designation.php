@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Designation extends Model
 {
-    use HasFactory,SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
+
     protected $fillable = [
         'designation_name',
         'abbreviation',
@@ -21,7 +24,7 @@ class Designation extends Model
 
     public function designation_types()
     {
-        return $this->belongsTo(DesignationType::class, 'type_id','id');
+        return $this->belongsTo(DesignationType::class, 'type_id', 'id');
     }
 
     public function company()

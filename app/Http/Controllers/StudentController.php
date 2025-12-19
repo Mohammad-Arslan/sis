@@ -135,7 +135,7 @@ class StudentController extends Controller
         $branches = Branch::all();
         $regions = Region::all();
 
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -168,7 +168,6 @@ class StudentController extends Controller
     {
 
         if ($request->ajax()) {
-
             $data = Guardian::with(['students', 'relation'])->get();
             // dd($data->toArray());
             return DataTables::of($data)
@@ -183,7 +182,7 @@ class StudentController extends Controller
                     return view('students.guardian_actions', ['row' => $row]);
                 })
                 ->rawColumns(['action'])
-                ->make(TRUE);
+                ->make(true);
         }
         $branches = Branch::all();
         $students = Student::get();
@@ -239,8 +238,8 @@ class StudentController extends Controller
                 "interview_date_time" => [
                     'nullable',
                     function ($attribute, $value, $fail) {
-                        if (!empty($value) && $value !== '') {
-                            if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $value)) {
+                        if (! empty($value) && $value !== '') {
+                            if (! preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $value)) {
                                 $fail('Interview date time must be in YYYY-MM-DD HH:MM format (e.g., 2025-07-25 11:01).');
                             }
                         }
@@ -398,7 +397,7 @@ class StudentController extends Controller
         $promos = Promo::where('branch_id', $student->branch_id)->get();
         $additional_charges = FeeCharge::where(['branch_id' => $student->branch_id])->whereNull('fee_package_id')->with('fee_charges_type')->get();
         $student_fee_package = StudentFeePackage::where(['student_id' => $student->id, 'is_valid' => 1])->with(['fee_package.fee_package_type', 'fee_concession.fee_concession_type', 'academic_year', 'com_class', 'section'])->first();
-        
+
         // Get fee charges - if student has an active package, show only package charges, otherwise show all branch charges
         if ($student_fee_package) {
             $package_charges = FeePackagesFeeCharges::where([
@@ -407,7 +406,7 @@ class StudentController extends Controller
             ])
             ->with(['fee_charges.fee_charges_type'])
             ->get();
-            
+
             // Extract the actual fee_charges from the package charges
             $fee_charges = collect();
             foreach ($package_charges as $package_charge) {
@@ -415,7 +414,7 @@ class StudentController extends Controller
                     $fee_charges->push($package_charge->fee_charges);
                 }
             }
-            
+
             // If no package charges found, fall back to all branch charges
             if ($fee_charges->isEmpty()) {
                 $fee_charges = FeeCharge::where(['branch_id' => $student->branch_id])->with('fee_charges_type')->get();
@@ -493,16 +492,18 @@ class StudentController extends Controller
                         })
                         ->get();
                 }
-            } else
+            } else {
                 $fee_concessions = FeeConcession::where(['branch_id' => $student->branch_id, 'academic_year_id' => $student_current_class->academic_year_id])
                     ->with('fee_concession_type')
                     ->whereHas('fee_concession_type', function ($query) {
                         $query->where('name', 'not LIKE', '%Sibling%');
                     })
                     ->get();
+            }
             $fee_periods = FeePeriod::where(['branch_id' => $student->branch_id, 'academic_year_id' => $student_current_class->academic_year_id]);
-            if (!empty($student->admission_wef))
+            if (! empty($student->admission_wef)) {
                 $fee_periods->whereDate('from_date', '>=', $student->admission_wef);
+            }
             $fee_periods = $fee_periods->get();
 
             $check_student_admission_status = StudentInvoice::where(['student_id' => $student->id, 'invoice_frequency' => 'Admission', 'is_paid' => 1])->whereHas('student_fee_package', function ($query) use ($student_current_class) {
@@ -527,7 +528,7 @@ class StudentController extends Controller
             $TF_in_admission_invoice = StudentInvoice::whereHas('student_invoice_items.fee_charges.fee_charges_type', function ($q) {
                 $q->where('abbreviation', 'TF');
             })->where(['student_id' => $student->id, 'invoice_frequency' => 'Admission'])->first();
-            $existing_invoice = !empty($existing_fee_period_invoice1) ? StudentLedgerInvoice::where('student_invoice_id', $existing_fee_period_invoice1[0]['id'])->get()->toArray() : [];
+            $existing_invoice = ! empty($existing_fee_period_invoice1) ? StudentLedgerInvoice::where('student_invoice_id', $existing_fee_period_invoice1[0]['id'])->get()->toArray() : [];
             //    dd($existing_invoice->toArray());
             if (empty($TF_in_admission_invoice)) {
                 $admission_invoice = StudentInvoice::where(['student_id' => $student->id, 'invoice_frequency' => 'Admission'])->first();
@@ -535,7 +536,7 @@ class StudentController extends Controller
                     $existing_fee_period_invoice = $existing_fee_period_invoice->where('id', '!=', $admission_invoice->id);
                 }
             }
-            if (isset($existing_invoice) && !empty($existing_invoice) && isset($existing_invoice[0]['month'])) {
+            if (isset($existing_invoice) && ! empty($existing_invoice) && isset($existing_invoice[0]['month'])) {
                 $last_invoice_month = $existing_invoice[0]['month'];
                 // dd($last_invoice_month);
                 if ($last_invoice_month == 12) {
@@ -633,8 +634,9 @@ class StudentController extends Controller
             $response['student_package_charges'] = $student_package_charges;
         }
 
-        if (isset($request->general_document_id))
+        if (isset($request->general_document_id)) {
             $response['general_document'] = GeneralDocument::find($request->general_document_id);
+        }
 
         return view('students.add_student', $response);
     }
@@ -741,7 +743,7 @@ class StudentController extends Controller
             DB::beginTransaction();
 
             $inputs = $request->all();
-            if (!isset($inputs['security_deposit'])) {
+            if (! isset($inputs['security_deposit'])) {
                 $inputs['security_deposit'] = 0;
                 $inputs['security_number'] = null;
             } else {
@@ -841,8 +843,9 @@ class StudentController extends Controller
             },
         ])->where('id', $student_id)->first();
 
-        if ($type == 'modal')
+        if ($type == 'modal') {
             return view('students.registration_slip_modal', $data);
+        }
         $pdf = Pdf::loadView('students.registration_slip_pdf', $data);
         return $pdf->download('RegistrationSlip.pdf');
     }
@@ -884,17 +887,16 @@ class StudentController extends Controller
     {
         // Configure memory and execution time for large exports
         ExportService::configureForLargeExport();
-        
+
         // Get the appropriate export class based on dataset size
         $exportClass = ExportService::getExportClass($request);
-        
+
         return \Maatwebsite\Excel\Facades\Excel::download(new $exportClass($request), 'Students.xlsx');
     }
 
     public function studentAssessments(Request $request)
     {
         if ($request->ajax()) {
-
             $query = array();
 
             if (isset($request->section_id)) {
@@ -910,21 +912,23 @@ class StudentController extends Controller
                     'subject',
                 ])->select('assessment_entries.*', 'assessment_entries.id as assessment_entry_id');
 
-                if (isset($request->academic_year_id))
+                if (isset($request->academic_year_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('academic_year_id', $request->academic_year_id);
                         $q->orWhereNull('academic_year_id');
                     });
+                }
 
-                if (isset($request->branch_id))
+                if (isset($request->branch_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('assessment_entries.branch_id', $request->branch_id);
                         $q->orWhereNull('assessment_entries.branch_id');
                     });
+                }
 
                 if (isset($request->class_id)) {
                     $branch_class = BranchClass::find($request->class_id);
-                    $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+                    $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
                     $query = $query->where(function ($q) use ($class_id) {
                         $q->where('class_id', $class_id);
                         $q->orWhereNull('class_id');
@@ -933,24 +937,26 @@ class StudentController extends Controller
 
                 if (isset($request->section_id)) {
                     $branch_class_section = BranchClassSection::find($request->section_id);
-                    $section_id = !empty($branch_class_section) ? $branch_class_section->section_id : 0;
+                    $section_id = ! empty($branch_class_section) ? $branch_class_section->section_id : 0;
                     $query = $query->where(function ($q) use ($section_id) {
                         $q->where('section_id', $section_id);
                         $q->orWhereNull('section_id');
                     });
                 }
 
-                if (isset($request->subject_id))
+                if (isset($request->subject_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('subject_id', $request->subject_id);
                         $q->orWhereNull('subject_id');
                     });
+                }
 
-                if (isset($request->term_id))
+                if (isset($request->term_id)) {
                     $query = $query->where(function ($q) use ($request) {
                         $q->where('term_id', $request->term_id);
                         $q->orWhereNull('term_id');
                     });
+                }
             }
 
             return DataTables::of($query)
@@ -1054,7 +1060,7 @@ class StudentController extends Controller
                 'branch.default_bank_account',
             ])->findOrFail($student_id);
 
-            if (!isset($data['securityChallan']['branch']['default_bank_account']['id'])) {
+            if (! isset($data['securityChallan']['branch']['default_bank_account']['id'])) {
                 return redirect()->back()->with('error', 'Bank Account Not Available');
             }
 
@@ -1092,16 +1098,15 @@ class StudentController extends Controller
         try {
             // Store the file temporarily
             $filePath = $request->file('file')->store('temp/imports');
-            
+
             // Dispatch the import job to the queue
             ProcessStudentImport::dispatch($filePath, auth()->id());
-            
+
             return response()->json([
                 'success' => 'Import has been queued and will be processed in the background. Check the logs for progress.',
                 'queued' => true,
                 'message' => 'Your file is being processed. Large imports may take several minutes to complete.'
             ], 200);
-            
         } catch (\Exception $e) {
             return response()->json(['errors' => ['An error occurred while queuing the import: ' . $e->getMessage()]], 500);
         }
@@ -1123,8 +1128,8 @@ class StudentController extends Controller
             $query = Student::where('status', 'on_roll')
                 ->with(['active_class.branch_class_sections.com_classes']);
 
-            if (!empty($search)) {
-                $query->where(function($q) use ($search) {
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
                     $q->where('registration_no', 'LIKE', "%{$search}%")
                       ->orWhere('first_name', 'LIKE', "%{$search}%")
                       ->orWhere('last_name', 'LIKE', "%{$search}%")
@@ -1136,15 +1141,15 @@ class StudentController extends Controller
                 ->orderBy('last_name')
                 ->paginate($perPage, ['*'], 'page', $page);
 
-            $formattedStudents = $students->getCollection()->map(function($student) {
+            $formattedStudents = $students->getCollection()->map(function ($student) {
                 return [
                     'id' => $student->id,
                     'registration_no' => $student->registration_no,
                     'first_name' => $student->first_name,
                     'last_name' => $student->last_name,
                     'roll_no' => $student->roll_no,
-                    'class_name' => $student->active_class && $student->active_class->branch_class_sections && $student->active_class->branch_class_sections->com_classes 
-                        ? $student->active_class->branch_class_sections->com_classes->class_name 
+                    'class_name' => $student->active_class && $student->active_class->branch_class_sections && $student->active_class->branch_class_sections->com_classes
+                        ? $student->active_class->branch_class_sections->com_classes->class_name
                         : 'N/A'
                 ];
             });
@@ -1157,12 +1162,10 @@ class StudentController extends Controller
                 'per_page' => $students->perPage(),
                 'total' => $students->total()
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to search students: ' . $e->getMessage()
             ], 500);
         }
     }
-
 }

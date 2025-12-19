@@ -9,13 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DesignationType extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'type_name'
     ];
 
     public function designations()
     {
-        return $this->hasMany(Designation::class, 'id','type_id');
+        return $this->hasMany(Designation::class, 'id', 'type_id');
     }
 }

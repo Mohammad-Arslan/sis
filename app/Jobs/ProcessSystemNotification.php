@@ -17,7 +17,10 @@ use Illuminate\Support\Facades\Mail;
 
 class ProcessSystemNotification implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $data, $user;
 
@@ -27,7 +30,7 @@ class ProcessSystemNotification implements ShouldQueue
      * @param $data
      * @param User $user
      */
-    public function __construct( User $user, $data )
+    public function __construct(User $user, $data)
     {
         $this -> data = $data;
         $this -> user = $user;
@@ -48,7 +51,7 @@ class ProcessSystemNotification implements ShouldQueue
      */
     protected function sendNotificationToUser(): void
     {
-        if ( $this -> data[ 'type' ] == 'SMS' ) {
+        if ($this -> data[ 'type' ] == 'SMS') {
             sendOTPCode($this -> data[ 'message' ], $this -> data[ 'mobile' ]);
         }
 
@@ -56,17 +59,17 @@ class ProcessSystemNotification implements ShouldQueue
             $this -> user -> notify(new SendPushNotification('Notification', $this -> data[ 'message' ]));
         }*/
 
-        if ( $this -> data[ 'type' ] == 'Email' ) {
+        if ($this -> data[ 'type' ] == 'Email') {
             // $notification = new SendNotification($this -> data[ 'header' ], $this -> data[ 'message' ], $this -> data[ 'salutation' ],$this->user);
             // $this->user->notify($notification);
             $subject = $this->data['header'];
             $receiver_name = $this->user->name;
             $message = $this->data['message'];
             // dd($subject,  $receiver_name, $message, $this->user->email);
-            Mail::to($this->user->email)->send(new NotifyMail($subject,$receiver_name,$message));
+            Mail::to($this->user->email)->send(new NotifyMail($subject, $receiver_name, $message));
         }
 
-        if ( $this -> data[ 'type' ] == 'SMS, Email, Push Notification' ) {
+        if ($this -> data[ 'type' ] == 'SMS, Email, Push Notification') {
             sendOTPCode($this -> data[ 'message' ], $this -> data[ 'mobile' ]);
             /*$this -> user -> notify(new SendPushNotification('Notification', $this -> data[ 'message' ]));*/
             // $notification = new SendNotification($this -> data[ 'header' ], $this -> data[ 'message' ], $this -> data[ 'salutation' ],$this->user);
@@ -74,7 +77,7 @@ class ProcessSystemNotification implements ShouldQueue
             $subject = $this->data['header'];
             $receiver_name = $this->user->name;
             $message = $this->data['message'];
-            Mail::to($this->user->email)->send(new NotifyMail($subject,$receiver_name,$message));
+            Mail::to($this->user->email)->send(new NotifyMail($subject, $receiver_name, $message));
         }
 
         NotificationLog ::create([

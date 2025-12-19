@@ -48,14 +48,14 @@ class PurchaseOrderController extends Controller
             ->whereDoesntHave('purchaseOrder')
             ->latest()
             ->get();
-        
+
         $poNumber = PurchaseOrder::generatePONumber();
-        
+
         return view('fixed-assets.purchase-orders.create', compact(
-            'suppliers', 
-            'branches', 
-            'departments', 
-            'categories', 
+            'suppliers',
+            'branches',
+            'departments',
+            'categories',
             'purchaseRequests',
             'poNumber'
         ));
@@ -101,11 +101,11 @@ class PurchaseOrderController extends Controller
             foreach ($request->items as $item) {
                 $subtotal += $item['quantity'] * $item['unit_price'];
             }
-            
+
             $discountAmount = $request->discount_amount ?? 0;
             $taxAmount = $request->tax_amount ?? 0;
             $shippingCost = $request->shipping_cost ?? 0;
-            
+
             $totalCost = $subtotal - $discountAmount + $taxAmount + $shippingCost;
 
             $purchaseOrder = PurchaseOrder::create([
@@ -132,7 +132,7 @@ class PurchaseOrderController extends Controller
             ]);
 
             DB::commit();
-            
+
             session()->flash('success', 'Purchase order created successfully.');
             return redirect()->route('fixed-assets.purchase-orders.index');
         } catch (\Exception $e) {
@@ -160,7 +160,7 @@ class PurchaseOrderController extends Controller
             'receivedBy',
             'purchaseRequest'
         ])->findOrFail($id);
-        
+
         $categories = AssetCategory::all();
 
         return view('fixed-assets.purchase-orders.show', compact('purchaseOrder', 'categories'));
@@ -175,31 +175,31 @@ class PurchaseOrderController extends Controller
     public function edit($id)
     {
         $purchaseOrder = PurchaseOrder::findOrFail($id);
-        
-        if (!in_array($purchaseOrder->status, ['draft', 'pending'])) {
+
+        if (! in_array($purchaseOrder->status, ['draft', 'pending'])) {
             return back()->with('error', 'Only draft or pending purchase orders can be edited.');
         }
-        
+
         $suppliers = Supplier::where('is_active', true)->orderBy('name')->get();
         $branches = Branch::orderBy('br_name')->get();
         $departments = Department::orderBy('department_name')->get();
         $categories = AssetCategory::where('is_active', true)->orderBy('name')->get();
         $purchaseRequests = PurchaseRequest::where('status', 'approved')
-            ->where(function($query) use ($purchaseOrder) {
+            ->where(function ($query) use ($purchaseOrder) {
                 $query->whereDoesntHave('purchaseOrder')
-                    ->orWhereHas('purchaseOrder', function($q) use ($purchaseOrder) {
+                    ->orWhereHas('purchaseOrder', function ($q) use ($purchaseOrder) {
                         $q->where('id', $purchaseOrder->id);
                     });
             })
             ->latest()
             ->get();
-        
+
         return view('fixed-assets.purchase-orders.edit', compact(
             'purchaseOrder',
-            'suppliers', 
-            'branches', 
-            'departments', 
-            'categories', 
+            'suppliers',
+            'branches',
+            'departments',
+            'categories',
             'purchaseRequests'
         ));
     }
@@ -214,8 +214,8 @@ class PurchaseOrderController extends Controller
     public function update(Request $request, $id)
     {
         $purchaseOrder = PurchaseOrder::findOrFail($id);
-        
-        if (!in_array($purchaseOrder->status, ['draft', 'pending'])) {
+
+        if (! in_array($purchaseOrder->status, ['draft', 'pending'])) {
             return back()->with('error', 'Only draft or pending purchase orders can be updated.');
         }
 
@@ -251,11 +251,11 @@ class PurchaseOrderController extends Controller
             foreach ($request->items as $item) {
                 $subtotal += $item['quantity'] * $item['unit_price'];
             }
-            
+
             $discountAmount = $request->discount_amount ?? 0;
             $taxAmount = $request->tax_amount ?? 0;
             $shippingCost = $request->shipping_cost ?? 0;
-            
+
             $totalCost = $subtotal - $discountAmount + $taxAmount + $shippingCost;
 
             $purchaseOrder->update([
@@ -280,7 +280,7 @@ class PurchaseOrderController extends Controller
             ]);
 
             DB::commit();
-            
+
             return redirect()->route('fixed-assets.purchase-orders.index')
                 ->with('success', 'Purchase order updated successfully.');
         } catch (\Exception $e) {
@@ -298,8 +298,8 @@ class PurchaseOrderController extends Controller
     public function destroy($id)
     {
         $purchaseOrder = PurchaseOrder::findOrFail($id);
-        
-        if (!in_array($purchaseOrder->status, ['draft', 'pending'])) {
+
+        if (! in_array($purchaseOrder->status, ['draft', 'pending'])) {
             return back()->with('error', 'Only draft or pending purchase orders can be deleted.');
         }
 
@@ -399,7 +399,7 @@ class PurchaseOrderController extends Controller
     {
         $purchaseRequest = PurchaseRequest::with(['supplier', 'branch', 'department', 'user'])
             ->findOrFail($request->purchase_request_id);
-        
+
         return response()->json([
             'purchaseRequest' => $purchaseRequest
         ]);
@@ -413,14 +413,14 @@ class PurchaseOrderController extends Controller
      */
     public function getBranchUsers(Request $request)
     {
-        $users = User::whereHas('employee', function($query) use ($request) {
+        $users = User::whereHas('employee', function ($query) use ($request) {
             $query->where('branch_id', $request->branch_id)
-                ->when($request->department_id, function($q) use ($request) {
+                ->when($request->department_id, function ($q) use ($request) {
                     $q->where('department_id', $request->department_id);
                 });
         })
         ->get()
-        ->map(function($user) {
+        ->map(function ($user) {
             return [
                 'id' => $user->id,
                 'name' => $user->first_name . ' ' . $user->last_name
@@ -449,7 +449,7 @@ class PurchaseOrderController extends Controller
             'approvedBy',
             'purchaseRequest'
         ])->findOrFail($id);
-        
+
         $categories = AssetCategory::all();
 
         return view('fixed-assets.purchase-orders.print', compact('purchaseOrder', 'categories'));

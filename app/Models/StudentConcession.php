@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentConcession extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'student_id',
@@ -19,23 +20,28 @@ class StudentConcession extends Model
         'end_date'
     ];
 
-    public static function store($payload) {
+    public static function store($payload)
+    {
         self::create($payload);
     }
 
-    public function student() {
+    public function student()
+    {
         return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 
-    public function fee_charge() {
+    public function fee_charge()
+    {
         return $this->belongsTo(FeeCharge::class, 'fee_charge_id', 'id');
     }
 
-    public function fee_concession() {
+    public function fee_concession()
+    {
         return $this->belongsTo(FeeConcession::class, 'fee_concession_id', 'id');
     }
 
-    public function academic_year() {
+    public function academic_year()
+    {
         return $this->belongsTo(AcademicYear::class, 'academic_year_id', 'id');
     }
 }

@@ -13,14 +13,14 @@ class IncomeTaxSlabController extends Controller
         if ($request->ajax()) {
             $data = IncomeTaxSlab::select(['id', 'fiscal_year', 'min_salary', 'max_salary', 'tax_percent', 'fixed_amount', 'status']);
             return datatables()->of($data)
-                ->addColumn('status', function($row) {
+                ->addColumn('status', function ($row) {
                     return $row->status
                         ? '<span class="badge bg-success">Active</span>'
                         : '<span class="badge bg-secondary">Inactive</span>';
                 })
-                ->addColumn('action', function($row) {
-                    return '<button class="btn btn-sm btn-outline-info edit-btn" data-id="'.$row->id.'"><i class="ri-edit-line"></i> Edit</button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="'.$row->id.'"><i class="ri-delete-bin-line"></i> Delete</button>';
+                ->addColumn('action', function ($row) {
+                    return '<button class="btn btn-sm btn-outline-info edit-btn" data-id="' . $row->id . '"><i class="ri-edit-line"></i> Edit</button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="' . $row->id . '"><i class="ri-delete-bin-line"></i> Delete</button>';
                 })
                 ->rawColumns(['status', 'action'])
                 ->make(true);
@@ -46,12 +46,12 @@ class IncomeTaxSlabController extends Controller
                         $startYear = (int)$matches[1];
                         $endYear = (int)$matches[2];
                         $currentYear = (int)date('Y');
-                        
+
                         // Check if end year is exactly start year + 1
                         if ($endYear !== $startYear + 1) {
                             $fail('The fiscal year must be in consecutive year format (e.g., 2024-2025).');
                         }
-                        
+
                         // Check if fiscal year is not greater than current year
                         if ($startYear > $currentYear) {
                             $fail('The fiscal year cannot be greater than the current year.');
@@ -92,12 +92,12 @@ class IncomeTaxSlabController extends Controller
                         $startYear = (int)$matches[1];
                         $endYear = (int)$matches[2];
                         $currentYear = (int)date('Y');
-                        
+
                         // Check if end year is exactly start year + 1
                         if ($endYear !== $startYear + 1) {
                             $fail('The fiscal year must be in consecutive year format (e.g., 2024-2025).');
                         }
-                        
+
                         // Check if fiscal year is not greater than current year
                         if ($startYear > $currentYear) {
                             $fail('The fiscal year cannot be greater than the current year.');

@@ -21,7 +21,6 @@ class SubjectMarksSetupController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $query = SubjectMarksSetup::with([
                 'assessment_level_one',
                 'assessment_level_two',
@@ -33,38 +32,42 @@ class SubjectMarksSetupController extends Controller
                 'subject',
             ]);
 
-            if (isset($request->academic_year_id))
+            if (isset($request->academic_year_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('academic_year_id', $request->academic_year_id);
                     $q->orWhereNull('academic_year_id');
                 });
+            }
 
-            if (isset($request->branch_id))
+            if (isset($request->branch_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('branch_id', $request->branch_id);
                     $q->orWhereNull('branch_id');
                 });
+            }
 
             if (isset($request->class_id)) {
                 $branch_class = BranchClass::find($request->class_id);
-                $class_id = !empty($branch_class) ? $branch_class->class_id : 0;
+                $class_id = ! empty($branch_class) ? $branch_class->class_id : 0;
                 $query = $query->where(function ($q) use ($class_id) {
                     $q->where('class_id', $class_id);
                     $q->orWhereNull('class_id');
                 });
             }
 
-            if (isset($request->subject_id))
+            if (isset($request->subject_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('subject_id', $request->subject_id);
                     $q->orWhereNull('subject_id');
                 });
+            }
 
-            if (isset($request->term_id))
+            if (isset($request->term_id)) {
                 $query = $query->where(function ($q) use ($request) {
                     $q->where('term_id', $request->term_id);
                     $q->orWhereNull('term_id');
                 });
+            }
             $data = $query;
 
             $limit = $request->input('length');
@@ -133,7 +136,7 @@ class SubjectMarksSetupController extends Controller
         $input = $request->all();
 
         $branch_class = BranchClass::find($request->class_id);
-        $input['class_id'] = !empty($branch_class) ? $branch_class->class_id : 0;
+        $input['class_id'] = ! empty($branch_class) ? $branch_class->class_id : 0;
 
         SubjectMarksSetup::create($input);
 
@@ -184,7 +187,7 @@ class SubjectMarksSetupController extends Controller
         $input = $request->all();
 
         $branch_class = BranchClass::find($request->class_id);
-        $input['class_id'] = !empty($branch_class) ? $branch_class->class_id : 0;
+        $input['class_id'] = ! empty($branch_class) ? $branch_class->class_id : 0;
 
         $subjectMarksSetup->update($input);
 

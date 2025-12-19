@@ -49,8 +49,6 @@ class FranchiseInquiryOldController extends Controller
             'attachment_types' => $attachmentTypes,
         ];
         if ($request->ajax()) {
-
-
             $query = FranchiseInquiryOld::with(['states', 'cities', 'source', 'other_informations']);
 
             if ($request->state_id && $request->state_id > 0) {
@@ -82,7 +80,6 @@ class FranchiseInquiryOldController extends Controller
 
 
             if ($request->searchTerm && $request->searchTerm != null) {
-
                 $query->orWhere('appl_name', 'like', '%' . $request->searchTerm . '%');
                 $query->orWhere('CNIC', 'like', '%' . $request->searchTerm . '%');
                 $query->orWhere('personal_address', 'like', '%' . $request->searchTerm . '%');
@@ -240,7 +237,7 @@ class FranchiseInquiryOldController extends Controller
 
         if ($request->hasfile('file')) {
             $path = public_path('uploads/franchise_applications_attachments');
-            if (!File::exists($path)) {
+            if (! File::exists($path)) {
                 File::makeDirectory($path, $mode = 0777, true, true);
             }
             $fileName = time() . '.' . $request->file->extension();
@@ -593,14 +590,12 @@ class FranchiseInquiryOldController extends Controller
                 ->make(true);
             return view('franchises.registration-forms.franchise_Info_form', $data);
         } else {
-
             return view('franchises.registration-forms.franchise_Info_form');
         }
     }
     public function loadInquirySchoolBuilding(Request $request)
     {
         if ($request->ajax()) {
-
             $data = SchoolBuilding::with(['inquirer', 'cities']);
             if ($request->inquirer_id) {
                 $data->where('inquirer_id', $request->inquirer_id);
@@ -612,7 +607,6 @@ class FranchiseInquiryOldController extends Controller
                 ->make(true);
             return view('franchises.registration-forms.school_building_options_form', $data);
         } else {
-
             return view('franchises.registration-forms.school_building_options_form');
         }
     }
@@ -673,15 +667,17 @@ class FranchiseInquiryOldController extends Controller
 
     public function applications($value = 0)
     {
-        if ($value == 'qa')
+        if ($value == 'qa') {
             return view('franchises-inquiry.quality_assurance_form');
-        else if ($value == 'bd')
+        } else if ($value == 'bd') {
             return view('franchises-inquiry.business_development_form');
-        else if ($value == 'dd')
+        } else if ($value == 'dd') {
             return view('franchises-inquiry.deputy_director_form');
+        }
         // else if ($value == 'qa_visit_form')
         //     return view('franchises-inquiry.qa_visit_report');
-        else
+        else {
             return view('franchises-inquiry.review_by_legal_form');
+        }
     }
 }

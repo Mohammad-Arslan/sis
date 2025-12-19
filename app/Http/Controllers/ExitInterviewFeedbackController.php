@@ -20,7 +20,7 @@ class ExitInterviewFeedbackController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
@@ -38,13 +38,13 @@ class ExitInterviewFeedbackController extends Controller
     public function create()
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         $employee = $user->employee;
         $departments = Department::all();
-        
+
         // Auto-populate employee data
         $employeeData = [
             'employee_id_code' => $employee->employee_id ?? '',
@@ -53,7 +53,7 @@ class ExitInterviewFeedbackController extends Controller
             'date_of_joining' => $employee->hiring_date ? $employee->hiring_date->format('Y-m-d') : '',
             'reporting_manager' => $employee->reporting_manager ? $employee->reporting_manager->name : '',
         ];
-        
+
         return view('exit-interview-feedbacks.create', compact('departments', 'employeeData'));
     }
 
@@ -63,7 +63,7 @@ class ExitInterviewFeedbackController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
@@ -100,7 +100,7 @@ class ExitInterviewFeedbackController extends Controller
         ]);
 
         $employee = $user->employee;
-        
+
         $feedback = ExitInterviewFeedback::create([
             'employee_id' => $employee->id,
             'employee_id_code' => $employee->employee_id ?? '',
@@ -151,37 +151,37 @@ class ExitInterviewFeedbackController extends Controller
     public function show(ExitInterviewFeedback $exitInterviewFeedback)
     {
         $exitInterviewFeedback->load(['employee.user', 'reviewedBy', 'department']);
-        
+
         $user = Auth::user();
-        
+
         // Allow access if:
         // 1. User is viewing their own feedback
         // 2. User has HR role or permission to review exit interviews
         // 3. User is the reviewer of this feedback
-        
+
         $canView = false;
-        
+
         // Check if user is viewing their own feedback
         if ($user->employee && $exitInterviewFeedback->employee_id === $user->employee->id) {
             $canView = true;
         }
-        
+
         // Check if user has HR role or review permission
         if ($user->hasRole('human_resource') || $user->hasRole('hr') || $user->can('review-exit-interviews')) {
             $canView = true;
         }
-        
+
         // Check if user is the reviewer
         if ($exitInterviewFeedback->reviewed_by === $user->id) {
             $canView = true;
         }
-        
+
         // Check if user is admin or super admin
         if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
             $canView = true;
         }
-        
-        if (!$canView) {
+
+        if (! $canView) {
             abort(403, 'Unauthorized access. You do not have permission to view this feedback.');
         }
 
@@ -194,32 +194,36 @@ class ExitInterviewFeedbackController extends Controller
     public function edit(ExitInterviewFeedback $exitInterviewFeedback)
     {
         $user = Auth::user();
-        
+
         // Only allow editing if:
         // 1. User is editing their own feedback AND it's in draft status
         // 2. User has HR role and feedback is in submitted status (for review/editing)
-        
+
         $canEdit = false;
-        
+
         // Check if user is editing their own feedback and it's in draft status
-        if ($user->employee && 
-            $exitInterviewFeedback->employee_id === $user->employee->id && 
-            $exitInterviewFeedback->status === 'draft') {
+        if (
+            $user->employee &&
+            $exitInterviewFeedback->employee_id === $user->employee->id &&
+            $exitInterviewFeedback->status === 'draft'
+        ) {
             $canEdit = true;
         }
-        
+
         // Check if user has HR role and can edit submitted feedback
-        if (($user->hasRole('human_resource') || $user->hasRole('hr') || $user->can('review-exit-interviews')) && 
-            $exitInterviewFeedback->status === 'submitted') {
+        if (
+            ($user->hasRole('human_resource') || $user->hasRole('hr') || $user->can('review-exit-interviews')) &&
+            $exitInterviewFeedback->status === 'submitted'
+        ) {
             $canEdit = true;
         }
-        
+
         // Check if user is admin or super admin
         if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
             $canEdit = true;
         }
-        
-        if (!$canEdit) {
+
+        if (! $canEdit) {
             abort(403, 'Unauthorized access. You cannot edit this feedback.');
         }
 
@@ -233,13 +237,15 @@ class ExitInterviewFeedbackController extends Controller
     public function update(Request $request, ExitInterviewFeedback $exitInterviewFeedback)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
         // Ensure user can only update their own feedback and it's not submitted
-        if ($exitInterviewFeedback->employee_id !== $user->employee->id || 
-            $exitInterviewFeedback->status === 'submitted') {
+        if (
+            $exitInterviewFeedback->employee_id !== $user->employee->id ||
+            $exitInterviewFeedback->status === 'submitted'
+        ) {
             abort(403, 'Unauthorized access.');
         }
 
@@ -291,28 +297,32 @@ class ExitInterviewFeedbackController extends Controller
     public function destroy(ExitInterviewFeedback $exitInterviewFeedback)
     {
         $user = Auth::user();
-        
+
         // Allow deletion if:
         // 1. User owns the feedback AND it's in draft status
         // 2. User has HR role or admin role
-        
+
         $canDelete = false;
-        
+
         // Check if user owns the feedback and it's in draft status
-        if ($user->employee && 
-            $exitInterviewFeedback->employee_id === $user->employee->id && 
-            $exitInterviewFeedback->status === 'draft') {
+        if (
+            $user->employee &&
+            $exitInterviewFeedback->employee_id === $user->employee->id &&
+            $exitInterviewFeedback->status === 'draft'
+        ) {
             $canDelete = true;
         }
-        
+
         // Check if user has HR role or admin role
-        if ($user->hasRole('human_resource') || $user->hasRole('hr') || 
+        if (
+            $user->hasRole('human_resource') || $user->hasRole('hr') ||
             $user->hasRole('admin') || $user->hasRole('super_admin') ||
-            $user->can('review-exit-interviews')) {
+            $user->can('review-exit-interviews')
+        ) {
             $canDelete = true;
         }
-        
-        if (!$canDelete) {
+
+        if (! $canDelete) {
             abort(403, 'Unauthorized access. You cannot delete this feedback.');
         }
 
@@ -335,7 +345,7 @@ class ExitInterviewFeedbackController extends Controller
     public function submit(ExitInterviewFeedback $exitInterviewFeedback)
     {
         $user = Auth::user();
-        if (!$user || !$user->employee) {
+        if (! $user || ! $user->employee) {
             abort(403, 'Employee record not found.');
         }
 
@@ -356,18 +366,20 @@ class ExitInterviewFeedbackController extends Controller
     public function review()
     {
         $user = Auth::user();
-        
+
         // Check if user has permission to review exit interviews
         $canReview = false;
-        
+
         // Check if user has HR role or review permission
-        if ($user->hasRole('human_resource') || $user->hasRole('hr') || 
-            $user->can('review-exit-interviews') || $user->hasRole('admin') || 
-            $user->hasRole('super_admin')) {
+        if (
+            $user->hasRole('human_resource') || $user->hasRole('hr') ||
+            $user->can('review-exit-interviews') || $user->hasRole('admin') ||
+            $user->hasRole('super_admin')
+        ) {
             $canReview = true;
         }
-        
-        if (!$canReview) {
+
+        if (! $canReview) {
             abort(403, 'Unauthorized access. You do not have permission to review exit interview feedbacks.');
         }
 
@@ -385,18 +397,20 @@ class ExitInterviewFeedbackController extends Controller
     public function markReviewed(Request $request, ExitInterviewFeedback $exitInterviewFeedback)
     {
         $user = Auth::user();
-        
+
         // Check if user has permission to review exit interviews
         $canReview = false;
-        
+
         // Check if user has HR role or review permission
-        if ($user->hasRole('human_resource') || $user->hasRole('hr') || 
-            $user->can('review-exit-interviews') || $user->hasRole('admin') || 
-            $user->hasRole('super_admin')) {
+        if (
+            $user->hasRole('human_resource') || $user->hasRole('hr') ||
+            $user->can('review-exit-interviews') || $user->hasRole('admin') ||
+            $user->hasRole('super_admin')
+        ) {
             $canReview = true;
         }
-        
-        if (!$canReview) {
+
+        if (! $canReview) {
             abort(403, 'Unauthorized access. You do not have permission to review exit interview feedbacks.');
         }
 

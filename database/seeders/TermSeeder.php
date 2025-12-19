@@ -16,14 +16,13 @@ class TermSeeder extends Seeder
      */
     public function run()
     {
-        $company = Company::with(['branch'])->where('company_name','Super Nova')->first();
+        $company = Company::with(['branch'])->where('company_name', 'Super Nova')->first();
 
         $dataToInsert = array();
 
-        if (isset($company['branch']))
-        {
+        if (isset($company['branch'])) {
             $checkStatus = Term::where([['company_id',$company['id'],['branch_id',$company['branch']['id']]]])->first();
-            if(empty($checkStatus)){
+            if (empty($checkStatus)) {
                 $dataToInsert[] = [
                     'branch_id' => $company['id'],
                     'company_id' => $company['branch']['id'],
@@ -37,7 +36,8 @@ class TermSeeder extends Seeder
             }
         }
 
-        if (sizeof($dataToInsert))
+        if (sizeof($dataToInsert)) {
             Term::insert($dataToInsert);
+        }
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class GuardianOtp extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'guardian_id',
         'OTP',

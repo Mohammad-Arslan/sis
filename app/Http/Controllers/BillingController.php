@@ -30,7 +30,6 @@ class BillingController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-
             $data = Billing::with([
                 'students.active_class.branch_class_sections.com_classes',
                 'students.active_class.branch_class_sections.sections',
@@ -38,12 +37,13 @@ class BillingController extends Controller
                 'invoice'
             ]);
 
-            if (auth()->user()->hasRole('network_associate'))
+            if (auth()->user()->hasRole('network_associate')) {
                 $data = $data->where('branch_id', get_set_NWABranchId());
+            }
 
             if ($request->branch_id && $request->branch_id > 0) {
                 $data = $data->where('branch_id', $request->branch_id);
-            } elseif (!isSuperAdmin() && !isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
+            } elseif (! isSuperAdmin() && ! isHeadOfficeEmp() /*!auth()->user()->hasRole('manager-parent-relations')*/) {
                 $data = $data->where('branch_id', get_branch_id());
             }
 
@@ -63,61 +63,61 @@ class BillingController extends Controller
                 $data = $data->whereHas('students', function ($query) use ($request) {
                     $query->where('gender', $request->gender);
                 });
-
             }
 
-        if ($request->status && $request->status != 'all') {
-            if (in_array($request->status, ['on_roll', 'registered', 'left', 'pass-out']))
-                $data = $data->whereHas('students', function ($query) use ($request) { $query->where('status', $request->status); });
-            elseif (in_array($request->status, ['transferred'])) {
-                $data = $data->whereHas('students', function ($query) use ($request) {
-                    $query->where('from_branch', '!=', null);
+            if ($request->status && $request->status != 'all') {
+                if (in_array($request->status, ['on_roll', 'registered', 'left', 'pass-out'])) {
+                    $data = $data->whereHas('students', function ($query) use ($request) {
+                        $query->where('status', $request->status);
+                    });
+                } elseif (in_array($request->status, ['transferred'])) {
+                    $data = $data->whereHas('students', function ($query) use ($request) {
+                        $query->where('from_branch', '!=', null);
+                    });
+                } else {
+                    $data = $data->whereHas('students', function ($query) use ($request) {
+                        $query->whereNull('status');
+                    });
+                }
+            }
+
+            if ($request->searchName && $request->searchName != null) {
+                //dd($request->searchName);
+                $data = $data->where(function ($query) use ($request) {
+                    $query->orWhere('order_id', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('discountable_charges', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('royalty_amount', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('arrears', 'like', '' . $request->searchName . '%');
+                    $query->orWhere('billing_amount', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('total_after_royalty', 'like', '%' . $request->searchName . '%');
+                })->OrWhereHas('invoice', function ($query) use ($request) {
+                    $query->where('invoice_no', 'like', '%' . $request->searchName . '%');
+                })->OrWhereHas('students', function ($query) use ($request) {
+                    $query->where('first_name', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('middle_name', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('last_name', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('gender', 'like', '' . $request->searchName . '%');
+                    $query->orWhere('registration_no', 'like', '%' . $request->searchName . '%');
+                    $query->orWhere('roll_no', 'like', '%' . $request->searchName . '%');
                 });
-            } else
-                $data = $data->whereHas('students', function ($query) use ($request) {
-                    $query->whereNull('status');
-                });
-        }
-
-        if ($request->searchName && $request->searchName != null) {
-            //dd($request->searchName);
-            $data = $data->where(function ($query) use ($request) {
-                $query->orWhere('order_id', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('discountable_charges', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('royalty_amount', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('arrears', 'like', '' . $request->searchName . '%');
-                $query->orWhere('billing_amount', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('total_after_royalty', 'like', '%' . $request->searchName . '%');
-            })->OrWhereHas('invoice', function ($query) use ($request) {
-                $query->where('invoice_no', 'like', '%' . $request->searchName . '%');
-            })->OrWhereHas('students', function ($query) use ($request) {
-                $query->where('first_name', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('middle_name', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('last_name', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('gender', 'like', '' . $request->searchName . '%');
-                $query->orWhere('registration_no', 'like', '%' . $request->searchName . '%');
-                $query->orWhere('roll_no', 'like', '%' . $request->searchName . '%');
-            });
-
-
-        }
+            }
             //$data = $data->get();
             //dd($data->toArray());
 
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('order_id', function ($row) {
-                    return !empty($row['order_id']) ? $row['order_id'] : '';
+                    return ! empty($row['order_id']) ? $row['order_id'] : '';
                 })
                 ->addColumn('invoice_no', function ($row) {
                     return view('billing.invoice_list_link', ['row' => $row]);
                     //return !empty($row->invoice->invoice_no) ? $row->invoice->invoice_no : '';
                 })
                 ->addColumn('full_name', function ($row) {
-                    return !empty($row['students']) ? $row->students->first_name . ' ' . $row->students->middle_name . ' ' . $row->students->last_name : '';
+                    return ! empty($row['students']) ? $row->students->first_name . ' ' . $row->students->middle_name . ' ' . $row->students->last_name : '';
                 })
                 ->addColumn('branch', function ($row) {
-                    return !empty($row->branch->br_name) ? $row->branch->br_name : '';
+                    return ! empty($row->branch->br_name) ? $row->branch->br_name : '';
                 })
                 ->addColumn('class_section', function ($row) {
                     $class_name = isset($row['students']['active_class']['branch_class_sections']['com_classes']) ? $row['students']['active_class']['branch_class_sections']['com_classes']['class_name'] : 'N/A';
@@ -158,13 +158,13 @@ class BillingController extends Controller
                     return $row['billing_amount'];
                 })
                 ->addColumn('created_at', function ($row) {
-                    return !empty($row['created_at']) ? date('d-m-Y h:i:s',strtotime($row['created_at'])) : '';
+                    return ! empty($row['created_at']) ? date('d-m-Y h:i:s', strtotime($row['created_at'])) : '';
                 })
-                ->make(TRUE);
+                ->make(true);
         }
 
         $branches = Branch::all();
-        if (!isSuperAdmin() && !isHeadOfficeEmp()) {
+        if (! isSuperAdmin() && ! isHeadOfficeEmp()) {
             $branch_id = get_branch_id();
             $classes = BranchClass::where('branch_id', $branch_id)->with(['com_classes'])->get();
             $sections = Section::all();
@@ -225,11 +225,11 @@ class BillingController extends Controller
 
     private function obfuscate_email($email)
     {
-        $em   = explode("@",$email);
-        $name = implode('@', array_slice($em, 0, count($em)-1));
-        $len  = floor(strlen($name)/2);
+        $em   = explode("@", $email);
+        $name = implode('@', array_slice($em, 0, count($em) - 1));
+        $len  = floor(strlen($name) / 2);
 
-        return substr($name,0, $len) . str_repeat('*', $len) . "@" . end($em);
+        return substr($name, 0, $len) . str_repeat('*', $len) . "@" . end($em);
     }
 
     private function hide_mobile_no($number)
@@ -242,37 +242,32 @@ class BillingController extends Controller
         if ($request->ajax()) {
             //dd($request->all());
             $mode_html = null;
-            if($request->field == 'roll_no')
-            {
+            if ($request->field == 'roll_no') {
                 $student = Student::where('roll_no', $request->field_val)->orWhere('registration_no', $request->field_val)->get('id');
                 if (isset($student[0])) {
                     $student_id = $student[0]['id'];
                     $gaurdians = Guardian::where('student_id', $student_id)->with('relation')->get();
                     //dd($gaurdians->toArray());
-                    foreach($gaurdians as $gaurdian)
-                    {
-                        $mode_html .= '<strong>'.$gaurdian['relation']['relation_name'].'</strong>
+                    foreach ($gaurdians as $gaurdian) {
+                        $mode_html .= '<strong>' . $gaurdian['relation']['relation_name'] . '</strong>
                                        <br>
-                                       <input type="radio" name="mode" id="email_'.$gaurdian['relation']['relation_name'].'" value="'.$gaurdian['email'].'"> &nbsp; '.$this->obfuscate_email($gaurdian['email']).'
+                                       <input type="radio" name="mode" id="email_' . $gaurdian['relation']['relation_name'] . '" value="' . $gaurdian['email'] . '"> &nbsp; ' . $this->obfuscate_email($gaurdian['email']) . '
                                        <br>
-                                       <input type="radio" name="mode" id="mobile_'.$gaurdian['relation']['relation_name'].'" value="'.$gaurdian['mobile'].'"> &nbsp; '.$this->hide_mobile_no($gaurdian['mobile']).'
+                                       <input type="radio" name="mode" id="mobile_' . $gaurdian['relation']['relation_name'] . '" value="' . $gaurdian['mobile'] . '"> &nbsp; ' . $this->hide_mobile_no($gaurdian['mobile']) . '
                                        <br>';
                     }
-                    $mode_html .='<input type="hidden" name="student_id" id="student_id" value="'.$student_id.'">';
+                    $mode_html .= '<input type="hidden" name="student_id" id="student_id" value="' . $student_id . '">';
                 }
             }
-            if(isset($mode_html))
-            {
+            if (isset($mode_html)) {
                 return $mode_html;
-            }
-            else
-            {
+            } else {
                 return '';
             }
         }
     }
 
-    private function sendOTPCode($message, $mobile = NULL)
+    private function sendOTPCode($message, $mobile = null)
     {
         $type = "xml";
         $id = "cd1094beacon";
@@ -280,7 +275,7 @@ class BillingController extends Controller
         $lang = "English";
         $mask = "1";
 
-        if ($mobile == NULL) {
+        if ($mobile == null) {
             $mobile = $this->phone;
         }
 
@@ -292,9 +287,9 @@ class BillingController extends Controller
         $data = "id=" . $id . "&pass=" . $pass . "&msg=" . $message . "&to=" . $to . "&lang=" . $lang . "&mask=" . $mask . "&type=" . $type;
 
         $ch = curl_init('http://www.opencodes.pk/api/medver.php/sendsms/url');
-        curl_setopt($ch, CURLOPT_POST, TRUE);
+        curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $result = curl_exec($ch);
         $xml = simplexml_load_string($result);
         $api_response = $xml->code;
@@ -303,37 +298,31 @@ class BillingController extends Controller
         return $api_response;
     }
 
-    public function SendOTP(Request $request){
+    public function SendOTP(Request $request)
+    {
         if (filter_var($request->mode, FILTER_VALIDATE_EMAIL)) {
             $gaurdians = Guardian::where('email', $request->mode)->with('relation')->get();
             $receiver_name = $gaurdians[0]['guardian_name'];
             $randomNumber = random_int(1000, 9999);
-            $subject ='UCS Billing Application OTP';
-            $message = 'Your UCS billing OTP is : '. $randomNumber;
+            $subject = 'UCS Billing Application OTP';
+            $message = 'Your UCS billing OTP is : ' . $randomNumber;
 
             Mail::to($request->mode)->send(new NotifyMail($subject, $receiver_name, $message));
             if (Mail::failures()) {
                 return '';
-            }
-            else
-            {
+            } else {
                 $billing_otp = null;
                 $billing_otp = BillingOtp::create([
                     'student_id' => $request->student_id,
                     'OTP' => $randomNumber
                 ]);
-                if($billing_otp)
-                {
+                if ($billing_otp) {
                     return $randomNumber;
                 }
             }
             //$message = 'Your OTP for UCS Billing is ' . $randomNumber;
             //new SendNotification($header, $message, $salutation);
-
-
-        }
-        else
-        {
+        } else {
             $gaurdians = Guardian::where('mobile', $request->mode)->with('relation')->get();
             //$gaurdians[0]['id'];
             $randomNumber = random_int(1000, 9999);
@@ -344,18 +333,15 @@ class BillingController extends Controller
                 'student_id' => $request->student_id,
                 'OTP' => $randomNumber
             ]);
-            if($billing_otp)
-            {
+            if ($billing_otp) {
                 return $randomNumber;
             }
-
         }
     }
 
     public function AddPaidDetails(Request $request)
     {
-        if($request->ajax())
-        {
+        if ($request->ajax()) {
             //dd($request->all());
             $input = $request->all();
             $billing = Billing::create($input);
@@ -367,7 +353,7 @@ class BillingController extends Controller
             $invoiceinput['bank_received_amount'] = $request->bank_received_amount;
             $invoiceinput['updated_at'] = date('Y-m-d H:i:s');
             $invoice_record->update($invoiceinput);
-            
+
             // Handle admission to monthly package transition and status change to 'on_roll'
             if ($invoice_record->invoice_frequency === 'Admission' && $invoice_record->bank_payment_status === 'paid') {
                 try {
@@ -382,21 +368,21 @@ class BillingController extends Controller
                     if ($paidAdmissionInvoiceCount == 1) {
                         // Apply monthly package transition
                         $monthlyPackageResult = \App\Models\StudentInvoice::apply_monthly_package($invoice_record->student_id);
-                        
+
                         if ($monthlyPackageResult) {
                             // Update student status to 'on_roll'
                             $student = \App\Models\Student::find($invoice_record->student_id);
                             if ($student && in_array($student->status, ['processing', 'registered'])) {
                                 $student->update(['status' => 'on_roll']);
-                                
+
                                 // Update system ID and roll number if not already set
-                                if (!$student->system_id) {
+                                if (! $student->system_id) {
                                     \App\Models\Student::update_student_id($invoice_record->student_id);
                                 }
-                                if (!$student->roll_no) {
+                                if (! $student->roll_no) {
                                     \App\Models\Student::update_roll_no($invoice_record->student_id);
                                 }
-                                
+
                                 \Log::info('Student status changed to on_roll and monthly package applied via BillingController', [
                                     'student_id' => $invoice_record->student_id,
                                     'invoice_id' => $invoice_record->id,
@@ -416,11 +402,9 @@ class BillingController extends Controller
                     ]);
                 }
             }
-            if($billing)
-            {
+            if ($billing) {
                 return $input['invoice_id'];
-            }
-            else{
+            } else {
                 return '';
             }
         }
@@ -429,10 +413,9 @@ class BillingController extends Controller
     {
         //dd($request->query('otp'));
         $student_id = BillingOtp::where('OTP', $request->query('otp'))->get('student_id');
-        if(isset($student_id[0]))
-        {
+        if (isset($student_id[0])) {
             $fee_period_id = StudentInvoice::max_fee_period_id($student_id[0]['student_id']);
-            $studentInvoice = StudentInvoice::where('student_id',$student_id[0]['student_id'])->where('bank_payment_status','unpaid')->where('fee_period_id',$fee_period_id)->with([
+            $studentInvoice = StudentInvoice::where('student_id', $student_id[0]['student_id'])->where('bank_payment_status', 'unpaid')->where('fee_period_id', $fee_period_id)->with([
                 'student',
                 'student.branch',
                 'student_fee_package.fee_package',
@@ -452,10 +435,10 @@ class BillingController extends Controller
                 $calculations = calculate_total_price_by_invoice($studentInvoice);
             }
 
-            if($studentInvoice->student->roll_no != '') {
-                $orderId = 'BR'.$studentInvoice->student->branch->branch_code.'_'.$studentInvoice->student->roll_no.'_'.$studentInvoice->invoice_no;
-            }else{
-                $orderId = 'BR'.$studentInvoice->student->branch->branch_code.'_'.$studentInvoice->student->registration_no.'_'.$studentInvoice->invoice_no;
+            if ($studentInvoice->student->roll_no != '') {
+                $orderId = 'BR' . $studentInvoice->student->branch->branch_code . '_' . $studentInvoice->student->roll_no . '_' . $studentInvoice->invoice_no;
+            } else {
+                $orderId = 'BR' . $studentInvoice->student->branch->branch_code . '_' . $studentInvoice->student->registration_no . '_' . $studentInvoice->invoice_no;
             }
             $requestBody = '{
                 "apiOperation": "CREATE_CHECKOUT_SESSION",
@@ -463,7 +446,7 @@ class BillingController extends Controller
                     "operation": "PURCHASE"
                 },
                 "order": {
-                    "id" : "'.$orderId.'",
+                    "id" : "' . $orderId . '",
                     "currency" : "PKR"
                 }
             }' ;
@@ -477,7 +460,7 @@ class BillingController extends Controller
             //test-mcbpk.mtf.gateway.mastercard.com, Test829910158101:b99e6dbc33ad0cdc2cf949b3cc6be236
             //mcbpk.gateway.mastercard.com, 824410244809:ffa59d1a8f9ba89d15c554654d427795
             $headers = [
-                'Authorization: Basic '.base64_encode("merchant.824410244809:ffa59d1a8f9ba89d15c554654d427795"),
+                'Authorization: Basic ' . base64_encode("merchant.824410244809:ffa59d1a8f9ba89d15c554654d427795"),
                 'Content-Type: application/json',
                 'Host: mcbpk.gateway.mastercard.com',
                 'Referer: https//oms.ucs.edu.pk/ipg-billing', //Your referrer address
@@ -486,32 +469,35 @@ class BillingController extends Controller
             ];
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             $server_output = curl_exec($ch) ;
-            curl_close ($ch);
+            curl_close($ch);
             $json = json_decode($server_output, true) ;
             $sessionId = $json['session']['id'] ;
-            return view('billing.info',
-            [
+            return view(
+                'billing.info',
+                [
                 'studentInvoice' => $studentInvoice,
                 'billingInfo' => $calculations,
                 'session_id' => $sessionId,
                 'orderId' => $orderId,
                 'otp' => $request->query('otp'),
-            ]
-        );
+                ]
+            );
         }
     }
 
     public function PaymentSuccess(Request $request)
     {
         //dd($request->all());
-        $invoice_record = Billing::where('invoice_id',$request->invoice_id)->first();
+        $invoice_record = Billing::where('invoice_id', $request->invoice_id)->first();
         //dd($invoice_record['order_id']);
-        return view('billing.success',
-        [
+        return view(
+            'billing.success',
+            [
             'orderId' => $invoice_record['order_id'],
-            'amount' => $invoice_record['billing_amount'].' PKR',
+            'amount' => $invoice_record['billing_amount'] . ' PKR',
             'invoice_id' => $invoice_record['invoice_id'],
-        ]);
+            ]
+        );
     }
 
     /**

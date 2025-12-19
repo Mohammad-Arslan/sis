@@ -23,11 +23,10 @@ class ExportStudentConcession implements FromCollection, WithHeadings
         // dd($data->toArray());
 
         $student_array = array();
-        foreach($data as $key => $collection)
-        {
+        foreach ($data as $key => $collection) {
             // dd($collection->toArray());
             $array_data['student_id'] = isset($collection['student']['roll_no']) ? $collection['student']['roll_no'] : '';
-            $array_data['student_name'] = isset($collection['student']['first_name']) ? $collection['student']['first_name'] . ' ' . $collection['student']['middle_name'] . ' ' . $collection['student']['last_name']: '';
+            $array_data['student_name'] = isset($collection['student']['first_name']) ? $collection['student']['first_name'] . ' ' . $collection['student']['middle_name'] . ' ' . $collection['student']['last_name'] : '';
             $array_data['academic_year'] = isset($collection['academic_year']) ? $collection['academic_year']['title'] : '';
             $array_data['fee_charge'] = isset($collection['fee_charge']) ? $collection['fee_charge']['fee_charges_type']['name'] . ' (' . $collection['fee_charge']['amount'] . ' PKR)' : '';
             $array_data['fee_concession'] = isset($collection['fee_concession']) ? $collection['fee_concession']['fee_concession_type']['name'] . ' (' . $collection['fee_concession']['concession_percentage'] . ' %)' : '';

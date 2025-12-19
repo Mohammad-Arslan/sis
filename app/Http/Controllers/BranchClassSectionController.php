@@ -21,16 +21,17 @@ class BranchClassSectionController extends Controller
 
         if ($request->ajax()) {
             $data = BranchClassSection::with(['sections', 'com_classes', 'branches']);
-            if (isset($request->branch_id))
+            if (isset($request->branch_id)) {
                 $data = $data->where('branch_id', $request->branch_id);
-            else if (!Auth::user()->hasRole('super_admin') && !auth()->user()->hasPermission('approve-lesson-plan'))
+            } else if (! Auth::user()->hasRole('super_admin') && ! auth()->user()->hasPermission('approve-lesson-plan')) {
                 $data = $data->where('branch_id', get_branch_id());
+            }
             $data = $data->get();
             // dd($data->toArray());
 
             return Datatables::of($data)
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) use ($request){
+                ->addColumn('action', function ($row) use ($request) {
                     return view('branches.branch_class_section_actions', ['row' => $row,'request' => $request]);
                 })
                 ->rawColumns(['action'])
@@ -67,7 +68,7 @@ class BranchClassSectionController extends Controller
             'class_id' => $request->class_id
         ])->exists();
 
-        if (!$class) {
+        if (! $class) {
             BranchClass::create($request->all());
         }
 
@@ -129,7 +130,7 @@ class BranchClassSectionController extends Controller
     {
         try {
             $branchClassSection = BranchClassSection::findOrFail($id);
-            
+
             // Check if there are any related records that would prevent deletion
             if ($branchClassSection->class_students()->count() > 0) {
                 return response()->json([
@@ -137,21 +138,20 @@ class BranchClassSectionController extends Controller
                     'message' => 'Cannot delete this class-section relationship as it has associated students. Please remove all students from this class-section first.'
                 ], 422);
             }
-            
+
             if ($branchClassSection->class_teachers()->count() > 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Cannot delete this class-section relationship as it has associated teachers. Please remove all teachers from this class-section first.'
                 ], 422);
             }
-            
+
             $branchClassSection->delete();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Class-section relationship has been successfully deleted.'
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

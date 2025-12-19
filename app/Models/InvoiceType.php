@@ -8,5 +8,6 @@ use App\Traits\SerializeDateTrait;
 
 class InvoiceType extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 }

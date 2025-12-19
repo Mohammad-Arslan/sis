@@ -30,7 +30,7 @@ class TeacherObservation extends Model
 
     public function branch()
     {
-        return $this->belongsTo(Branch::class, 'branch_id','id');
+        return $this->belongsTo(Branch::class, 'branch_id', 'id');
     }
 
 
@@ -44,6 +44,4 @@ class TeacherObservation extends Model
     {
         return $this->hasMany(ObservationDetail::class, 'teacher_observation_id');
     }
-
-
 }

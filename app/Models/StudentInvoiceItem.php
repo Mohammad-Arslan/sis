@@ -8,7 +8,8 @@ use App\Traits\SerializeDateTrait;
 
 class StudentInvoiceItem extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 
     protected $fillable = [
         'student_invoice_id',

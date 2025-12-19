@@ -8,5 +8,6 @@ use App\Traits\SerializeDateTrait;
 
 class Comment extends Model
 {
-    use HasFactory,SerializeDateTrait;
+    use HasFactory;
+    use SerializeDateTrait;
 }

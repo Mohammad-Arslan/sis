@@ -30,12 +30,14 @@ class TownSeeder extends Seeder
         if (isset($towns)) {
             foreach ($towns as $town) {
                 $checkStatus = Town::where('town_name', $town['town_name'])->first();
-                if (empty($checkStatus))
+                if (empty($checkStatus)) {
                     $dataToInsert[] = $town;
+                }
             }
 
-            if (sizeof($dataToInsert))
+            if (sizeof($dataToInsert)) {
                 Town::insert($dataToInsert);
+            }
         }
     }
 }

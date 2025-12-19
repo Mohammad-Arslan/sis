@@ -48,9 +48,9 @@ class EmployeeWorkingDayController extends Controller
                     return $ShiftTiming;
                 })
                 ->addColumn('status', function ($row) {
-                    if($row->working_shift->status == '0'){
+                    if ($row->working_shift->status == '0') {
                         $Status =  "Off Day";
-                    }else{
+                    } else {
                         $Status =  "Working Shift";
                     }
                     return $Status;
@@ -65,7 +65,7 @@ class EmployeeWorkingDayController extends Controller
         $working_days = WorkingDay::all();
         $working_shifts = WorkingShift::all();
 
-        return view('employees.employee_working_shifts',[
+        return view('employees.employee_working_shifts', [
             'working_days' => $working_days,
             'working_shifts' => $working_shifts
         ]);
@@ -81,7 +81,7 @@ class EmployeeWorkingDayController extends Controller
         //
     }
 
-    
+
     public function store(Request $request)
     {
         $request->validate([
@@ -93,11 +93,10 @@ class EmployeeWorkingDayController extends Controller
 
         $AssigendWorkingDays = EmployeeWorkingDay::where([['employee_id','=' ,$request->employee_id],['working_day_id','=',$request->working_day_id]])->get(['employee_id','working_day_id']);
 
-        $error= NULL;
-        if(isset($AssigendWorkingDays[0]) && !is_null($AssigendWorkingDays[0]))
-        {
-            $error=1;
-        }else{
+        $error = null;
+        if (isset($AssigendWorkingDays[0]) && ! is_null($AssigendWorkingDays[0])) {
+            $error = 1;
+        } else {
             EmployeeWorkingDay::create($request->all());
         }
 
@@ -140,15 +139,12 @@ class EmployeeWorkingDayController extends Controller
             'working_shifts' => $working_shifts,
             'employee' => $employee[0]
         ];
-        if($error)
-        {
+        if ($error) {
             //return redirect(route('edit-employee', $data['id']) . '?tab=working_shifts')->with('success', 'Dependent added successfully.');
             return redirect(route('edit-employee', $data['id']) . '?tab=working_shifts')->with('error', 'Duplicate entry not allowed, selected schedule is already assigned to the employee.');
-        }
-        else{
+        } else {
             return redirect(route('edit-employee', $data['id']) . '?tab=working_shifts')->with('success', 'Employee working shift has been created successfully.');
         }
-
     }
 
     /**
@@ -211,7 +207,7 @@ class EmployeeWorkingDayController extends Controller
             'employeeWorkingDay' => $employeeWorkingDay
         ];
         //dd($data);
-        return redirect(route('edit-employee', $data['id']) . '?record_id='.$request->id.'&tab=working_shifts');
+        return redirect(route('edit-employee', $data['id']) . '?record_id=' . $request->id . '&tab=working_shifts');
         //return view('employees.employee_working_shifts', ['employeeWorkingDay' => $employeeWorkingDay]);
     }
 
@@ -224,11 +220,10 @@ class EmployeeWorkingDayController extends Controller
             'working_shift_id' => 'required',
         ]);
         $AssigendWorkingDays = EmployeeWorkingDay::where([['employee_id','=' ,$request->employee_id],['working_day_id','=',$request->working_day_id],['id','!=',$employeeShift->id]])->get(['id','employee_id','working_day_id','working_shift_id']);
-        $error= NULL;
-        if(isset($AssigendWorkingDays[0]) && !is_null($AssigendWorkingDays[0]))
-        {
-            $error=1;
-        }else{
+        $error = null;
+        if (isset($AssigendWorkingDays[0]) && ! is_null($AssigendWorkingDays[0])) {
+            $error = 1;
+        } else {
             $employeeShift->update($request->all());
         }
         $countries = Country::all();
@@ -271,10 +266,9 @@ class EmployeeWorkingDayController extends Controller
             'employee' => $employee[0],
             'employeeWorkingDay' => $employeeWorkingDay
         ];
-        if($error)
-        {
-            return redirect(route('edit-employee', $data['id']).'&tab=working_shifts')->with('error', 'Duplicate entry not allowed, selected schedule is already assigned to the employee.');
-        }else{
+        if ($error) {
+            return redirect(route('edit-employee', $data['id']) . '&tab=working_shifts')->with('error', 'Duplicate entry not allowed, selected schedule is already assigned to the employee.');
+        } else {
             return redirect(route('edit-employee', $data['id']) . '?tab=official_leaves')->with('success', 'Employee working shift has been updated successfully.');
         }
     }

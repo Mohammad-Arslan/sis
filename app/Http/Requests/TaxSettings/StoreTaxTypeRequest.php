@@ -37,4 +37,3 @@ class StoreTaxTypeRequest extends FormRequest
         ];
     }
 }
-

@@ -24,26 +24,26 @@ class DailyOperationalReportController extends Controller
     {
         // Get filter data
         $branches = Branch::all();
-        
+
         // Set default date if not provided (current date)
         $selectedDate = $request->get('report_date', Carbon::today()->format('Y-m-d'));
-        
+
         // Handle both single and multiple branch IDs
         $branchId = $request->get('branch_id');
         if (empty($branchId)) {
             // If no branches selected, get all branches
             $branchId = Branch::pluck('id')->toArray();
-        } elseif (!is_array($branchId)) {
+        } elseif (! is_array($branchId)) {
             $branchId = [$branchId];
         }
-        
+
         // Calculate date range for the selected date
         $startDate = Carbon::parse($selectedDate)->startOfDay();
         $endDate = Carbon::parse($selectedDate)->endOfDay();
-        
+
         // Get all report data
         $reportData = $this->getAllReportData($startDate, $endDate, $branchId);
-        
+
         return view('reports.daily_operational_report', compact(
             'branches',
             'reportData',
@@ -72,10 +72,10 @@ class DailyOperationalReportController extends Controller
     {
         // Ensure branchId is an array
         $branchIds = is_array($branchId) ? $branchId : [$branchId];
-        
+
         $campuses = Branch::whereIn('id', $branchIds)->get();
         $campusData = [];
-        
+
         foreach ($campuses as $campus) {
             $campusData[] = [
                 'campus_name' => $campus->br_name,
@@ -85,7 +85,7 @@ class DailyOperationalReportController extends Controller
                 'meter_reading' => $this->getMeterReadingData($startDate, $endDate, $campus->id)
             ];
         }
-        
+
         return $campusData;
     }
 
@@ -96,9 +96,9 @@ class DailyOperationalReportController extends Controller
     {
         // Get total employees in the branch
         $totalEmployees = Employee::where('branch_id', $branchId)->count();
-        
+
         // Get present employees (those who marked attendance)
-        $presentEmployees = EmployeeAttendance::whereHas('employees', function($query) use ($branchId) {
+        $presentEmployees = EmployeeAttendance::whereHas('employees', function ($query) use ($branchId) {
             $query->where('branch_id', $branchId);
         })
         ->whereBetween('created_at', [$startDate, $endDate])
@@ -106,16 +106,16 @@ class DailyOperationalReportController extends Controller
         ->whereNotNull('time_in')
         ->distinct('employee_id')
         ->count('employee_id');
-        
+
         // Get absent employees
         $absentEmployees = $totalEmployees - $presentEmployees;
-        
+
         // Get late arrivals
         $lateArrivals = $this->getLateArrivalsCount($startDate, $endDate, $branchId);
-        
+
         // Get early departures
         $earlyDepartures = $this->getEarlyDeparturesCount($startDate, $endDate, $branchId);
-        
+
         return [
             'total' => $totalEmployees,
             'present' => $presentEmployees,
@@ -131,15 +131,15 @@ class DailyOperationalReportController extends Controller
     private function getStudentAttendanceData($startDate, $endDate, $branchId)
     {
         // Get total students in the branch
-        $totalStudents = Student::whereHas('class_students', function($query) use ($branchId) {
-            $query->whereHas('branch_class_sections', function($q) use ($branchId) {
+        $totalStudents = Student::whereHas('class_students', function ($query) use ($branchId) {
+            $query->whereHas('branch_class_sections', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         })->count();
-        
+
         // Get present students
-        $presentStudents = StudentAttendance::whereHas('student.class_students', function($query) use ($branchId) {
-            $query->whereHas('branch_class_sections', function($q) use ($branchId) {
+        $presentStudents = StudentAttendance::whereHas('student.class_students', function ($query) use ($branchId) {
+            $query->whereHas('branch_class_sections', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         })
@@ -147,10 +147,10 @@ class DailyOperationalReportController extends Controller
         ->where('attendance_status_id', 1)
         ->distinct('student_id')
         ->count('student_id');
-        
+
         // Get absent students
         $absentStudents = $totalStudents - $presentStudents;
-        
+
         return [
             'total' => $totalStudents,
             'present' => $presentStudents,
@@ -164,23 +164,23 @@ class DailyOperationalReportController extends Controller
     private function getAdmissionsWithdrawalData($startDate, $endDate, $branchId)
     {
         // Get new admissions
-        $newAdmissions = Student::whereHas('class_students', function($query) use ($branchId) {
-            $query->whereHas('branch_class_sections', function($q) use ($branchId) {
+        $newAdmissions = Student::whereHas('class_students', function ($query) use ($branchId) {
+            $query->whereHas('branch_class_sections', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         })
         ->whereBetween('created_at', [$startDate, $endDate])
         ->count();
-        
+
         // Get withdrawals
-        $withdrawals = StudentWithdrawal::whereHas('student.class_students', function($query) use ($branchId) {
-            $query->whereHas('branch_class_sections', function($q) use ($branchId) {
+        $withdrawals = StudentWithdrawal::whereHas('student.class_students', function ($query) use ($branchId) {
+            $query->whereHas('branch_class_sections', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         })
         ->whereBetween('created_at', [$startDate, $endDate])
         ->count();
-        
+
         return [
             'new_admissions' => $newAdmissions,
             'withdrawals' => $withdrawals
@@ -197,7 +197,7 @@ class DailyOperationalReportController extends Controller
         $meterReadings = ElectricityMeterReading::where('branch_id', $branchId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
-        
+
         $totalConsumption = 0;
         foreach ($meterReadings as $reading) {
             $opening = floatval($reading->opening_day_reading);
@@ -207,12 +207,12 @@ class DailyOperationalReportController extends Controller
                 $totalConsumption += $consumption;
             }
         }
-        
+
         // Get generator info filtered by branch - sum all quantity_liter
         $generatorTotal = GeneratorInfo::where('branch_id', $branchId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('quantity_liter');
-        
+
         return [
             'el_unit_consumed' => $totalConsumption > 0 ? $totalConsumption : 0,
             'generator' => floatval($generatorTotal ?? 0)
@@ -225,7 +225,7 @@ class DailyOperationalReportController extends Controller
     private function getGrandTotal($startDate, $endDate, $branchId)
     {
         $campusData = $this->getCampusData($startDate, $endDate, $branchId);
-        
+
         $grandTotal = [
             'employee_attendance' => [
                 'total' => 0,
@@ -248,7 +248,7 @@ class DailyOperationalReportController extends Controller
                 'generator' => 0
             ]
         ];
-        
+
         foreach ($campusData as $campus) {
             // Employee attendance totals
             $grandTotal['employee_attendance']['total'] += $campus['employee_attendance']['total'];
@@ -256,21 +256,21 @@ class DailyOperationalReportController extends Controller
             $grandTotal['employee_attendance']['absent'] += $campus['employee_attendance']['absent'];
             $grandTotal['employee_attendance']['late_arrival'] += $campus['employee_attendance']['late_arrival'];
             $grandTotal['employee_attendance']['early_pack_up'] += $campus['employee_attendance']['early_pack_up'];
-            
+
             // Student attendance totals
             $grandTotal['student_attendance']['total'] += $campus['student_attendance']['total'];
             $grandTotal['student_attendance']['present'] += $campus['student_attendance']['present'];
             $grandTotal['student_attendance']['absent'] += $campus['student_attendance']['absent'];
-            
+
             // Admissions and withdrawal totals
             $grandTotal['admissions_withdrawal']['new_admissions'] += $campus['admissions_withdrawal']['new_admissions'];
             $grandTotal['admissions_withdrawal']['withdrawals'] += $campus['admissions_withdrawal']['withdrawals'];
-            
+
             // Meter reading totals
             $grandTotal['meter_reading']['el_unit_consumed'] += $campus['meter_reading']['el_unit_consumed'];
             $grandTotal['meter_reading']['generator'] += $campus['meter_reading']['generator'];
         }
-        
+
         return $grandTotal;
     }
 
@@ -280,29 +280,29 @@ class DailyOperationalReportController extends Controller
     private function getLateArrivalsCount($startDate, $endDate, $branchId)
     {
         $lateCount = 0;
-        
+
         $attendances = EmployeeAttendance::with(['employees', 'employees.employeeWorkingDays.workingShift'])
-            ->whereHas('employees', function($query) use ($branchId) {
+            ->whereHas('employees', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             })
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('attendance_type', 1)
             ->whereNotNull('time_in')
             ->get();
-        
+
         foreach ($attendances as $attendance) {
             $employee = $attendance->employees;
             $dayName = $attendance->created_at->format('l');
             $workingDayId = array_search($dayName, ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']) + 1;
-            
+
             $workingDay = $employee->employeeWorkingDays()
                 ->where('working_day_id', $workingDayId)
-                ->whereHas('workingShift', function($query) {
+                ->whereHas('workingShift', function ($query) {
                     $query->where('status', 1);
                 })
                 ->with('workingShift')
                 ->first();
-            
+
             if ($workingDay && $workingDay->workingShift) {
                 $late = calculateTimeDifference($workingDay->workingShift->start_time, $attendance->time_in);
                 if ($late > 0) {
@@ -310,7 +310,7 @@ class DailyOperationalReportController extends Controller
                 }
             }
         }
-        
+
         return $lateCount;
     }
 
@@ -320,29 +320,29 @@ class DailyOperationalReportController extends Controller
     private function getEarlyDeparturesCount($startDate, $endDate, $branchId)
     {
         $earlyCount = 0;
-        
+
         $attendances = EmployeeAttendance::with(['employees', 'employees.employeeWorkingDays.workingShift'])
-            ->whereHas('employees', function($query) use ($branchId) {
+            ->whereHas('employees', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             })
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('attendance_type', 1)
             ->whereNotNull('time_out')
             ->get();
-        
+
         foreach ($attendances as $attendance) {
             $employee = $attendance->employees;
             $dayName = $attendance->created_at->format('l');
             $workingDayId = array_search($dayName, ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']) + 1;
-            
+
             $workingDay = $employee->employeeWorkingDays()
                 ->where('working_day_id', $workingDayId)
-                ->whereHas('workingShift', function($query) {
+                ->whereHas('workingShift', function ($query) {
                     $query->where('status', 1);
                 })
                 ->with('workingShift')
                 ->first();
-            
+
             if ($workingDay && $workingDay->workingShift) {
                 $extra = calculateTimeDifference($workingDay->workingShift->end_time, $attendance->time_out);
                 if ($extra < 0) {
@@ -350,7 +350,7 @@ class DailyOperationalReportController extends Controller
                 }
             }
         }
-        
+
         return $earlyCount;
     }
 }

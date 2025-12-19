@@ -79,7 +79,7 @@ class StudentFeePackageController extends Controller
             'branch_class_sections.sections'
         ])->first();
 
-        if (!isset($academic_info)) {
+        if (! isset($academic_info)) {
             return redirect()->back(302)->with('error', 'Student\'s academic info not found.');
         }
 
@@ -88,7 +88,7 @@ class StudentFeePackageController extends Controller
             // "fee_concession_id" => "required",
         ]);
         $fee_concession_id = StudentConcession::where(['student_id' => $request->student_id, 'is_valid' => 1, 'deleted_at' => null])->first();
-        
+
         $input = [
             "fee_package_id" => $request->fee_package_id,
             "fee_concession_id" => $fee_concession_id->fee_concession_id ?? null,
@@ -158,7 +158,9 @@ class StudentFeePackageController extends Controller
         })->exists();
 
 
-        if (!$check_student_admission_status) return redirect()->back(302)->with('error', 'Student\'s admission fees is not paid.');
+        if (! $check_student_admission_status) {
+            return redirect()->back(302)->with('error', 'Student\'s admission fees is not paid.');
+        }
 
         $fee_package = FeePackage::where([
             'branch_id' => $student->branch_id,
@@ -167,7 +169,9 @@ class StudentFeePackageController extends Controller
             $query->where(['name' => 'Monthly']);
         })->latest('created_at');
 
-        if (!$fee_package->exists()) return redirect()->back(302)->with('error', 'Cannot enroll the student in this academic year.');
+        if (! $fee_package->exists()) {
+            return redirect()->back(302)->with('error', 'Cannot enroll the student in this academic year.');
+        }
 
         // dd($student->with('student_fee_package')->get());
 

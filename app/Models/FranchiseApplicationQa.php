@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class FranchiseApplicationQa extends Model
 {
     protected $table = 'franchise_application_qa';
-    use HasFactory,SerializeDateTrait,SoftDeletes;
+    use HasFactory;
+    use SerializeDateTrait;
+    use SoftDeletes;
 
     protected $guarded = [];
 
@@ -52,12 +54,11 @@ class FranchiseApplicationQa extends Model
     public static function bd_forwarded_date($franchise_application_id)
     {
         $forwarded_date = null;
-        $forwarded_date =  FranchiseApplicationBdVisit::where('franchise_application_id',$franchise_application_id)->latest('id')->first('forwarded_date');
-        if(isset($forwarded_date))
+        $forwarded_date =  FranchiseApplicationBdVisit::where('franchise_application_id', $franchise_application_id)->latest('id')->first('forwarded_date');
+        if (isset($forwarded_date)) {
             return Carbon::parse($forwarded_date->forwarded_date)->format('d-m-Y');
+        }
 
         return '';
     }
-
-
 }

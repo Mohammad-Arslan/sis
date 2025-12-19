@@ -33,12 +33,14 @@ class InvoiceTypeSeeder extends Seeder
         if (isset($invoice_types)) {
             foreach ($invoice_types as $invoice_type) {
                 $checkStatus = InvoiceType::where('name', $invoice_type['name'])->first();
-                if (empty($checkStatus))
+                if (empty($checkStatus)) {
                     $dataToInsert[] = $invoice_type;
+                }
             }
 
-            if (sizeof($dataToInsert))
+            if (sizeof($dataToInsert)) {
                 InvoiceType::insert($dataToInsert);
+            }
         }
     }
 }

@@ -46,16 +46,17 @@ class FranchiseApplicationQaController extends Controller
         // $sales_reps = Employee::with(['designation'])->whereHas('designation', function ($query) {
         //     $query->where(['designation_name' => 'Assistant Manager New Media']);
         // })->get();
-        $sales_reps = Employee::with('user')->where('department_id','=','5')->get();
-        $qa_reps = Employee::with('user')->where('department_id','=','6')->get();
-        $regional_heads = Employee::with('user')->where('department_id','=','5')->get();
+        $sales_reps = Employee::with('user')->where('department_id', '=', '5')->get();
+        $qa_reps = Employee::with('user')->where('department_id', '=', '6')->get();
+        $regional_heads = Employee::with('user')->where('department_id', '=', '5')->get();
         $class_groups = ClassGroup::all();
         //dd($franchise_application_id->id);
-        $forwardedDate = FranchiseApplicationBdVisit::where('franchise_application_id',$franchise_application_id->id)->latest('id')->first('forwarded_date');
-        if($forwardedDate)
+        $forwardedDate = FranchiseApplicationBdVisit::where('franchise_application_id', $franchise_application_id->id)->latest('id')->first('forwarded_date');
+        if ($forwardedDate) {
             $forwarded_date = Carbon::parse($forwardedDate->forwarded_date)->format('d-m-Y');
-        else
+        } else {
             $forwarded_date = null;
+        }
         return view('franchise_application.franchise_application_qa', [
             'sales_reps' => $sales_reps,
             'qa_reps' => $qa_reps,
@@ -183,9 +184,9 @@ class FranchiseApplicationQaController extends Controller
      */
     public function edit(FranchiseApplicationQa $franchiseApplicationQa)
     {
-        $sales_reps = Employee::with('user')->where('department_id','=','5')->get();
-        $qa_reps = Employee::with('user')->where('department_id','=','6')->get();
-        $regional_heads = Employee::with('user')->where('department_id','=','5')->get();
+        $sales_reps = Employee::with('user')->where('department_id', '=', '5')->get();
+        $qa_reps = Employee::with('user')->where('department_id', '=', '6')->get();
+        $regional_heads = Employee::with('user')->where('department_id', '=', '5')->get();
         $class_groups = ClassGroup::all();
         return view('franchise_application.franchise_application_qa', [
             'sales_reps' => $sales_reps,
@@ -315,11 +316,10 @@ class FranchiseApplicationQaController extends Controller
             'qa_rep.user', 'sales_rep.user', 'regional_head.user','class_group'
         ])->where('id', $franchise_application_qa_id)->first();
         // dd($data['franchise_application_qa'] ->toArray());
-        $data['franchise_application_qa']['BD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id',$data['franchise_application_qa']['franchise_application_id'])->where('observation_for','QA_Report')->where('user_role','manager-business-development')->orWhere('user_role','senior-manager-business-development')->latest('id')->first('observation');
-        $data['franchise_application_qa']['DD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id',$data['franchise_application_qa']['franchise_application_id'])->where('observation_for','QA_Report')->where('user_role','deputy-director')->latest('id')->first('observation');
+        $data['franchise_application_qa']['BD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id', $data['franchise_application_qa']['franchise_application_id'])->where('observation_for', 'QA_Report')->where('user_role', 'manager-business-development')->orWhere('user_role', 'senior-manager-business-development')->latest('id')->first('observation');
+        $data['franchise_application_qa']['DD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id', $data['franchise_application_qa']['franchise_application_id'])->where('observation_for', 'QA_Report')->where('user_role', 'deputy-director')->latest('id')->first('observation');
         return view('franchise_application.franchise_application_qa_report', $data);
         // dd($data['franchise_application_qa']->toArray());
-
     }
 
     public function create_pdf($franchise_application_qa_id)
@@ -328,13 +328,13 @@ class FranchiseApplicationQaController extends Controller
             'qa_rep.user', 'sales_rep.user', 'regional_head.user','class_group'
         ])->where('id', $franchise_application_qa_id)->first();
         // dd($data['franchise_application_qa'] ->toArray());
-        $data['franchise_application_qa']['BD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id',$data['franchise_application_qa']['franchise_application_id'])->where('observation_for','QA_Report')->where('user_role','manager-business-development')->orWhere('user_role','senior-manager-business-development')->latest('id')->first('observation');
-        $data['franchise_application_qa']['DD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id',$data['franchise_application_qa']['franchise_application_id'])->where('observation_for','QA_Report')->where('user_role','deputy-director')->latest('id')->first('observation');
+        $data['franchise_application_qa']['BD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id', $data['franchise_application_qa']['franchise_application_id'])->where('observation_for', 'QA_Report')->where('user_role', 'manager-business-development')->orWhere('user_role', 'senior-manager-business-development')->latest('id')->first('observation');
+        $data['franchise_application_qa']['DD_Remarks'] = FrachiseApplicationRemark::where('franchise_application_id', $data['franchise_application_qa']['franchise_application_id'])->where('observation_for', 'QA_Report')->where('user_role', 'deputy-director')->latest('id')->first('observation');
         $pdf = Pdf::loadView('franchise_application.franchise_application_qa_pdf', $data);
         // dd($data['franchise_application_qa']->toArray());
-        $file_name = $data['franchise_application_qa']['client_name'].' ' .'franchise_application_qa.pdf';
+        $file_name = $data['franchise_application_qa']['client_name'] . ' ' . 'franchise_application_qa.pdf';
         return $pdf->download(
             $file_name
-         );
+        );
     }
 }

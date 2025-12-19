@@ -18,7 +18,7 @@ class ImportClass implements ToModel
             'class_name' => $row[0],
             'abbreviation' => $row[1],
             'description' => $row[2],
-            'created_at'=>$row[3]
+            'created_at' => $row[3]
         ]);
     }
 }

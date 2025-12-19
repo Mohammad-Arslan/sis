@@ -17,7 +17,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProcessEmployeeImport implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public $timeout = 3600; // 1 hour timeout
     public $tries = 3; // Retry 3 times on failure
@@ -46,11 +49,11 @@ class ProcessEmployeeImport implements ShouldQueue
         if (class_exists(\Laravel\Telescope\Telescope::class)) {
             \Laravel\Telescope\Telescope::stopRecording();
         }
-        
+
         // Increase memory limit for large imports (will use value from ImportEmployee constructor)
         // This is a safety measure in case the job runs before ImportEmployee sets it
         @ini_set('memory_limit', '1024M');
-        
+
         try {
             Log::info("Starting employee import job", [
                 'import_id' => $this->importId,
@@ -60,8 +63,8 @@ class ProcessEmployeeImport implements ShouldQueue
 
             // Get import progress record
             $importProgress = ImportProgress::where('import_id', $this->importId)->first();
-            
-            if (!$importProgress) {
+
+            if (! $importProgress) {
                 Log::error("Import progress record not found for ID: {$this->importId}");
                 return;
             }
@@ -71,7 +74,7 @@ class ProcessEmployeeImport implements ShouldQueue
 
             // Get total rows for progress calculation
             $totalRows = Excel::toCollection(new ImportEmployee(), Storage::disk('local')->path($this->filePath))->flatten(1)->count();
-            
+
             // Update total rows in database
             $importProgress->updateProgress([
                 'total_rows' => $totalRows,
@@ -93,9 +96,9 @@ class ProcessEmployeeImport implements ShouldQueue
 
             // Create import instance with progress callback
             $import = new ImportEmployee($this->importId, $this->userId);
-            
+
             // Set up progress tracking
-            $import->setProgressCallback(function($stats) use ($importProgress) {
+            $import->setProgressCallback(function ($stats) use ($importProgress) {
                 $this->updateProgress($stats, $importProgress);
             });
 
@@ -130,7 +133,6 @@ class ProcessEmployeeImport implements ShouldQueue
                 'import_id' => $this->importId,
                 'stats' => $stats
             ]);
-
         } catch (\Exception $e) {
             Log::error("Employee import job failed", [
                 'import_id' => $this->importId,

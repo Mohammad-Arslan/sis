@@ -11,11 +11,15 @@ use Illuminate\Queue\SerializesModels;
 
 class ExampleLoggedJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public function __construct(
         private readonly ActivityLoggerService $logger
-    ) {}
+    ) {
+    }
 
     public function handle(): void
     {
@@ -25,4 +29,3 @@ class ExampleLoggedJob implements ShouldQueue
         );
     }
 }
-

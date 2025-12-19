@@ -28,7 +28,7 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
     private $countries = null;
     private $states = null;
     private $cities = null;
-    
+
     public function __construct($request = null)
     {
         $this->request = $request;
@@ -43,16 +43,16 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
     {
         // Load academic years
         $this->academicYears = AcademicYear::select('id', 'title')->pluck('title', 'id')->toArray();
-        
+
         // Load towns
         $this->towns = Town::select('id', 'town_name')->pluck('town_name', 'id')->toArray();
-        
+
         // Load countries
         $this->countries = Country::select('id', 'country_name')->pluck('country_name', 'id')->toArray();
-        
+
         // Load states
         $this->states = State::select('id', 'state_name')->pluck('state_name', 'id')->toArray();
-        
+
         // Load cities
         $this->cities = City::select('id', 'city_name')->pluck('city_name', 'id')->toArray();
     }
@@ -67,7 +67,7 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
             ->select([
                 'students.id',
                 'students.first_name',
-                'students.middle_name', 
+                'students.middle_name',
                 'students.last_name',
                 'students.gender',
                 'students.email',
@@ -137,7 +137,7 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
 
             if ($this->request->branch_id && $this->request->branch_id > 0) {
                 $query->where('students.branch_id', $this->request->branch_id);
-            } elseif (!isSuperAdmin() && !isHeadOfficeEmp()) {
+            } elseif (! isSuperAdmin() && ! isHeadOfficeEmp()) {
                 $query->where('students.branch_id', get_branch_id());
             }
 
@@ -187,10 +187,10 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
      */
     private function getAcademicYearTitle($admissionYearId)
     {
-        if (!$admissionYearId) {
+        if (! $admissionYearId) {
             return '';
         }
-        
+
         return $this->academicYears[$admissionYearId] ?? '';
     }
 
@@ -199,10 +199,10 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
      */
     private function getTownName($townId)
     {
-        if (!$townId) {
+        if (! $townId) {
             return '';
         }
-        
+
         return $this->towns[$townId] ?? '';
     }
 
@@ -211,10 +211,10 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
      */
     private function getCountryName($countryId)
     {
-        if (!$countryId) {
+        if (! $countryId) {
             return '';
         }
-        
+
         return $this->countries[$countryId] ?? '';
     }
 
@@ -223,10 +223,10 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
      */
     private function getStateName($stateId)
     {
-        if (!$stateId) {
+        if (! $stateId) {
             return '';
         }
-        
+
         return $this->states[$stateId] ?? '';
     }
 
@@ -235,10 +235,10 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
      */
     private function getCityName($cityId)
     {
-        if (!$cityId) {
+        if (! $cityId) {
             return '';
         }
-        
+
         return $this->cities[$cityId] ?? '';
     }
 
@@ -257,15 +257,15 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
         $relation_name = $this->safeArrayGet($guardian, 'relation_name');
         $is_parent = $this->safeArrayGet($guardian, 'is_parent', 'no');
         $employee_no = $this->safeArrayGet($guardian, 'employee_no');
-        
+
         // Get address information with optimized query
         $address = $this->getAddressInfo($row->id);
-        
+
         // Get class and section information with optimized query
         $classInfo = $this->getClassInfo($row->id);
         $class_name = $this->safeArrayGet($classInfo, 'class_name');
         $section_name = $this->safeArrayGet($classInfo, 'section_name');
-        
+
         return [
             // Student Personal Information (29 columns)
             $row->first_name ?? '',
@@ -333,7 +333,7 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
      */
     private function safeArrayGet($array, $key, $default = '')
     {
-        if (!$array || !is_array($array) || !isset($array[$key])) {
+        if (! $array || ! is_array($array) || ! isset($array[$key])) {
             return $default;
         }
         return $array[$key] ?? $default;
@@ -345,11 +345,11 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
     private function getGuardianInfo($studentId)
     {
         static $guardianCache = [];
-        
+
         if (isset($guardianCache[$studentId])) {
             return $guardianCache[$studentId];
         }
-        
+
         $guardian = DB::table('guardians')
             ->leftJoin('relations', 'guardians.relation_id', '=', 'relations.id')
             ->where('guardians.student_id', $studentId)
@@ -363,9 +363,9 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
                 'relations.relation_name'
             ])
             ->first();
-        
+
         $guardianCache[$studentId] = $guardian ? (array) $guardian : [];
-        
+
         return $guardianCache[$studentId];
     }
 
@@ -375,11 +375,11 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
     private function getAddressInfo($studentId)
     {
         static $addressCache = [];
-        
+
         if (isset($addressCache[$studentId])) {
             return $addressCache[$studentId];
         }
-        
+
         $address = DB::table('student_addresses')
             ->where('student_id', $studentId)
             ->select([
@@ -399,9 +399,9 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
                 'res_contact_person'
             ])
             ->first();
-        
+
         $addressCache[$studentId] = $address ? (array) $address : [];
-        
+
         return $addressCache[$studentId];
     }
 
@@ -411,11 +411,11 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
     private function getClassInfo($studentId)
     {
         static $classCache = [];
-        
+
         if (isset($classCache[$studentId])) {
             return $classCache[$studentId];
         }
-        
+
         $classInfo = DB::table('class_students')
             ->leftJoin('branch_class_sections', 'class_students.branch_class_section_id', '=', 'branch_class_sections.id')
             ->leftJoin('com_classes', 'branch_class_sections.class_id', '=', 'com_classes.id')
@@ -427,9 +427,9 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
                 'sections.section_name'
             ])
             ->first();
-        
+
         $classCache[$studentId] = $classInfo ? (array) $classInfo : [];
-        
+
         return $classCache[$studentId];
     }
 
@@ -518,7 +518,7 @@ class ExportStudent implements FromQuery, WithHeadings, WithEvents, ShouldAutoSi
                 // Get the highest row number
                 $highestRow = $event->sheet->getHighestRow();
                 $highestColumn = $event->sheet->getHighestColumn();
-                
+
                 // Style the header row
                 $headerRange = 'A1:' . $highestColumn . '1';
                 $event->sheet->getDelegate()->getStyle($headerRange)->applyFromArray([

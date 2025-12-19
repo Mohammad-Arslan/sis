@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<ruleset name="Laravel 12 PSR-12 Coding Standard">
+    <description>PSR-12 coding standard for Laravel 12 project</description>
+
+    <!-- Display progress -->
+    <arg value="p"/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+
+    <!-- Show warnings -->
+    <arg name="warning-severity" value="0"/>
+    <arg name="error-severity" value="1"/>
+
+    <!-- Paths to check -->
+    <file>app</file>
+    <file>routes</file>
+    <file>database</file>
+    <file>config</file>
+    <file>tests</file>
+
+    <!-- Exclude paths -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/storage/*</exclude-pattern>
+    <exclude-pattern>*/public/*</exclude-pattern>
+    <exclude-pattern>*/bootstrap/cache/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/migrations/*</exclude-pattern>
+
+    <!-- Use PSR-12 standard -->
+    <rule ref="PSR12">
+        <!-- Allow short array syntax -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+    </rule>
+
+    <!-- Additional rules -->
+    <rule ref="Generic.Formatting.SpaceAfterNot"/>
+    <rule ref="Generic.WhiteSpace.ScopeIndent"/>
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace.StartFile"/>
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace.EndFile"/>
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace.EmptyLines"/>
+
+    <!-- Line length (120 characters) -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="140"/>
+        </properties>
+    </rule>
+
+    <!-- Exclude some rules that might conflict with Laravel conventions -->
+    <rule ref="PSR12.Files.FileHeader.SpacingAfterBlock">
+        <severity>0</severity>
+    </rule>
+</ruleset>
+

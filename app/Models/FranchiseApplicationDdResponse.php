@@ -9,7 +9,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FranchiseApplicationDdResponse extends Model
 {
-    use HasFactory, SoftDeletes,SerializeDateTrait;
+    use HasFactory;
+    use SoftDeletes;
+    use SerializeDateTrait;
+
     protected $fillable = [
         'franchise_application_id',
         'review_date',
@@ -22,11 +25,13 @@ class FranchiseApplicationDdResponse extends Model
         'review_date'
     ];
 
-    public function user(){
-        return $this->belongsTo(User::class,'review_by','id');
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'review_by', 'id');
     }
 
-    public function franchise_application(){
-        return $this->belongsTo(FranchiseApplication::class,'franchise_application_id','id');
+    public function franchise_application()
+    {
+        return $this->belongsTo(FranchiseApplication::class, 'franchise_application_id', 'id');
     }
 }

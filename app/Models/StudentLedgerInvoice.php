@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentLedgerInvoice extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'student_ledger_id',
@@ -28,7 +29,9 @@ class StudentLedgerInvoice extends Model
 
         $j = (int) $academic_start_date;
         for ($i = 0; $i < 12; $i++) {
-            if ($j == 13) $j = 1;
+            if ($j == 13) {
+                $j = 1;
+            }
 
             $entry = [
                 'student_ledger_id' => $student_ledger['id'],
