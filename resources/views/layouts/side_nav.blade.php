@@ -7,6 +7,7 @@
         <div class="container-fluid">
             <div id="two-column-menu">
             </div>
+            <x-nav.menu-search />
             <ul class="navbar-nav" id="navbar-nav">
                 @role('super_admin')
                     <li class="nav-item">
