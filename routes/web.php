@@ -1247,5 +1247,8 @@ Route::post('/employees/export', [App\Http\Controllers\EmployeeController::class
 Route::get('/export-stats', [App\Http\Controllers\EmployeeController::class, 'getExportStats'])->middleware('auth')->name('export.stats');
 Route::get('/export-download', [App\Http\Controllers\EmployeeController::class, 'downloadExport'])->middleware('auth')->name('export.download');
 
+// Global Search Routes
+Route::get('/global-search', [App\Http\Controllers\GlobalSearchController::class, 'search'])->middleware('auth')->name('global-search');
+
 // Broadcasting Authentication Routes
 Broadcast::routes(['middleware' => ['auth']]);

@@ -887,6 +887,112 @@
             value === '<span class="badge bg-success">Exempted</span>' ? '<span class="fw-bold text-success">E</span>' :
             '-'
     }
+
+    // Global Search Functionality
+    (function() {
+        let searchTimeout;
+        const searchInput = $('#search-options');
+        const searchDropdown = $('#search-dropdown');
+        const searchResults = $('#search-results');
+        const searchSpinner = $('#search-spinner');
+        const searchPlaceholder = $('#search-placeholder');
+        const searchCloseBtn = $('#search-close-options');
+
+        // Show dropdown when input is focused
+        searchInput.on('focus', function() {
+            if (searchInput.val().trim()) {
+                searchDropdown.addClass('show');
+            }
+        });
+
+        // Handle search input
+        searchInput.on('input', function() {
+            const query = $(this).val().trim();
+            
+            if (query.length < 2) {
+                searchDropdown.removeClass('show');
+                searchResults.html('<div class="text-center py-4"><p class="text-muted mb-0">Start typing to search...</p></div>');
+                searchCloseBtn.addClass('d-none');
+                return;
+            }
+
+            searchCloseBtn.removeClass('d-none');
+            clearTimeout(searchTimeout);
+
+            searchTimeout = setTimeout(function() {
+                performSearch(query);
+            }, 300);
+        });
+
+        // Clear search
+        searchCloseBtn.on('click', function(e) {
+            e.stopPropagation();
+            searchInput.val('');
+            searchDropdown.removeClass('show');
+            searchResults.html('<div class="text-center py-4"><p class="text-muted mb-0">Start typing to search...</p></div>');
+            $(this).addClass('d-none');
+        });
+
+        // Close dropdown when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.app-search').length) {
+                searchDropdown.removeClass('show');
+            }
+        });
+
+        // Perform search via AJAX
+        function performSearch(query) {
+            searchSpinner.show();
+            searchPlaceholder.hide();
+            searchResults.html('');
+            searchDropdown.addClass('show');
+
+            $.ajax({
+                url: '{{ route("global-search") }}',
+                type: 'GET',
+                data: { q: query },
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    searchSpinner.hide();
+                    
+                    if (response.success && response.data.total > 0) {
+                        renderSearchResults(response.data.results);
+                    } else {
+                        searchResults.html('<div class="text-center py-4"><p class="text-muted mb-0">No results found</p></div>');
+                    }
+                },
+                error: function(xhr) {
+                    searchSpinner.hide();
+                    searchResults.html('<div class="text-center py-4"><p class="text-danger mb-0">Error occurred while searching</p></div>');
+                }
+            });
+        }
+
+        // Render search results
+        function renderSearchResults(results) {
+            let html = '';
+            
+            results.forEach(function(category) {
+                html += '<div class="dropdown-header mt-2">';
+                html += '<h6 class="text-overflow text-muted mb-1 text-uppercase"><i class="' + category.icon + ' align-middle me-2"></i>' + category.category + '</h6>';
+                html += '</div>';
+                
+                category.items.forEach(function(item) {
+                    html += '<a href="' + item.url + '" class="dropdown-item notify-item">';
+                    html += '<i class="' + item.icon + ' align-middle fs-18 text-muted me-2"></i>';
+                    html += '<div class="flex-1">';
+                    html += '<h6 class="m-0">' + item.title + '</h6>';
+                    html += '<span class="fs-11 mb-0 text-muted">' + item.subtitle + '</span>';
+                    html += '</div>';
+                    html += '</a>';
+                });
+            });
+
+            searchResults.html(html);
+        }
+    })();
 </script>
 <script type="text/javascript">
     $(document).ready(function() {
