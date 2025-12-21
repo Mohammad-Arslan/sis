@@ -1,6 +1,6 @@
 <!-- App favicon -->
 {{-- <link rel="shortcut icon" href="{{ asset('theme/dist/default/assets/images/favicon.ico') }}"> --}}
-<link rel="shortcut icon" href="{{ asset('Favicon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('assets/logo/academiqo.png') }}">
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <!-- aos css -->
@@ -52,6 +52,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 {{-- <link href="https://cdn.jsdelivr.net/npm/datetimepicker-jquery@2.5.11/jquery.datetimepicker.min.css" rel="stylesheet"> --}}
 <link href="https://fonts.googleapis.com/earlyaccess/notonastaliqurdudraft.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
 <style type="text/css">
     .navbar-brand-box {

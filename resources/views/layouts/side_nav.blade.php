@@ -1,95 +1,14 @@
 <div class="app-menu navbar-menu">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <x-nav.nav-styles />
 
-    <div class="navbar-brand-box">
-        <!-- Dark Logo-->
-        <a href="/dashboard" class="logo logo-dark">
-            <span class="logo-sm">
-                <img src="{{ asset('Group.png') }}" alt="" height="50">
-            </span>
-            <span class="logo-lg">
-                <img src="{{ asset('Group.png') }}" alt="" height="50">
-            </span>
-        </a>
-        <!-- Light Logo-->
-        <a href="/dashboard" class="logo logo-light">
-            <span class="logo-sm">
-                <img src="{{ asset('Favicon.png') }}" alt="" height="50">
-                <p></p>
-            </span>
-            <span class="logo-lg" style="display: inline-block; vertical-align: middle;">
-                <img src="{{ asset('Group.png') }}" alt="" height="50" style="vertical-align: middle;">
-            </span>
-
-
-
-        </a>
-        <button type="button" class="p-0 btn btn-sm fs-20 header-item float-end btn-vertical-sm-hover"
-            id="vertical-hover">
-            <i class="ri-record-circle-line"></i>
-        </button>
-    </div>
+    <x-nav.nav-brand />
 
     <div id="scrollbar">
         <div class="container-fluid">
             <div id="two-column-menu">
             </div>
             <ul class="navbar-nav" id="navbar-nav">
-                <!-- <li class="menu-title"><span data-key="t-menu">Menu</span></li> -->
                 @role('super_admin')
-                    <!-- <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                                    <a class="nav-link menu-link {{ Request::is('franchise-applications') ? 'active' : '' }}"
-                                                                                                                                                                                                                                                                                                                                                                                        href="#sidebarCrm" data-bs-toggle="collapse" role="button"
-                                                                                                                                                                                                                                                                                                                                                                                        {{ Request::is('franchise-applications') ? 'aria-expanded="true"' : 'aria-expanded="false"' }}
-                                                                                                                                                                                                                                                                                                                                                                                        aria-controls="sidebarDashboards">
-                                                                                                                                                                                                                                                                                                                                                                                        <i><img width="13px" src="{{ asset('theme/icons/awesome-file-invoice-dollar.png') }}" /></i>
-                                                                                                                                                                                                                                                                                                                                                                                        <span data-key="t-dashboards">Franchise Onboarding</span>
-                                                                                                                                                                                                                                                                                                                                                                                    </a> -->
-                    <div class="collapse menu-dropdown {{ Request::is('franchise-applications') ? 'show' : '' }}"
-                        id="sidebarCrm">
-                        <ul class="nav nav-sm flex-column">
-                            {{-- <li class="nav-item">
-                                <a href="{{ route('franchises-inquiry.create') }}" class="nav-link"
-                        data-key="t-analytics"> Franchise Inquiry </a>
-                        </li> --}}
-                            <!-- <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                                    <a href="{{ route('franchise-applications.index') }}"
-                                                                                                                                                                                                                                                                                                                                                                                        class="nav-link {{ Request::is('franchise-applications') ? 'active' : '' }}"
-                                                                                                                                                                                                                                                                                                                                                                                        data-key="t-analytics"> Franchise Application </a>
-                                                                                                                                                                                                                                                                                                                                                                                </li> -->
-                        </ul>
-                    </div>
-                    </li>
-
-                    <!-- <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                            <a class="nav-link menu-link collapsed" href="{{ route('franchises-inquiry.index') }}">
-                                                                                                                                                                                                                                                                                                                                                                                <i class="mdi mdi-badge-account"></i>
-                                                                                                                                                                                                                                                                                                                                                                                <span data-key="t-dashboards">Franchise Inquiry</span>
-                                                                                                                                                                                                                                                                                                                                                                            </a>
-                                                                                                                                                                                                                                                                                                                                                                        </li> -->
-
-                    <!-- <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                            <a class="nav-link menu-link" href="#sidebarIPG" data-bs-toggle="collapse" role="button"
-                                                                                                                                                                                                                                                                                                                                                                                aria-expanded="false" aria-controls="sidebarDashboards">
-                                                                                                                                                                                                                                                                                                                                                                                <i><img width="13px" src="{{ asset('theme/icons/awesome-file-invoice-dollar.png') }}" /></i>
-                                                                                                                                                                                                                                                                                                                                                                                <span data-key="t-dashboards">IPG</span>
-                                                                                                                                                                                                                                                                                                                                                                            </a>
-
-                                                                                                                                                                                                                                                                                                                                                                            <div class="collapse menu-dropdown" id="sidebarIPG">
-                                                                                                                                                                                                                                                                                                                                                                                <ul class="nav nav-sm flex-column">
-                                                                                                                                                                                                                                                                                                                                                                                    <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                                        <a href="{{ route('ipg-online-billing') }}" class="nav-link" data-key="t-analytics"
-                                                                                                                                                                                                                                                                                                                                                                                            target="_blank"> Billing </a>
-                                                                                                                                                                                                                                                                                                                                                                                    </li>
-
-                                                                                                                                                                                                                                                                                                                                                                                    <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                                        <a href="{{ route('ipg-billing.index') }}" class="nav-link" data-key="t-analytics">
-                                                                                                                                                                                                                                                                                                                                                                                            Online Payments </a>
-                                                                                                                                                                                                                                                                                                                                                                                    </li>
-                                                                                                                                                                                                                                                                                                                                                                                </ul>
-                                                                                                                                                                                                                                                                                                                                                                            </div>
-                                                                                                                                                                                                                                                                                                                                                                        </li> -->
-
                     <li class="nav-item">
                         <a class="nav-link menu-link {{ Request::is(['network-associates', 'branches', 'student/class-sections', 'teacher/class-sections']) ? 'active' : '' }}"
                             href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
@@ -102,11 +21,7 @@
                         <div class="collapse menu-dropdown {{ Request::is(['network-associates', 'branches', 'student/class-sections', 'teacher/class-sections']) ? 'show' : '' }}"
                             id="sidebarDashboards">
                             <ul class="nav nav-sm flex-column">
-                                {{-- <li class="nav-item">
-                                    <a href="{{ route('network-associates.index') }}"
-                                        class="nav-link {{ Request::is('network-associates') ? 'active' : '' }}"
-                                        data-key="t-analytics"> Network Associates </a>
-                                </li> --}}
+
                                 <li class="nav-item">
                                     <a href="{{ route('branches.index') }}"
                                         class="nav-link  {{ Request::is('branches') ? 'active' : '' }}"
@@ -127,7 +42,6 @@
                                         Class Teachers
                                     </a>
                                 </li>
-
                             </ul>
                         </div>
                     </li>
@@ -269,20 +183,9 @@
                         </div>
                     </li>
                 @endpermission
-                {{-- <li class="nav-item">
-                    <a class="nav-link menu-link collapsed" href="{{ route('bulk-invoices') }}">
-                <i class="ri-currency-fill"></i>
-                <span data-key="t-dashboards">Generate Invoice / Print</span>
-                </a>
-                </li> --}}
+
                 @permission('list-generate-invoice')
-                    {{-- <li class="nav-item">
-                        <a class="nav-link menu-link {{ Request::is('bulk-invoices') ? 'active' : '' }}"
-                            href="{{ route('bulk-invoices') }}">
-                            <i class="ri-currency-fill"></i>
-                            <span data-key="t-dashboards">Generate Invoice / Print</span>
-                        </a>
-                    </li> --}}
+
                     <li class="nav-item">
                         <a class="nav-link menu-link {{ Request::is('enhanced-bulk-challans') ? 'active' : '' }}"
                             href="{{ route('enhanced-bulk-challans') }}">
@@ -298,24 +201,7 @@
                         </a>
                     </li>
                 @endpermission
-                {{-- @role('super_admin')
-                    <li class="nav-item">
-                        <a class="nav-link menu-link {{ Request::is('super-admin-bulk-invoices') ? 'active' : '' }}"
-                            href="{{ route('super-admin-bulk-invoices') }}">
-                            <i class="ri-currency-fill"></i>
-                            <span data-key="t-dashboards">Super Admin - Generate Invoices</span>
-                        </a>
-                    </li>
-                @endrole --}}
-                {{-- @permission('list-preview-invoice')
-                    <li class="nav-item">
-                        <a class="nav-link menu-link {{ Request::is('preview-invoices') ? 'active' : '' }}"
-                            href="{{ route('preview-invoices') }}">
-                            <i class="ri-currency-fill"></i>
-                            <span data-key="t-dashboards">Preview Invoices</span>
-                        </a>
-                    </li>
-                @endpermission --}}
+
                 @role('school_teacher')
                     <li class="nav-item">
                         <a class="nav-link menu-link {{ Request::is('teacher-dashboard') ? '' : 'collapsed' }}"
@@ -356,16 +242,12 @@
                                     <a href="{{ route('employees.index') }}"
                                         class="nav-link {{ Request::is('employees') && !Request::is('employees/create') ? 'active' : '' }}"
                                         data-key="t-employee">Employee List</a>
-                                    {{-- @permission('list-visits')
-                                        <a href="{{ route('visitDetail.index') }}"
-                                            class="nav-link {{ Request::is('visitDetail') ? 'active' : '' }}"
-                                            data-key="t-employee">Visitor Requests</a>
-                                    @endpermission --}}
+
                                     <a href="{{ route('timetables.index') }}"
                                         class="nav-link {{ Request::is('timetables') ? 'active' : '' }}"
                                         data-key="t-employee">Teacher TimeTable</a>
                                 </li>
-                                <!-- Payroll submenu START -->
+
                                 <li class="nav-item">
                                     <a class="nav-link menu-link {{ Request::is('payrolls*') ? '' : 'collapsed' }}"
                                         href="#sidebarPayroll" data-bs-toggle="collapse" role="button"
@@ -377,19 +259,19 @@
                                         id="sidebarPayroll">
                                         <ul class="nav nav-sm flex-column">
                                             <li class="nav-item">
-                                                <a href="{{ route('payrolls.index') }}" 
+                                                <a href="{{ route('payrolls.index') }}"
                                                    class="nav-link {{ Request::is('payrolls') && !Request::is('payrolls/*') ? 'active' : '' }}">
                                                    <i class="ri-list-check"></i> Payroll List
                                                 </a>
                                             </li>
                                             <li class="nav-item">
-                                                <a href="{{ route('payrolls.create') }}" 
+                                                <a href="{{ route('payrolls.create') }}"
                                                    class="nav-link {{ Request::is('payrolls/create') ? 'active' : '' }}">
                                                    <i class="ri-add-circle-line"></i> Create Payroll
                                                 </a>
                                             </li>
                                             <li class="nav-item">
-                                                <a href="{{ route('payrolls.salary.index') }}" 
+                                                <a href="{{ route('payrolls.salary.index') }}"
                                                    class="nav-link {{ Request::is('payrolls/salary*') ? 'active' : '' }}">
                                                    <i class="ri-money-dollar-circle-line"></i> Salary Management
                                                 </a>
@@ -397,7 +279,6 @@
                                         </ul>
                                     </div>
                                 </li>
-                                <!-- Payroll submenu END -->
                             </ul>
                         </div>
                     </li>
@@ -408,7 +289,6 @@
                             <span data-key="t-dashboards">Teacher Effectiveness</span>
                         </a>
                     </li>
-
 
                     <li class="nav-item">
                         <a class="nav-link menu-link collapsed" href="#sidebarEvaluation" data-bs-toggle="collapse"
@@ -421,69 +301,12 @@
                                 <li class="nav-item">
                                     <a href="{{ route('question-dimensions.index') }}?tab=basic_info" class="nav-link"
                                         data-key="t-employee"> Teacher Effectiveness Criteria </a>
-
                                 </li>
                             </ul>
                         </div>
                     </li>
-                    {{-- 
-                    <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarStudents" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarStudents">
-                        <i><img width="17px" src="{{ asset('theme/icons/awesome-file-invoice-dollar.png') }}" /></i>
-                <span data-key="t-dashboards">Student</span>
-                </a>
-                <div class="collapse menu-dropdown" id="sidebarStudents">
-                    <ul class="nav nav-sm flex-column">
-                        <li class="nav-item">
-                            <a href="{{ route('students.index') }}" class="nav-link" data-key="t-analytics">
-                                Students </a>
-                        </li>
-                    </ul>
-                </div>
-                </li> --}}
-                    {{-- 
-                <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarEmployee" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="sidebarEmployee">
-                        <i><img width="17px" src="{{ asset('theme/icons/awesome-file-invoice-dollar.png') }}" /></i>
-                        <span data-key="t-dashboards">Employee</span>
-                    </a>
-                    <div class="collapse menu-dropdown" id="sidebarEmployee">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{{ route('employees.create') }}?tab=basic_info" class="nav-link"
-                                    data-key="t-analytics"> Staff Basic Info </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li> --}}
                 @endrole
 
-                <!-- Your other navigation items go here -->
-
-
-
-                <!-- Your other navigation items go here -->
-
-
-                <!-- @permission('list-branding-marketing')
-    <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                            <a class="nav-link menu-link collapsed" href="{{ route('branding-marketing.index') }}">
-                                                                                                                                                                                                                                                                                                                                                                                <i class="mdi mdi-badge-account"></i>
-                                                                                                                                                                                                                                                                                                                                                                                <span data-key="t-dashboards">Branding / Marketing</span>
-                                                                                                                                                                                                                                                                                                                                                                            </a>
-                                                                                                                                                                                                                                                                                                                                                                        </li>
-@endpermission
-        @permission('list-support-staff-uniform')
-    <li class="nav-item">
-                                                                                                                                                                                                                                                                                                                                                                            <a class="nav-link menu-link collapsed"
-                                                                                                                                                                                                                                                                                                                                                                                href="{{ route('general-document.support-staff-uniform.index') }}">
-                                                                                                                                                                                                                                                                                                                                                                                <i class="mdi mdi-tshirt-crew"></i>
-                                                                                                                                                                                                                                                                                                                                                                                <span data-key="t-dashboards">Support Staff Uniform</span>
-                                                                                                                                                                                                                                                                                                                                                                            </a>
-                                                                                                                                                                                                                                                                                                                                                                        </li>
-@endpermission -->
                 @permission(['list-booklist', 'list-scheme-of-work', 'list-lesson-plan', 'view-lessonplan-calendar',
                     'list-academic-calendar', 'list-class-timetable', 'list-school-manuals', 'list-infinity-teacher-guide',
                     'list-summer-resource-pack', 'list-winter-resource-pack'])
@@ -593,89 +416,6 @@
                             <a class="nav-link menu-link {{ Request::is('lesson-plans') ? 'active' : '' }}"
                                 href="{{ route('lesson-plans.index') }}">Daily Lesson Plan</a>
 
-                            {{-- @if (get_lesson_plan_hierarchy(0, 0, 0, 0, 'branch')->isEmpty())
-                    <a class="nav-link menu-link" href="{{route('lesson-plans.index')}}">Lesson Plan</a>
-                    @else
-                    <a class="nav-link menu-link" href="#lessonPlanMultilevel" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="lessonPlanMultilevel">
-                        <span data-key="t-multi-level">Lesson Plan</span>
-                    </a>
-                    @endif
-                    <div class="collapse menu-dropdown" id="lessonPlanMultilevel">
-                        <ul class="nav nav-sm flex-column">
-                            @foreach (get_lesson_plan_hierarchy(0, 0, 0, 0, 'branch') as $branch_index => $branch)
-                            <li class="nav-item">
-                                <a href="#branch{{ $branch_index }}" class="nav-link" data-bs-toggle="collapse"
-                                    role="button" aria-expanded="false" aria-controls="branch{{ $branch_index }}">
-                                    {{ $branch['br_name'] }}
-                                </a>
-                                <div class="collapse menu-dropdown" id="branch{{ $branch_index }}">
-                                    <ul class="nav nav-sm flex-column">
-                                        @foreach (get_lesson_plan_hierarchy($branch['id'], 0, 0, 0, 'academic_year') as $academic_year_index => $academic_year)
-                                        <li class="nav-item">
-                                            <a href="#academic_year{{ $branch_index }}" class="nav-link"
-                                                data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                                aria-controls="academic_year{{ $academic_year_index }}">
-                                                {{ $academic_year['title'] }}
-                                            </a>
-                                            <div class="collapse menu-dropdown"
-                                                id="academic_year{{ $academic_year_index }}">
-                                                <ul class="nav nav-sm flex-column">
-                                                    @foreach (get_lesson_plan_hierarchy($branch['id'], $academic_year['id'], 0, 0, 'class') as $class_index => $class)
-                                                    <li class="nav-item">
-                                                        <a href="#class{{ $class_index }}" class="nav-link"
-                                                            data-bs-toggle="collapse" role="button"
-                                                            aria-expanded="false"
-                                                            aria-controls="class{{ $class_index }}">
-                                                            Class
-                                                            {{ $class['com_class']['class_name'] }}
-                                                            <a href="#class{{$class_index}}" class="nav-link"
-                                                                data-bs-toggle="collapse" role="button"
-                                                                aria-expanded="false"
-                                                                aria-controls="class{{$class_index}}">{{$class['com_class']['class_name']}}
-                                                            </a>
-                                                            <div class="collapse menu-dropdown"
-                                                                id="class{{ $class_index }}">
-                                                                <ul class="nav nav-sm flex-column">
-                                                                    @foreach (get_lesson_plan_hierarchy($class->branch_id, $class->academic_year_id, $class->com_class_id, 0, 'subject') as $subject_index => $subject)
-                                                                    <li class="nav-item">
-                                                                        <a href="{{ route('lesson-plans.index') }}?id={{ $subject['id'] }}"
-                                                                            class="nav-link">
-                                                                            {{ $subject['subject']['subject_name'] }}
-                                                                        </a>
-                                                                        {{-- <div class="collapse menu-dropdown"
-                                                                            id="term_week{{$subject_index}}"> --}}{{--
-                                                                            <div class="collapse menu-dropdown"
-                                                                                id="term_week{{$subject_index}}">
-                                                                        <ul class="nav nav-sm flex-column">
-                                                                            @foreach (get_lesson_plan_hierarchy($subject->branch_id, $subject->academic_year_id, $subject->com_class_id, $subject->subject_id) as $term)
-                                                                            <li class="nav-item">
-                                                                                <a href="{{route('lesson-plans.index')}}"
-                                                                                    class="nav-link"> {{
-                                                                                            $term['term']['name'] .' |
-                                                                                            '. $term['week']['name'] }}
-                                                                                </a>
-                                                                            </li>
-                                                                            @endforeach
-                                                                        </ul>
-                                                            </div> --}}{{--
-                                                                    </li>
-                                                                    @endforeach
-                                                                </ul>
-                                                            </div>
-                                                    </li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </li>
-                            @endforeach
-                        </ul>
-                    </div> --}}
-                        </li>
                     @endpermission
 
                     @permission('view-lessonplan-calendar')
@@ -792,10 +532,9 @@
                     @endpermission
                 </ul>
             </div>
-            </li>
+        </li>
         @endpermission
 
-        {{-- @permission('list-homework-diary') --}}
         <li class="nav-item">
             <a class="nav-link menu-link {{ Request::is('homeWorkDiary') ? '' : 'collapsed' }}"
                 href="{{ route('homeWorkDiary.index') }}">
@@ -803,7 +542,6 @@
                 <span data-key="t-homework">Home Work Diary</span>
             </a>
         </li>
-        {{-- @endpermission --}}
 
         @permission(['assessment-permission', 'assessment-settings-permission', 'settings-assessment-level-permission',
             'settings-grading-criteria-permission', 'settings-skill-permission', 'settings-general-behaviour-permission',
@@ -942,38 +680,6 @@
             </li>
         @endpermission
 
-        {{-- @permission(['student-withdrawal-requests', 'guardian-info-update', 'parent-queries'])
-            <li class="nav-item">
-                <a class="nav-link menu-link" href="#mobileAppQueries" data-bs-toggle="collapse" role="button"
-                    aria-expanded="false" aria-controls="sidebarLeaves">
-                    <i class="mdi mdi-file-document"></i>
-                    <span data-key="t-leaves">Mobile App Queries</span>
-                </a>
-                <div class="collapse menu-dropdown" id="mobileAppQueries">
-                    <ul class="nav nav-sm flex-column">
-                        @permission('student-withdrawal-requests')
-                            <li class="nav-item">
-                                <a href="{{ route('students-withdrawal-requests') }}" class="nav-link"
-                                    data-key="t-analytics">Withdrawal Requests</a>
-                            </li>
-                        @endpermission
-                        @permission('guardian-info-update')
-                            <li class="nav-item">
-                                <a href="{{ route('guardian-info-update.index') }}" class="nav-link" data-key="t-projects">
-                                    Guardian Info Update </a>
-                            </li>
-                        @endpermission
-                        @permission('parent-queries')
-                            <li class="nav-item">
-                                <a href="{{ route('parent-queries.index') }}" class="nav-link" data-key="t-projects">Parent
-                                    Queries</a>
-                            </li>
-                        @endpermission
-                    </ul>
-                </div>
-            </li>
-        @endpermission --}}
-
         @permission('list-attachments')
             <li class="nav-item">
                 <a class="nav-link menu-link {{ Request::is('general-document') ? 'active' : '' }}"
@@ -1043,7 +749,6 @@
             </div>
         </li>
 
-        {{-- @permission(['list-support', 'create-support']) --}}
         <li class="nav-item">
             <a class="nav-link menu-link {{ Request::is('fee_structure') ? '' : 'collapsed' }}"
                 href="{{ route('fee_structure.index') }}">
@@ -1052,23 +757,9 @@
             </a>
         </li>
 
-        {{-- @endpermission --}}
-
         @permission(['list-support', 'create-support'])
-            {{-- <li class="nav-item">
-                <a class="nav-link menu-link collapsed" href="{{ route('support-query.index') }}">
-                    <i class="mdi mdi-account-tie-voice"></i>
-                    <span data-key="t-dashboards">Support</span>
-                </a>
-            </li> --}}
-        @endpermission
 
-        <!-- <li class="nav-item">
-                                    <a href="{{ route('reports-computation') }}" class="nav-link menu-link collapsed">
-                                        <i><img width="17px" src="{{ asset('theme/icons/awesome-crown.png') }}" /></i>
-                                        <span data-key="t-dashboards">Royalty Computation</span>
-                                    </a>
-                                </li> -->
+        @endpermission
 
         @permission('system-notifications')
             <li class="nav-item">
@@ -1170,7 +861,7 @@
                 </a>
                 <div class="collapse menu-dropdown {{ Request::is('fixed-assets*') ? 'show' : '' }}" id="sidebarFixedAssets">
                     <ul class="nav nav-sm flex-column">
-                        
+
                         <li class="nav-item">
                             <a href="{{ route('fixed-assets.categories.index') }}" class="nav-link {{ Request::is('fixed-assets/categories*') ? 'active' : '' }}">
                                 <i class="fas fa-tags me-1"></i>
@@ -1190,7 +881,7 @@
                                 Asset Register
                             </a>
                         </li>
-                        
+
                         <li class="nav-item">
                             <a href="{{ route('fixed-assets.transfer-requests.index') }}" class="nav-link {{ Request::is('fixed-assets/transfer-requests*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt me-1"></i>
@@ -1215,23 +906,19 @@
                                 Goods Received Notes
                             </a>
                         </li>
-                        
+
                         <li class="nav-item">
                             <a href="{{ route('fixed-assets.stock-reports.index') }}" class="nav-link">
                                 <i class="fas fa-warehouse me-1"></i>
                                 Stock Reports
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="fas fa-history me-1"></i>
-                                Audit Trail
-                            </a>
-                        </li> --}}
+
                     </ul>
                 </div>
             </li>
         @endrole
+
         @role('super_admin')
             <li class="nav-item">
                 <a class="nav-link menu-link {{ Request::is('activity-logs*') ? '' : 'collapsed' }}"
@@ -1336,499 +1023,9 @@
                 </div>
             </li>
 
-            <!-- Your other navigation items go here -->
-
-
-            <!-- Your other navigation items go here -->
-
-
-            <li class="nav-item">
-                <a class="nav-link menu-link {{ Request::is('building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'academic-settings*', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax-settings*', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? '' : 'collapsed' }}"
-                    href="#sidebarMultilevel" data-bs-toggle="collapse" role="button"
-                    aria-expanded="{{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'academic-settings*', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax-settings*', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'true' : 'false' }}"
-                    aria-controls="sidebarMultilevel">
-                    <i class="ri-settings-2-line"></i> <span data-key="t-multi-level">Setting</span>
-                </a>
-                <div class="collapse menu-dropdown {{ Request::is('geographic-settings*', 'building-type', 'cities', 'countries', 'classes', 'class-subjects', 'class-groups', 'companies', 'departments', 'designations', 'fee-', 'application-type', 'leave-types', 'designationLeaveQuota', 'academic-settings*', 'regions', 'withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason', 'working-day', 'working-shift', 'official-leave-day', 'staff-type', 'branch-working-shift', 'sections', 'states', 'subject-groups', 'subjects', 'system-modules', 'towns', 'inquiry-type', 'followUpType', 'campusOfficeType', 'tax-settings*', 'paper-types', 'hm-campus-round*', 'calls-details*', 'repair-maintenance*', 'petty-cash-details*', 'electricity-meter*', 'generator-info*') ? 'show' : '' }}"
-                    id="sidebarMultilevel">
-                    <ul class="nav nav-sm flex-column">
-                        <li class="nav-item">
-                            <a href="{{ route('geographic-settings.index') }}"
-                                class="nav-link {{ Request::is('geographic-settings*') ? 'active' : '' }}"
-                                data-key="t-geographic">Geographic & Location</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('classes.index') }}"
-                                class="nav-link {{ Request::is('classes') ? 'active' : '' }}"
-                                data-key="t-analytics">Classes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('class-subjects.index') }}"
-                                class="nav-link {{ Request::is('class-subjects') ? 'active' : '' }}"
-                                data-key="t-analytics">Class Subjects</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('class-groups.index') }}"
-                                class="nav-link {{ Request::is('class-groups') ? 'active' : '' }}"
-                                data-key="t-analytics">School Types</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('companies.index') }}"
-                                class="nav-link {{ Request::is('companies') ? 'active' : '' }}"
-                                data-key="t-analytics">Companies</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('departments.index') }}"
-                                class="nav-link {{ Request::is('departments') ? 'active' : '' }}"
-                                data-key="t-projects">Departments</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('designations.index') }}"
-                                class="nav-link {{ Request::is('designations') ? 'active' : '' }}"
-                                data-key="t-designation">Designations</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#sidebarAccount" class="nav-link {{ Request::is('fee-') ? '' : 'collapsed' }}"
-                                data-bs-toggle="collapse" role="button"
-                                aria-expanded="{{ Request::is('fee-') ? 'true' : 'false' }}"
-                                aria-controls="sidebarAccount" data-key="t-fee-level">Fee</a>
-                            <div class="collapse menu-dropdown {{ Request::is('fee-') ? 'show' : '' }}"
-                                id="sidebarAccount">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-concessions.index') }}"
-                                            class="nav-link {{ Request::is('fee-concessions') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Concessions</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-concessions-type.index') }}"
-                                            class="nav-link {{ Request::is('fee-concessions-type') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Concessions Type</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-charges.index') }}"
-                                            class="nav-link {{ Request::is('fee-charges') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Charges</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-charges-type.index') }}"
-                                            class="nav-link {{ Request::is('fee-charges-type') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Charges Type</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-packages.index') }}"
-                                            class="nav-link {{ Request::is('fee-packages') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Packages</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-period.index') }}"
-                                            class="nav-link {{ Request::is('fee-period') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Periods</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('fee-tier.index') }}"
-                                            class="nav-link {{ Request::is('fee-tier') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Fee Tier</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#sidebarLeaves"
-                                class="nav-link {{ Request::is('application-type', 'leave-types', 'designationLeaveQuota') ? '' : 'collapsed' }}"
-                                data-bs-toggle="collapse" role="button"
-                                aria-expanded="{{ Request::is('application-type', 'leave-types', 'designationLeaveQuota') ? 'true' : 'false' }}"
-                                aria-controls="sidebarLeaves" data-key="t-fee-level">Leaves</a>
-                            <div class="collapse menu-dropdown {{ Request::is('application-type', 'leave-types', 'designationLeaveQuota') ? 'show' : '' }}"
-                                id="sidebarLeaves">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a href="{{ route('application-type.index') }}"
-                                            class="nav-link {{ Request::is('application-type') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Application Types</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('leave-types.index') }}"
-                                            class="nav-link {{ Request::is('leave-types') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Leave Types</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('designationLeaveQuota.index') }}"
-                                            class="nav-link {{ Request::is('designationLeaveQuota') ? 'active' : '' }}"
-                                            data-key="t-fee-level">Designation Leave Quotas</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('academic-settings.index') }}"
-                                class="nav-link {{ Request::is('academic-settings*') ? 'active' : '' }}"
-                                data-key="t-projects">Academic Settings</a>
-                        </li>
-                        {{-- <li class="nav-item">
-                        <a href="{{ route('academic-year-working-days.index') }}" class="nav-link"
-                                                    data-key="t-projects">Manage
-                                                    Working Days</a>
-                                        </li> --}}
-                        <li class="nav-item">
-                            <a href="#sidebarStudentsMulti"
-                                class="nav-link {{ Request::is('withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason') ? '' : 'collapsed' }}"
-                                data-bs-toggle="collapse" role="button"
-                                aria-expanded="{{ Request::is('withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason') ? 'true' : 'false' }}"
-                                aria-controls="sidebarStudentsMulti" data-key="t-students-level">Students</a>
-                            <div class="collapse menu-dropdown {{ Request::is('withdrawal-reason', 'withdrawal-cancellation-reason', 'student-transfer-reason') ? 'show' : '' }}"
-                                id="sidebarStudentsMulti">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a href="{{ route('withdrawal-reason.index') }}"
-                                            class="nav-link {{ Request::is('withdrawal-reason') ? 'active' : '' }}"
-                                            data-key="t-students-level">Withdrawal Reasons</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('withdrawal-cancellation-reason.index') }}"
-                                            class="nav-link {{ Request::is('withdrawal-cancellation-reason') ? 'active' : '' }}"
-                                            data-key="t-students-level">Cancellation Reason</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('student-transfer-reason.index') }}"
-                                            class="nav-link {{ Request::is('student-transfer-reason') ? 'active' : '' }}"
-                                            data-key="t-students-level">Transfer Reason</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#sidebarShifts"
-                                class="nav-link {{ Request::is('working-day', 'working-shift', 'official-leave-day') ? '' : 'collapsed' }}"
-                                data-bs-toggle="collapse" role="button"
-                                aria-expanded="{{ Request::is('working-day', 'working-shift', 'official-leave-day') ? 'true' : 'false' }}"
-                                aria-controls="sidebarShifts" data-key="t-shift-level">Shifts</a>
-                            <div class="collapse menu-dropdown {{ Request::is('working-day', 'working-shift', 'official-leave-day') ? 'show' : '' }}"
-                                id="sidebarShifts">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a href="{{ route('working-day.index') }}"
-                                            class="nav-link {{ Request::is('working-day') ? 'active' : '' }}"
-                                            data-key="t-shift-level">Working Days</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('working-shift.index') }}"
-                                            class="nav-link {{ Request::is('working-shift') ? 'active' : '' }}"
-                                            data-key="t-shift-level">Schedule Shifts</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('official-leave-day.index') }}"
-                                            class="nav-link {{ Request::is('official-leave-day') ? 'active' : '' }}"
-                                            data-key="t-shift-level">National Holidays</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#sidebarBranchShifts"
-                                class="nav-link {{ Request::is('staff-type', 'branch-working-shift') ? '' : 'collapsed' }}"
-                                data-bs-toggle="collapse" role="button"
-                                aria-expanded="{{ Request::is('staff-type', 'branch-working-shift') ? 'true' : 'false' }}"
-                                aria-controls="sidebarBranchShifts" data-key="t-shift-level">Branch Schedule</a>
-                            <div class="collapse menu-dropdown {{ Request::is('staff-type', 'branch-working-shift') ? 'show' : '' }}"
-                                id="sidebarBranchShifts">
-                                <ul class="nav nav-sm flex-column">
-                                    <li class="nav-item">
-                                        <a href="{{ route('staff-type.index') }}"
-                                            class="nav-link {{ Request::is('staff-type') ? 'active' : '' }}"
-                                            data-key="t-branch-shift-level">Staff Types</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="{{ route('branch-working-shift.index') }}"
-                                            class="nav-link {{ Request::is('branch-working-shift') ? 'active' : '' }}"
-                                            data-key="t-branch-shift-level">Schedule Shifts</a>
-                                    </li>
-                                    {{-- <li class="nav-item">
-                                    <a href="{{ route('official-leave-day.index') }}" class="nav-link"
-                                                    data-key="t-shift-level"> Official Leaves </a>
-                                        </li> --}}
-                                </ul>
-                            </div>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ route('sections.index') }}"
-                                class="nav-link {{ Request::is('sections') ? 'active' : '' }}"
-                                data-key="t-projects">Sections</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('subject-groups.index') }}"
-                                class="nav-link {{ Request::is('subject-groups') ? 'active' : '' }}"
-                                data-key="t-ecommerce">Subject Groups</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('subjects.index') }}"
-                                class="nav-link {{ Request::is('subjects') ? 'active' : '' }}"
-                                data-key="t-ecommerce">Subjects</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('system-modules.index') }}"
-                                class="nav-link {{ Request::is('system-modules') ? 'active' : '' }}"
-                                data-key="t-ecommerce">System Modules</a>
-                        </li>
-                        {{-- <li class="nav-item">
-                        <a href="{{ route('system-notifications.index') }}" class="nav-link" data-key="t-projects">
-                            System Notifications </a>
-                </li> --}}
-                        <li class="nav-item">
-                            <a href="{{ route('inquiry-type.index') }}"
-                                class="nav-link {{ Request::is('inquiry-type') ? 'active' : '' }}"
-                                data-key="t-projects">Admission Inquiry Types</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('followUpType.index') }}"
-                                class="nav-link {{ Request::is('followUpType') ? 'active' : '' }}"
-                                data-key="t-projects">Admission Follow Up Types</a>
-                        </li>
-                        @permission('list-campus-type')
-                            <li class="nav-item">
-                                <a href="{{ route('campusOfficeType.index') }}"
-                                    class="nav-link {{ Request::is('campusOfficeType') ? 'active' : '' }}"
-                                    data-key="t-projects">Campus/Office Types</a>
-                            </li>
-                        @endpermission
-                        <li class="nav-item">
-                            <a href="{{ route('tax-settings.index') }}"
-                                class="nav-link {{ Request::is('tax-settings*') ? 'active' : '' }}" data-key="t-projects">Tax Settings</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('paper-types.index') }}"
-                                class="nav-link {{ Request::is('paper-types') ? 'active' : '' }}"
-                                data-key="t-projects">Paper Type</a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a href="{{ route('settings.provident-fund-definitions.index') }}" class="nav-link"
-                                data-key="t-projects">
-                                Provident Fund Definitions
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('settings.income-tax-slabs.index') }}" class="nav-link"
-                                data-key="t-projects">
-                                Income Tax Slabs
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('settings.deduction-types.index') }}" class="nav-link"
-                                data-key="t-projects">
-                                Deduction Types
-                            </a>
-                        </li>
-
-                        <!-- New Settings Forms -->
-                        <li class="nav-item">
-                            <a href="{{ route('hm-campus-round.index') }}" class="nav-link {{ Request::is('hm-campus-round*') ? 'active' : '' }}"
-                                data-key="t-projects">
-                                HM Campus Round
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('calls-details.index') }}" class="nav-link {{ Request::is('calls-details*') ? 'active' : '' }}"
-                                data-key="t-projects">
-                                Calls Details Of HM + Admin
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('repair-maintenance.index') }}" class="nav-link {{ Request::is('repair-maintenance*') ? 'active' : '' }}"
-                                data-key="t-projects">
-                                Repair & Maintenance
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('petty-cash-details.index') }}" class="nav-link {{ Request::is('petty-cash-details*') ? 'active' : '' }}"
-                                data-key="t-projects">
-                                Petty Cash Details
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('electricity-meter.index') }}" class="nav-link {{ Request::is('electricity-meter*') ? 'active' : '' }}"
-                                data-key="t-projects">
-                                Daily Electricity Meter Reading
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('generator-info.index') }}" class="nav-link {{ Request::is('generator-info*') ? 'active' : '' }}"
-                                data-key="t-projects">
-                                Daily Generator Information
-                            </a>
-                        </li>
-
-                    </ul>
-                </div>
-            </li>
-
-            {{-- <li class="nav-item">
-                <a class="nav-link menu-link" href="#sidebarRolePermission" data-bs-toggle="collapse" role="button"
-                    aria-expanded="false" aria-controls="sidebarRolePermission">
-                    <i class="ri-user-settings-line"></i>
-                    <span data-key="t-dashboards">Roles & Responsibility</span>
-                </a>
-                <div class="collapse menu-dropdown" id="sidebarRolePermission">
-                    <ul class="nav nav-sm flex-column">
-                        <li class="nav-item">
-                            <a href="{{ route('users.index') }}" class="nav-link" data-key="t-analytics">
-                                Users </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('roles-permission-assignment-list') }}" class="nav-link"
-                                data-key="t-analytics"> Roles Assignment </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('roles.index') }}" class="nav-link" data-key="t-analytics">
-                                Roles </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('permissions.index') }}" class="nav-link" data-key="t-analytics">
-                                Permissions </a>
-                        </li>
-                    </ul>
-                </div>
-            </li> --}}
+            @include('layouts.nav.settings-menu')
         @endrole
         </ul>
+        </div>
     </div>
 </div>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-
-<style>
-    .side-nav {
-        position: fixed;
-        top: 0;
-        right: -250px;
-        / Initially hide the side-nav to the right / height: 100%;
-        width: 250px;
-        background-color: #ffffff;
-        color: #000000;
-        padding: 20px;
-        transition: right 0.3s;
-        / Add transition for smooth animation /
-    }
-
-    .side-nav ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .side-nav li {
-        margin-bottom: 10px;
-    }
-
-    .side-nav a {
-        text-decoration: none;
-        color: #000000;
-    }
-
-    .side-nav .close-button {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        cursor: pointer;
-    }
-
-    .quick-links-button {
-        position: fixed;
-        top: 50%;
-        right: -40px;
-        font-weight: 600;
-        / Adjust the right property for your desired spacing / transform: translateY(-50%) rotate(90deg);
-        cursor: pointer;
-        background-color: #fff;
-        color: #000000;
-        / Text color on hover / padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        transition: background-color 0.3s, color 0.3s;
-        / Add transitions for smooth hover effect /
-    }
-
-    .quick-links-button:hover {
-        background-color: #009EF7;
-        color: #fff;
-        / Text color on hover /
-    }
-
-    .nav-link.active {
-        color: #007AFF !important;
-        background-color: #f0f8ff !important;
-
-    }
-
-    .nav-link:hover {
-        color: #007AFF !important;
-    }
-
-    [data-layout=vertical][data-sidebar-size=sm] .logo span.logo-lg {
-        display: none !important;
-    }
-
-    [data-layout=vertical][data-sidebar=dark] .navbar-nav .nav-sm .nav-link:hover {
-        color: #007AFF !important;
-    }
-
-    [data-layout=vertical][data-sidebar=dark] .navbar-nav .nav-sm .nav-link:hover:before {
-        background-color: #007AFF !important;
-    }
-</style>
-{{-- <div class="quick-links-button" onclick="toggleSideNav()">Quick Links</div>
-
-<div class="side-nav">
-    <div class="close-button" onclick="toggleSideNav()">X</div>
-    <h5 style="font-weight: 800; color: black;">Quick Links</h5>
-    <hr>
-    <ul>
-        <li>
-            <a href="{{ route('grade-book.index') }}">
-                <span
-                    style="color: #009EF7;font-size:30px; background-color: #F5F8FA; padding:5px; border-radius:10px;"
-                    class=" icon"><i class="fas fa-graduation-cap"></i></span>
-                <span style="font-weight: 500" class="text">Student Grade Book</span>
-            </a>
-            <p style="color: grey;">Subject and Marks data for every student in Beaconhouse</p>
-        </li>
-
-
-
-        <li>
-            <a href="{{ route('students.index') }}">
-                <span
-                    style="color: #009EF7;font-size:30px; background-color: #F5F8FA; padding:5px; border-radius:10px;"
-                    class="icon"><i class="fas fa-user-graduate"></i></span>
-                <span style="font-weight: 500" class="text">Student Dashboard</span>
-            </a>
-            <p style="color: grey;">View Details for every Student</p>
-        </li>
-
-        <li>
-            <a href="{{ route('system-notifications.index') }}">
-                <span
-                    style="color: #C1ACF4;font-size:30px; background-color: #F5F8FA; padding:5px; border-radius:10px;"
-                    class="icon"> <i class="fas fa-volume-up"></i></span>
-                <span style="font-weight: 500" class="text">Announcement Center</span>
-            </a>
-            <p style="color: grey;">Send Emails and Messages to Parent's and NWA's</p>
-        </li>
-    </ul>
-</div> --}}
-
-<!-- `<img class="sidebar-watermark" style="position: absolute; bottom: -100px; left: -120px"
-        src="{{ asset('watermark.png') }}" />` -->
-</div>
-
-
-<script>
-    function toggleSideNav() {
-        const sideNav = document.querySelector(".side-nav");
-
-        if (sideNav.style.right === "0px") {
-            sideNav.style.right = "-250px"; // Hide the side-nav
-        } else {
-            sideNav.style.right = "0px"; // Show the side-nav
-        }
-    }
-</script>

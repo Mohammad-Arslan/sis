@@ -2,6 +2,104 @@
 alwaysApply: true
 ---
 <laravel-boost-guidelines>
+=== .ai/code-examples rules ===
+
+# Code Examples & Patterns
+
+## Service Class Pattern
+```php
+<?php
+
+namespace App\Services;
+
+class ExampleService
+{
+    public function processData(array $data): array
+    {
+        // Business logic here
+        return $processed;
+    }
+}
+```
+
+## Form Request Pattern
+```php
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class ExampleRequest extends FormRequest
+{
+    public function rules(): array
+    {
+        return [
+            'field' => 'required|string|max:255',
+        ];
+    }
+}
+```
+
+## Controller Pattern
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\ExampleService;
+use App\Http\Requests\ExampleRequest;
+
+class ExampleController extends Controller
+{
+    public function __construct(
+        public ExampleService $service
+    ) {}
+
+    public function store(ExampleRequest $request)
+    {
+        $result = $this->service->processData($request->validated());
+        return response()->json($result);
+    }
+}
+```
+
+
+=== .ai/project-specific rules ===
+
+# Project-Specific Guidelines
+
+## Application Context
+This is a School Information System (SIS) built with Laravel 12 and PHP 8.5.
+
+## Code Style & Conventions
+- Follow PSR-12 coding standards
+- Use Laravel Pint for code formatting
+- Always use type hints for methods and properties
+- Use PHP 8.5 features (pipe operator, clone with syntax, URI extension)
+
+## Database Conventions
+- Use Eloquent relationships instead of manual joins
+- Always eager load relationships to prevent N+1 queries
+- Use database transactions for multi-step operations
+
+## Security Guidelines
+- Always validate user input using Form Request classes
+- Use Laravel's built-in authorization (policies, gates)
+- Never expose sensitive data in API responses
+- Use parameterized queries (Eloquent/Query Builder)
+
+## Testing Requirements
+- Write feature tests for critical user flows
+- Use factories for test data generation
+- Aim for meaningful test coverage
+
+## Architecture Patterns
+- Keep controllers thin - delegate to service classes
+- Use service classes in `app/Services/` for business logic
+- Follow repository pattern where appropriate
+
+
 === foundation rules ===
 
 # Laravel Boost Guidelines

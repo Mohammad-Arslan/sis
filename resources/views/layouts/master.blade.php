@@ -4,7 +4,8 @@
 <head>
 
     <meta charset="utf-8" />
-    <title>SUPER NOVA | SIS</title>
+    <title>{{ env('APP_NAME') }} | SIS</title>
+    <link rel="shortcut icon" href="{{ asset('assets/logo/academiqo.png') }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     @include('layouts.header_scripts')

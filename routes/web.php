@@ -1,157 +1,153 @@
 <?php
 
-use Illuminate\Support\Facades\Broadcast;
-use App\Http\Controllers\AssetCategoryController;
-use App\Http\Controllers\AssetController;
-use App\Http\Controllers\AttendanceReportController;
-use App\Http\Controllers\EmploymentLetterRequestController;
-use App\Http\Controllers\ExtraCurriculumController;
-use App\Http\Controllers\GoodsReceivedNoteController;
-use App\Http\Controllers\PurchaseOrderController;
-use App\Http\Controllers\PurchaseRequestController;
-use App\Http\Controllers\StockReportController;
-use App\Http\Controllers\TransferRequestController;
-use App\Http\Controllers\PTMController;
-use App\Http\Controllers\Settings\DeductionTypeController;
-use App\Http\Controllers\Settings\IncomeTaxSlabController;
-use App\Http\Controllers\Settings\ProvidentFundDefinitionController;
-use App\Http\Controllers\SupplierController;
-use App\Models\EmployeeDependent;
-use App\Models\EmployeeAttendance;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-// use App\Http\Controllers\TaxController; // Moved to TaxSettingsController
-use App\Http\Controllers\TaxSettingsController;
-use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SkillController;
-use App\Http\Controllers\UsersController;
-use App\Http\Controllers\BranchController;
-use App\Http\Controllers\CommonController;
-use App\Http\Controllers\SchoolController;
-use App\Http\Controllers\BillingController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\FeeTierController;
-use App\Http\Controllers\SectionController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\SubjectController;
-// use App\Http\Controllers\TaxTypeController; // Moved to TaxSettingsController
-use App\Http\Controllers\BooklistController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ComClassController;
-use App\Http\Controllers\CrmBoardController;
-use App\Http\Controllers\EmployeeController;
-// use App\Http\Controllers\LanguageController; // Moved to AcademicSettingsController
-use App\Http\Controllers\AcademicSettingsController;
-use App\Http\Controllers\GuardianController;
-use App\Http\Controllers\FeeChargeController;
-use App\Http\Controllers\FeePeriodController;
-use App\Http\Controllers\GradeBookController;
-use App\Http\Controllers\LeaveTypeController;
-use App\Http\Controllers\PaperTypeController;
-use App\Http\Controllers\StaffTypeController;
-use App\Http\Controllers\ClassGroupController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\FeePackageController;
-use App\Http\Controllers\PermissionController;
-use App\Http\Controllers\UcsReportsController;
-use App\Http\Controllers\WorkingDayController;
-use App\Http\Controllers\LessonPlanController;
-use App\Http\Controllers\BankAccountController;
-use App\Http\Controllers\BeamsChalanController;
-use App\Http\Controllers\DesignationController;
-use App\Http\Controllers\ParentQueryController;
-use App\Http\Controllers\VisitDetailController;
-use App\Http\Controllers\TeacherTypeController;
-// use App\Http\Controllers\AcademicYearController; // Moved to AcademicSettingsController
-use App\Http\Controllers\BeamsChallanController;
-use App\Http\Controllers\ClassSubjectController;
-use App\Http\Controllers\FollowUpTypeController;
-use App\Http\Controllers\SchemeOfWorkController;
-use App\Http\Controllers\SubjectGroupController;
-use App\Http\Controllers\SystemModuleController;
-use App\Http\Controllers\WorkingShiftController;
-use App\Http\Controllers\ClassStudentController;
-use App\Http\Controllers\ClassTeacherController;
-use App\Http\Controllers\ConstituencyController;
-use App\Http\Controllers\SupportQueryController;
-use App\Http\Controllers\FeeConcessionController;
-use App\Http\Controllers\HomeWorkDiaryController;
-use App\Http\Controllers\InquiriesTypeController;
-use App\Http\Controllers\StudentLedgerController;
-use App\Http\Controllers\SubjectRemarkController;
+use App\Http\Controllers\AcademicCalendarController;
 use App\Http\Controllers\AcademicClassController;
-use App\Http\Controllers\BranchRoyaltyController;
-use App\Http\Controllers\BranchSecurityController;
-use App\Http\Controllers\FeeChargesTypeController;
-use App\Http\Controllers\StudentAddressController;
-use App\Http\Controllers\StudentInvoiceController;
+use App\Http\Controllers\AcademicSettingsController;
+use App\Http\Controllers\AcademicYearWorkingDaysController;
+use App\Http\Controllers\AdmissionFollowUpController;
 use App\Http\Controllers\AdmissionQueryController;
+use App\Http\Controllers\AnswerDimensionController;
 use App\Http\Controllers\ApplicationTypeController;
 use App\Http\Controllers\AssessmentEntryController;
 use App\Http\Controllers\AssessmentLevelController;
-use App\Http\Controllers\GradingCriteriaController;
-use App\Http\Controllers\GeneralDocumentController;
-use App\Http\Controllers\CampusOfficeTypeController;
-use App\Http\Controllers\FranchiseInquiryController;
-use App\Http\Controllers\GeneralBehaviourController;
-use App\Http\Controllers\GradeBookHistoryController;
-use App\Http\Controllers\LeaveApplicationController;
-use App\Http\Controllers\NetworkAssociateController;
-use App\Http\Controllers\OfficialLeaveDayController;
-use App\Http\Controllers\PromotionRequestController;
-use App\Http\Controllers\TeacherDashboardController;
-use App\Http\Controllers\WithdrawalReasonController;
-use App\Http\Controllers\AcademicCalendarController;
-use App\Http\Controllers\AdmissionFollowUpController;
-use App\Http\Controllers\EmployeeDependentController;
-use App\Http\Controllers\FamilyInformationController;
-use App\Http\Controllers\FeeConcessionTypeController;
-use App\Http\Controllers\StudentAttendanceController;
-use App\Http\Controllers\StudentConcessionController;
-use App\Http\Controllers\StudentFeePackageController;
-use App\Http\Controllers\StudentWithdrawalController;
-use App\Http\Controllers\SubjectMarksSetupController;
-use App\Http\Controllers\BrandingMarketingController;
-// use App\Http\Controllers\BranchAcademicYearController; // Moved to AcademicSettingsController
-use App\Http\Controllers\BranchWorkingShiftController;
-use App\Http\Controllers\ContactInformationController;
-use App\Http\Controllers\EmployeeAttendanceController;
-use App\Http\Controllers\EmployeeLeaveQuotaController;
-use App\Http\Controllers\EmployeeWorkingDayController;
-use App\Http\Controllers\GuardianInfoUpdateController;
-use App\Http\Controllers\SiblingInformationController;
-use App\Http\Controllers\SystemNotificationController;
+use App\Http\Controllers\AssetCategoryController;
+use App\Http\Controllers\AssetController;
+use App\Http\Controllers\AttendanceReportController;
+use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\BeamsChallanController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\BooklistController;
 use App\Http\Controllers\BranchClassSectionController;
-use App\Http\Controllers\AccountantDashboardController;
+// use App\Http\Controllers\TaxController; // Moved to TaxSettingsController
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BranchRoyaltyController;
+use App\Http\Controllers\BranchSecurityController;
+use App\Http\Controllers\BranchWorkingShiftController;
+use App\Http\Controllers\BrandingMarketingController;
+use App\Http\Controllers\CampusOfficeTypeController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClassGroupController;
+use App\Http\Controllers\ClassStudentController;
 use App\Http\Controllers\ClassStudentSubjectController;
-use App\Http\Controllers\FranchiseInquiryOldController;
-use App\Http\Controllers\HomeWorkDiaryDetialController;
-use App\Http\Controllers\StudentTransferCaseController;
-use App\Http\Controllers\FranchiseApplicationController;
-use App\Http\Controllers\DesignationLeaveQuotaController;
-use App\Http\Controllers\FeePackagesFeeChargesController;
-use App\Http\Controllers\StudentBehaviourSkillController;
-// use App\Http\Controllers\StudentPreviousSchoolController; // Moved to AcademicSettingsController
-use App\Http\Controllers\StudentTransferReasonController;
-use App\Http\Controllers\FranchiseApplicationQaController;
-use App\Http\Controllers\NetworkAssociateBranchController;
-use App\Http\Controllers\AcademicYearWorkingDaysController;
+use App\Http\Controllers\ClassSubjectController;
+use App\Http\Controllers\ClassTeacherController;
+use App\Http\Controllers\ComClassController;
+// use App\Http\Controllers\TaxTypeController; // Moved to TaxSettingsController
+use App\Http\Controllers\CommonController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ConstituencyController;
+use App\Http\Controllers\ContactInformationController;
+use App\Http\Controllers\CrmBoardController;
+// use App\Http\Controllers\LanguageController; // Moved to AcademicSettingsController
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DeputyDirectorDashboardController;
+use App\Http\Controllers\DesignationController;
+use App\Http\Controllers\DesignationLeaveQuotaController;
+use App\Http\Controllers\EmployeeAttendanceController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeDependentController;
+use App\Http\Controllers\EmployeeLeaveQuotaController;
 use App\Http\Controllers\EmployeeOfficialLeaveDayController;
+use App\Http\Controllers\EmployeeWorkingDayController;
+use App\Http\Controllers\EmploymentLetterRequestController;
+use App\Http\Controllers\ExtraCurriculumController;
+use App\Http\Controllers\FamilyInformationController;
+use App\Http\Controllers\FeeChargeController;
+use App\Http\Controllers\FeeChargesTypeController;
+use App\Http\Controllers\FeeConcessionController;
+use App\Http\Controllers\FeeConcessionTypeController;
+use App\Http\Controllers\FeePackageController;
+use App\Http\Controllers\FeePackagesFeeChargesController;
+use App\Http\Controllers\FeePeriodController;
+// use App\Http\Controllers\AcademicYearController; // Moved to AcademicSettingsController
+use App\Http\Controllers\FeeTierController;
+use App\Http\Controllers\FollowUpTypeController;
 use App\Http\Controllers\FrachiseApplicationRemarkController;
 use App\Http\Controllers\FranchiseApplicationBdVisitController;
-use App\Http\Controllers\WithdrawalCancellationReasonController;
+use App\Http\Controllers\FranchiseApplicationController;
 use App\Http\Controllers\FranchiseApplicationDdResponseController;
 use App\Http\Controllers\FranchiseApplicationLaResponseController;
+use App\Http\Controllers\FranchiseApplicationQaController;
 use App\Http\Controllers\FranchiseApplicationTorsResponseController;
-use App\Http\Controllers\TeacherObservationController;
-use App\Http\Controllers\QuestionDimensionController;
-use App\Http\Controllers\AnswerDimensionController;
-use App\Http\Controllers\TimetableController;
-use App\Http\Controllers\ObservationDetailController;
+use App\Http\Controllers\FranchiseInquiryController;
+use App\Http\Controllers\FranchiseInquiryOldController;
+use App\Http\Controllers\GeneralBehaviourController;
+use App\Http\Controllers\GeneralDocumentController;
+use App\Http\Controllers\GoodsReceivedNoteController;
+use App\Http\Controllers\GradeBookController;
+use App\Http\Controllers\GradeBookHistoryController;
+use App\Http\Controllers\GradingCriteriaController;
+use App\Http\Controllers\GuardianController;
+use App\Http\Controllers\GuardianInfoUpdateController;
+use App\Http\Controllers\HomeWorkDiaryController;
+use App\Http\Controllers\HomeWorkDiaryDetialController;
+use App\Http\Controllers\InquiriesTypeController;
+use App\Http\Controllers\LeaveApplicationController;
+use App\Http\Controllers\LeaveTypeController;
+use App\Http\Controllers\LessonPlanController;
 use App\Http\Controllers\LessonPlanGenerateController;
+use App\Http\Controllers\NetworkAssociateBranchController;
+use App\Http\Controllers\NetworkAssociateController;
+use App\Http\Controllers\ObservationDetailController;
+use App\Http\Controllers\OfficialLeaveDayController;
+use App\Http\Controllers\PaperTypeController;
+use App\Http\Controllers\ParentQueryController;
 use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PromotionRequestController;
+use App\Http\Controllers\PTMController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseRequestController;
+use App\Http\Controllers\QuestionDimensionController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SchemeOfWorkController;
+use App\Http\Controllers\SchoolController;
+use App\Http\Controllers\SectionController;
+use App\Http\Controllers\Settings\DeductionTypeController;
+use App\Http\Controllers\Settings\IncomeTaxSlabController;
+use App\Http\Controllers\Settings\ProvidentFundDefinitionController;
+use App\Http\Controllers\SiblingInformationController;
+use App\Http\Controllers\SkillController;
+use App\Http\Controllers\StaffTypeController;
+// use App\Http\Controllers\BranchAcademicYearController; // Moved to AcademicSettingsController
+use App\Http\Controllers\StockReportController;
+use App\Http\Controllers\StudentAddressController;
+use App\Http\Controllers\StudentAttendanceController;
+use App\Http\Controllers\StudentBehaviourSkillController;
+use App\Http\Controllers\StudentConcessionController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentFeePackageController;
+use App\Http\Controllers\StudentInvoiceController;
+use App\Http\Controllers\StudentLedgerController;
+use App\Http\Controllers\StudentTransferCaseController;
+use App\Http\Controllers\StudentTransferReasonController;
+use App\Http\Controllers\StudentWithdrawalController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\SubjectGroupController;
+use App\Http\Controllers\SubjectMarksSetupController;
+use App\Http\Controllers\SubjectRemarkController;
+use App\Http\Controllers\SupplierController;
+// use App\Http\Controllers\StudentPreviousSchoolController; // Moved to AcademicSettingsController
+use App\Http\Controllers\SupportQueryController;
+use App\Http\Controllers\SystemModuleController;
+use App\Http\Controllers\SystemNotificationController;
+use App\Http\Controllers\TaxSettingsController;
+use App\Http\Controllers\TeacherDashboardController;
+use App\Http\Controllers\TeacherObservationController;
+use App\Http\Controllers\TeacherTypeController;
+use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\TransferRequestController;
+use App\Http\Controllers\UcsReportsController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\VisitDetailController;
+use App\Http\Controllers\WithdrawalCancellationReasonController;
+use App\Http\Controllers\WithdrawalReasonController;
+use App\Http\Controllers\WorkingDayController;
+use App\Http\Controllers\WorkingShiftController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -169,7 +165,6 @@ Route::get('/fee-structures', [SchoolController::class, 'index'])->name('fee_str
 Route::get('/fee-structures/create', [SchoolController::class, 'create'])->name('fee_structure.create');
 Route::post('/fee-structures', [SchoolController::class, 'store'])->name('fee_structure.store');
 Route::get('/fee-structures/{id}/edit', [SchoolController::class, 'edit'])->name('fee_structure.edit');
-
 
 Route::get('/fee-structures/{id}/index-edit', [SchoolController::class, 'index_edit'])->name('fee_structure.index_edit');
 
@@ -190,12 +185,6 @@ Route::post('/fee-structures/change-status', [SchoolController::class, 'changeSt
 // Route::get('filter-fee-structure', 'SchoolController@filterFeeStructure')->name('filter-fee-structure');
 Route::get('/filter-fee-structure', [SchoolController::class, 'filterFeeStructure'])->name('filter-fee-structure');
 
-
-
-
-
-
-
 Route::get('franchises-inquiry/campaign', [FranchiseInquiryController::class, 'create'])->name('franchise-inquiry.campaign');
 
 Route::resources(['ipg-billing' => BillingController::class]);
@@ -213,7 +202,7 @@ Route::get('/', function () {
     if (Auth::check()) {
         if (Auth::user()->hasRole('teacher')) {
             return redirect()->route('teacher-dashboard');
-        } else if (Auth::user()->hasRole('deputy-director')) {
+        } elseif (Auth::user()->hasRole('deputy-director')) {
             return redirect()->route('dd-dashboard');
         } else {
             return redirect()->route('dashboard');
@@ -225,7 +214,7 @@ Route::get('/', function () {
 
 Route::patch('/franchises/{franchise}', [FranchiseInquiryOldController::class, 'update'])->name('franchises.update');
 Route::get('/franchises/edit/{guid}', [FranchiseInquiryOldController::class, 'guestEditFranchiseApplication'])->name('guest-franchises.edit');
-//Franchise Application
+// Franchise Application
 Route::patch('/franchise-applications/{franchise_application}', [FranchiseApplicationController::class, 'update'])->name('franchise-applications.update');
 Route::get('/franchise-applications/edit/{guid}', [FranchiseApplicationController::class, 'guestEditFranchiseApplication'])->name('guest-franchise-applications.edit');
 Route::get('/franchise-applications/franchise_application_iasf_form/{id}', [FranchiseApplicationController::class, 'franchiseApplicationInquiryAssessmentSurvey'])->name('franchise-application-iasf-form');
@@ -236,7 +225,7 @@ Route::get('/load-qualification-data', [FranchiseInquiryOldController::class, 'l
 Route::post('/save-inquiry-qualification', [FranchiseInquiryOldController::class, 'saveInquiryQualification'])->name('save-inquiry-qualification');
 Route::get('/get-inquiry-qualification', [FranchiseInquiryOldController::class, 'getInquiryQualification'])->name('get-inquiry-qualification');
 Route::delete('/remove-inquiry-qualification/{franchise_qualification}', [FranchiseInquiryOldController::class, 'removeInquiryQualification'])->name('remove-inquiry-qualification');
-//Franchise Application
+// Franchise Application
 Route::get('/load-application-qualifications', [FranchiseApplicationController::class, 'loadApplicationQualifications'])->name('load-application-qualifications');
 Route::post('/save-application-qualification', [FranchiseApplicationController::class, 'saveApplicationQualification'])->name('save-application-qualification');
 Route::get('/get-application-qualification', [FranchiseApplicationController::class, 'getApplicationQualification'])->name('get-application-qualification');
@@ -246,7 +235,7 @@ Route::get('/load-inquiry-service-data', [FranchiseInquiryOldController::class, 
 Route::post('/save-inquiry-service', [FranchiseInquiryOldController::class, 'saveInquiryService'])->name('save-inquiry-service');
 Route::get('/get-inquiry-service', [FranchiseInquiryOldController::class, 'getInquiryService'])->name('get-inquiry-service');
 Route::delete('/remove-inquiry-service/{franchise_service}', [FranchiseInquiryOldController::class, 'removeInquiryService'])->name('remove-inquiry-service');
-//Franchise Application
+// Franchise Application
 Route::get('/load-application-services', [FranchiseApplicationController::class, 'loadApplicationServices'])->name('load-application-services');
 Route::post('/save-application-service', [FranchiseApplicationController::class, 'saveApplicationService'])->name('save-application-service');
 Route::get('/get-application-service', [FranchiseApplicationController::class, 'getApplicationService'])->name('get-application-service');
@@ -256,7 +245,7 @@ Route::get('/load-other-information-data', [FranchiseInquiryOldController::class
 Route::post('/save-inquiry-other-information', [FranchiseInquiryOldController::class, 'saveInquiryOtherInformation'])->name('save-inquiry-other-information');
 Route::get('/get-inquiry-other-information', [FranchiseInquiryOldController::class, 'getInquiryOtherInformation'])->name('get-inquiry-other-information');
 Route::delete('/remove-inquiry-other-information/{franchise_other_information}', [FranchiseInquiryOldController::class, 'removeInquiryOtherInformation'])->name('remove-inquiry-other-information');
-//Franchise Application
+// Franchise Application
 Route::get('/load-application-other-informations', [FranchiseApplicationController::class, 'loadApplicationOtherInformation'])->name('load-application-other-informations');
 Route::post('/save-application-other-information', [FranchiseApplicationController::class, 'saveApplicationOtherInformation'])->name('save-application-other-information');
 Route::get('/get-application-other-information', [FranchiseApplicationController::class, 'getApplicationOtherInformation'])->name('get-application-other-information');
@@ -266,7 +255,7 @@ Route::get('/load-posses-site-data', [FranchiseInquiryOldController::class, 'loa
 Route::post('/save-possess-site-date', [FranchiseInquiryOldController::class, 'savePossesSiteData'])->name('save-possess-site-date');
 Route::get('/get-possess-site-data', [FranchiseInquiryOldController::class, 'getPossesSiteData'])->name('get-possess-site-data');
 Route::delete('/remove-possess-site-data/{franchise_possess_site}', [FranchiseInquiryOldController::class, 'removePossesSiteData'])->name('remove-possess-site-data');
-//Franchise Application
+// Franchise Application
 Route::get('/load-application-posses-sites', [FranchiseApplicationController::class, 'loadApplicationPossesSites'])->name('load-application-posses-sites');
 Route::post('/save-application-possess-site', [FranchiseApplicationController::class, 'saveApplicationPossesSite'])->name('save-application-possess-site');
 Route::get('/get-application-possess-site', [FranchiseApplicationController::class, 'getApplicationPossesSite'])->name('get-application-possess-site');
@@ -274,12 +263,11 @@ Route::delete('/remove-application-possess-site/{application_possess_site}', [Fr
 
 Route::get('/list-cities', [CommonController::class, 'listCities'])->name('list-cities');
 
-//Franchise Application
+// Franchise Application
 Route::get('/get-franchise-application-docs', [FranchiseApplicationController::class, 'getFranchiseApplicationDocs'])->name('get-franchise-application-docs');
 Route::get('/franchise-application-docs', [DeputyDirectorDashboardController::class, 'franchiseApplicationDocs'])->name('franchise-application-docs');
 Route::post('/save-franchise-application-docs', [FranchiseApplicationController::class, 'saveFranchiseApplicationDocs'])->name('save-franchise-application-docs');
 Route::delete('/remove-franchise-application-docs/{franchise_application_doc}', [FranchiseApplicationController::class, 'removeFranchiseApplicationDocs'])->name('remove-franchise-application-docs');
-
 
 Route::group(['middleware' => ['auth']], function () {
 
@@ -292,7 +280,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('student_details_card', [DeputyDirectorDashboardController::class, 'student_details_card'])->name('student-details-card');
     Route::get('graph_data', [DeputyDirectorDashboardController::class, 'graph_data'])->name('graph-data');
     Route::get('on_boarding_list', [DeputyDirectorDashboardController::class, 'on_boarding_list'])->name('on-boarding-list');
-    //Route::get('/fee_structure_dd', [DeputyDirectorDashboardController::class, 'fee_structure_dd'])->name('fee-structure-dd');
+    // Route::get('/fee_structure_dd', [DeputyDirectorDashboardController::class, 'fee_structure_dd'])->name('fee-structure-dd');
     Route::get('/fee-structure-filter', [DeputyDirectorDashboardController::class, 'fee_structure_filter'])->name('fee-structure-filter');
     Route::get('/dd-visit-request', [DeputyDirectorDashboardController::class, 'dd_visit_request'])->name('dd-visit-request');
     Route::post('/mark-attendance-in', [EmployeeAttendanceController::class, 'store'])->name('mark-attendance-in');
@@ -322,9 +310,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/student-trends-data', [CrmBoardController::class, 'getStudentTrendsData'])->name('student-trends-data');
     // CRM Routes Ends Here
 
-
     Route::resource('franchises-inquiry', FranchiseInquiryController::class);
-
 
     // Inquiry routes starts from here
     Route::resource('franchises', FranchiseInquiryOldController::class, ['except' => ['update']]);
@@ -360,7 +346,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/inquiry-existing-building', [FranchiseInquiryOldController::class, 'inquiryExistingBuilding'])->name('inquiry-existing-building');
     Route::post('/inquiry-property-details', [FranchiseInquiryOldController::class, 'inquiryPropertyDetails'])->name('inquiry-property-details');
 
-
     Route::get('/get-students/{branch_class_section_id}/{subject_id?}/{date?}', [StudentAttendanceController::class, 'getStudents'])->name('getStudents');
     Route::get('/view-attendance-calendar/{branch_class_section_id}/{subject_id}', [StudentAttendanceController::class, 'viewAttendanceCalendar'])->name('viewAttendanceCalendar');
     Route::resources(['student-attendances' => StudentAttendanceController::class]);
@@ -371,7 +356,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('student-transfer-form-create', [StudentTransferCaseController::class, 'printTransferCase'])->name('students-transfer-form-create');
     Route::get('student-transfer-cancellation-form', [StudentTransferCaseController::class, 'createTransferCancellation'])->name('student-transfer-cancellation-form');
     Route::post('student-transfer-cancellation-store', [StudentTransferCaseController::class, 'storeTransferCancellation'])->name('student-transfer-cancellation-store');
-    //transfer case approval section
+    // transfer case approval section
     Route::get('student-transfer-approval-form', [StudentTransferCaseController::class, 'createTransferApproval'])->name('student-transfer-approval-form');
     Route::post('student-transfer-approval-store', [StudentTransferCaseController::class, 'storeTransferApproval'])->name('student-transfer-approval-store');
 
@@ -379,20 +364,17 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('student-withdrawal-form-create', [StudentWithdrawalController::class, 'createWithdrawalForm'])->name('students-withdrawal-form-create');
     Route::get('student-withdrawal-cancellation-form', [StudentWithdrawalController::class, 'createWithdrawalCancellation'])->name('student-withdrawal-cancellation-form');
     Route::post('student-withdrawal-cancellation-store', [StudentWithdrawalController::class, 'storeWithdrawalCancellation'])->name('student-withdrawal-cancellation-store');
-    //Withdrawal approval section
+    // Withdrawal approval section
     Route::get('student-withdrawal-approval-form', [StudentWithdrawalController::class, 'createWithdrawalApproval'])->name('student-withdrawal-approval-form');
     Route::post('student-withdrawal-approval-store', [StudentWithdrawalController::class, 'storeWithdrawalApproval'])->name('student-withdrawal-approval-store');
-    //Withdrawal Refund section
+    // Withdrawal Refund section
     Route::get('student-withdrawal-refund-form', [StudentWithdrawalController::class, 'createWithdrawalRefund'])->name('student-withdrawal-refund-form');
     Route::post('student-withdrawal-refund-store', [StudentWithdrawalController::class, 'storeWithdrawalRefund'])->name('student-withdrawal-refund-store');
     Route::get('student-withdrawal-requests', [StudentWithdrawalController::class, 'withdrawalRequests'])->name('students-withdrawal-requests');
     Route::delete('student-withdrawal-requests-delete', [StudentWithdrawalController::class, 'withdrawalRequestsDelete'])->name('students-withdrawal-requests-delete');
 
-
     Route::get('auto-withdrawal', [StudentWithdrawalController::class, 'auto_withdrawal'])->name('auto-withdrawal');
     Route::post('update-auto-withdraw-students', [StudentWithdrawalController::class, 'updateAutoWithdrawalStudents'])->name('update-auto-withdraw-students');
-
-
 
     Route::resource('lesson-plans', LessonPlanController::class);
     Route::resource('class-subjects', ClassSubjectController::class);
@@ -421,23 +403,18 @@ Route::group(['middleware' => ['auth']], function () {
 
     // HOMEWORK API
 
-
     Route::get('teacher_evaluation', [TeacherObservationController::class, 'index'])->name('teacher_evaluation.index');
-
 
     Route::get('/teacher_evaluation/create', [TeacherObservationController::class, 'create'])->name('teacher_evaluation.create');
     Route::post('/teacher_evaluation', [TeacherObservationController::class, 'store'])->name('teacher_evaluation.store');
     Route::get('/teacher_evaluation/teachers/{branchId}', [TeacherObservationController::class, 'getTeachersByBranch'])->name('teacher_evaluation.teachers');
 
-
     Route::get('/observation_details/create', [ObservationDetailController::class, 'create'])->name('observation_details.create');
     Route::post('/observation_details', [ObservationDetailController::class, 'store'])->name('observation_details.store');
     Route::get('/getSections/{classId}', [ObservationDetailController::class, 'getSections']);
 
-
     Route::get('/observation_details/competency/{id}', [ObservationDetailController::class, 'getRatingView'])
         ->name('observation_details.competency');
-
 
     Route::post('/save-ratings', [ObservationDetailController::class, 'saveDimensionRatings'])->name('save-dimension-ratings');
 
@@ -450,8 +427,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::put('answer-dimensions/{answerDimension}', [AnswerDimensionController::class, 'update'])->name('answer-dimensions.update');
     Route::delete('answer-dimensions/{answerDimension}', [AnswerDimensionController::class, 'destroy'])->name('answer-dimensions.destroy');
 
-
-
     Route::get('question-dimensions', [QuestionDimensionController::class, 'index'])->name('question-dimensions.index');
     Route::get('question-dimensions/create', [QuestionDimensionController::class, 'create'])->name('question-dimensions.create');
     Route::post('question-dimensions', [QuestionDimensionController::class, 'store'])->name('question-dimensions.store');
@@ -462,7 +437,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::put('question-dimensions/{questionDimension}', [QuestionDimensionController::class, 'update'])->name('question-dimensions.update');
     Route::delete('question-dimensions/{questionDimension}', [QuestionDimensionController::class, 'destroy'])->name('question-dimensions.destroy');
 
-
     // Route to display the form for creating a new timetable entry
     Route::get('/timetables/create', [TimetableController::class, 'create'])->name('timetables.create');
     Route::get('/timetables', [TimetableController::class, 'index'])->name('timetables.index');
@@ -471,8 +445,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::delete('timetables/{id}', [TimetableController::class, 'destroy'])->name('timetables.destroy');
     Route::get('get-teacher-by-branches/{branch}', [TimetableController::class, 'getEmployeesByBranch']);
 
-
-
     // Route to store the new timetable entry
     Route::post('/timetables', [TimetableController::class, 'store'])->name('timetables.store');
     // Route::get('/get-teachers/{branch}', [TimetableController::class, 'getTeachersByBranch']);
@@ -480,12 +452,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/get-section-by-classes', [TimetableController::class, 'getSectionbyClasses'])->name('getSectionbyClasses');
     Route::post('/get-subject-by-classes', [TimetableController::class, 'getSubjectbyClasses'])->name('getSubjectbyClasses');
 
-
-
-
-
     // Route::get('/observation_details/competency', [ObservationDetailController::class, 'competency'])->name('observation_details.competency');
-
 
     Route::resources(['visitDetail' => VisitDetailController::class]);
     Route::get('/edit-visit-status/{id}', [VisitDetailController::class, 'edit_visit_status'])->name('edit-visit-status');
@@ -739,7 +706,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('parent-queries/index', [ParentQueryController::class, 'index'])->name('parent-queries.index');
     Route::resources(['gradebook-history' => GradeBookHistoryController::class]);
 
-    //Resource route to manage curriculam
+    // Resource route to manage curriculam
     Route::resources(['curriculum' => \App\Http\Controllers\CurriculumController::class]);
     Route::get('show-curriculum', [\App\Http\Controllers\CurriculumController::class, 'show'])->name('show-curriculum');
     Route::post('store-curriculum', [\App\Http\Controllers\CurriculumController::class, 'store'])->name('store-curriculum');
@@ -766,14 +733,13 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('network-associates/profile/{id}', [NetworkAssociateController::class, 'profile'])->name('network-associates.profile');
 
         Route::resources(['designationLeaveQuota' => DesignationLeaveQuotaController::class]);
-        //Route::get('designation/leave-quotas', [DesignationLeaveQuotaController::class, 'index'])->name('designation-leave-quotas.index');
+        // Route::get('designation/leave-quotas', [DesignationLeaveQuotaController::class, 'index'])->name('designation-leave-quotas.index');
         Route::post('designation/leave-quota', [DesignationLeaveQuotaController::class, 'store'])->name('designation-leave-quota.store');
         Route::get('designation/leave-quota/{id}/edit', [DesignationLeaveQuotaController::class, 'show'])->name('designation-leave-quota.edit');
         Route::post('designation/leave-quota/delete', [DesignationLeaveQuotaController::class, 'delete'])->name('designation-leave-quota.delete');
     });
 
-    Route::group(['middleware' => ['role:super_admin|network_associate|teacher|academic_head']], function () {
-    });
+    Route::group(['middleware' => ['role:super_admin|network_associate|teacher|academic_head']], function () {});
 
     Route::group(['middleware' => ['role:super_admin|network_associate|finance-manager|accountant']], function () {
         Route::resources(['beams-challans' => BeamsChallanController::class]);
@@ -883,6 +849,24 @@ Route::group(['middleware' => ['auth']], function () {
             Route::delete('/student-previous-schools/{studentPreviousSchool}', [App\Http\Controllers\AcademicSettingsController::class, 'destroyStudentPreviousSchool'])->name('destroy-student-previous-school');
         });
 
+        // Unified Subject Settings Routes
+        Route::prefix('subject-settings')->name('subject-settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\SubjectSettingsController::class, 'index'])->name('index');
+            Route::get('/subjects/{subject}', [App\Http\Controllers\SubjectSettingsController::class, 'getSubject'])->name('get-subject');
+            Route::get('/subject-groups/{subjectGroup}', [App\Http\Controllers\SubjectSettingsController::class, 'getSubjectGroup'])->name('get-subject-group');
+
+            Route::get('/subjects-data', [App\Http\Controllers\SubjectSettingsController::class, 'getSubjects'])->name('get-subjects');
+            Route::get('/subject-groups-data', [App\Http\Controllers\SubjectSettingsController::class, 'getSubjectGroups'])->name('get-subject-groups');
+
+            Route::post('/subjects', [App\Http\Controllers\SubjectSettingsController::class, 'storeSubject'])->name('store-subject');
+            Route::put('/subjects/{subject}', [App\Http\Controllers\SubjectSettingsController::class, 'updateSubject'])->name('update-subject');
+            Route::delete('/subjects/{subject}', [App\Http\Controllers\SubjectSettingsController::class, 'destroySubject'])->name('destroy-subject');
+
+            Route::post('/subject-groups', [App\Http\Controllers\SubjectSettingsController::class, 'storeSubjectGroup'])->name('store-subject-group');
+            Route::put('/subject-groups/{subjectGroup}', [App\Http\Controllers\SubjectSettingsController::class, 'updateSubjectGroup'])->name('update-subject-group');
+            Route::delete('/subject-groups/{subjectGroup}', [App\Http\Controllers\SubjectSettingsController::class, 'destroySubjectGroup'])->name('destroy-subject-group');
+        });
+
         Route::resources(['system-modules' => SystemModuleController::class]);
         Route::resources(['withdrawal-reason' => WithdrawalReasonController::class]);
         Route::resources(['withdrawal-cancellation-reason' => WithdrawalCancellationReasonController::class]);
@@ -902,6 +886,37 @@ Route::group(['middleware' => ['auth']], function () {
             Route::post('/taxes', [App\Http\Controllers\TaxSettingsController::class, 'storeTax'])->name('store-tax');
             Route::put('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'updateTax'])->name('update-tax');
             Route::delete('/taxes/{tax}', [App\Http\Controllers\TaxSettingsController::class, 'destroyTax'])->name('destroy-tax');
+        });
+
+        // Unified Class & Subject Settings Routes
+        Route::prefix('class-subject-settings')->name('class-subject-settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\ClassSubjectSettingsController::class, 'index'])->name('index');
+
+            Route::get('/classes/{class}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getClass'])->name('get-class');
+            Route::get('/class-subjects/{classSubject}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getClassSubject'])->name('get-class-subject');
+            Route::get('/subjects/{subject}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getSubject'])->name('get-subject');
+            Route::get('/subject-groups/{subjectGroup}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getSubjectGroup'])->name('get-subject-group');
+
+            Route::get('/classes-data', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getClasses'])->name('get-classes');
+            Route::get('/class-subjects-data', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getClassSubjects'])->name('get-class-subjects');
+            Route::get('/subjects-data', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getSubjects'])->name('get-subjects');
+            Route::get('/subject-groups-data', [App\Http\Controllers\ClassSubjectSettingsController::class, 'getSubjectGroups'])->name('get-subject-groups');
+
+            Route::post('/classes', [App\Http\Controllers\ClassSubjectSettingsController::class, 'storeClass'])->name('store-class');
+            Route::put('/classes/{class}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'updateClass'])->name('update-class');
+            Route::delete('/classes/{class}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'destroyClass'])->name('destroy-class');
+
+            Route::post('/class-subjects', [App\Http\Controllers\ClassSubjectSettingsController::class, 'storeClassSubject'])->name('store-class-subject');
+            Route::put('/class-subjects/{classSubject}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'updateClassSubject'])->name('update-class-subject');
+            Route::delete('/class-subjects/{classSubject}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'destroyClassSubject'])->name('destroy-class-subject');
+
+            Route::post('/subjects', [App\Http\Controllers\ClassSubjectSettingsController::class, 'storeSubject'])->name('store-subject');
+            Route::put('/subjects/{subject}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'updateSubject'])->name('update-subject');
+            Route::delete('/subjects/{subject}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'destroySubject'])->name('destroy-subject');
+
+            Route::post('/subject-groups', [App\Http\Controllers\ClassSubjectSettingsController::class, 'storeSubjectGroup'])->name('store-subject-group');
+            Route::put('/subject-groups/{subjectGroup}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'updateSubjectGroup'])->name('update-subject-group');
+            Route::delete('/subject-groups/{subjectGroup}', [App\Http\Controllers\ClassSubjectSettingsController::class, 'destroySubjectGroup'])->name('destroy-subject-group');
         });
 
         // Activity Logs Routes
@@ -926,7 +941,7 @@ Route::group(['middleware' => ['auth']], function () {
         Route::resources(['users' => UsersController::class]);
         Route::resources(['permissions' => PermissionController::class]);
         Route::resources(['roles' => RoleController::class]);
-        //Route::get('/list_employees_roles_permissions', [UsersController::class,'userRolesPermissionList'])->name('roles-permission-assignment-list');
+        // Route::get('/list_employees_roles_permissions', [UsersController::class,'userRolesPermissionList'])->name('roles-permission-assignment-list');
         Route::get('/roles-permission-assignment-list', [UsersController::class, 'userRolesPermissionList'])->name('roles-permission-assignment-list');
         Route::get('edit-with-role-permissions/{id}', [UsersController::class, 'editUserRolesPermissions'])->name('edit-with-role-permissions');
         Route::post('assign-role-permissions/{id}', [UsersController::class, 'updateUserRolesPermissions'])->name('assign-role-permissions');
@@ -979,10 +994,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/get-curriculum-attainment-targets', [LessonPlanController::class, 'getCurriculumAttainmentTargets'])
         ->name('get-curriculum-attainment-targets');
 
-
-
-
-
     Route::get('/list-branch-terms', [CommonController::class, 'listBranchTerms'])->name('list-branch-terms');
     Route::get('/list-term-weeks', [CommonController::class, 'listTermWeeks'])->name('list-term-weeks');
     Route::get('/get-fee-period', [CommonController::class, 'getFeePeriod'])->name('get-fee-period');
@@ -1020,7 +1031,6 @@ Route::post('extra-curriculum/storeEca', [ExtraCurriculumController::class, 'sto
 Route::get('extra-curriculum/getEcaInfo', [ExtraCurriculumController::class, 'getEcaInfo'])->name('extra-curriculum.getEcaInfo');
 Route::get('extra-curriculum/getEcaInfoForEdit/{id}', [ExtraCurriculumController::class, 'getEcaInfoForEdit'])->name('extra-curriculum.getEcaInfoForEdit');
 Route::put('extra-curriculum/updateEca/{id}', [ExtraCurriculumController::class, 'updateEca'])->name('extra-curriculum.updateEca');
-
 
 Route::get('test_email/{is_direct?}', [LessonPlanController::class, 'test_email'])->name('test_email');
 
@@ -1065,7 +1075,7 @@ Route::resource('payrolls', PayrollController::class)->middleware(['auth', 'role
 Route::post('payrolls/summary', [PayrollController::class, 'fetchPayrollSummary'])->name('payrolls.summary');
 Route::post('payrolls/available-employees', [PayrollController::class, 'getAvailableEmployees'])->name('payrolls.available-employees');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:super_admin|human_resource'])->group(function () {
     // Purchase Request Routes
@@ -1125,13 +1135,13 @@ Route::prefix('fixed-assets')->name('fixed-assets.')->middleware(['auth', 'role:
     Route::delete('suppliers/{id}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
 
     // Assets Routes
-               Route::get('assets', [AssetController::class, 'index'])->name('assets.index');
-           Route::get('assets/create', [AssetController::class, 'create'])->name('assets.create');
-           Route::get('assets/{id}/edit', [AssetController::class, 'edit'])->name('assets.edit');
-           Route::get('assets/generate-tag', [AssetController::class, 'generateAssetTag'])->name('assets.generate-tag');
-           Route::get('assets/users-by-department-branch', [AssetController::class, 'getUsersByDepartmentBranch'])->name('assets.users-by-department-branch');
-           Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
-           Route::post('assets', [AssetController::class, 'store'])->name('assets.store');
+    Route::get('assets', [AssetController::class, 'index'])->name('assets.index');
+    Route::get('assets/create', [AssetController::class, 'create'])->name('assets.create');
+    Route::get('assets/{id}/edit', [AssetController::class, 'edit'])->name('assets.edit');
+    Route::get('assets/generate-tag', [AssetController::class, 'generateAssetTag'])->name('assets.generate-tag');
+    Route::get('assets/users-by-department-branch', [AssetController::class, 'getUsersByDepartmentBranch'])->name('assets.users-by-department-branch');
+    Route::get('assets/export', [AssetController::class, 'export'])->name('assets.export');
+    Route::post('assets', [AssetController::class, 'store'])->name('assets.store');
     Route::put('assets/{id}', [AssetController::class, 'update'])->name('assets.update');
     Route::delete('assets/{id}', [AssetController::class, 'destroy'])->name('assets.destroy');
 
@@ -1167,6 +1177,7 @@ Route::get('/student-import-log', function () {
         return response('Log file does not exist.', 404);
     }
     $content = File::get($logPath);
+
     return response($content, 200, [
         'Content-Type' => 'text/plain',
     ]);
@@ -1189,6 +1200,7 @@ Route::middleware(['auth'])->group(function () {
 // Debug route for permissions - remove after testing
 Route::get('debug-permissions', function () {
     $user = Auth::user();
+
     return [
         'user_id' => $user->id,
         'user_name' => $user->name,

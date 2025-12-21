@@ -1,139 +1,170 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" class="h-full">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SuperNovaSchool - Login</title>
-    <link rel="shortcut icon" href="{{ asset('Favicon.png') }}">
-    <link href='https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap' rel='stylesheet'>
+    <title>Academiqo - Login</title>
+    <link rel="shortcut icon" href="{{ asset('assets/logo/academiqo.png') }}">
+    <link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap' rel='stylesheet'>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
         }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
-        .input-focus:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(56, 181, 147, 0.3);
+        
+        .logo-container {
+            padding: 2rem 0 1rem;
         }
-        .btn-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px -5px rgba(56, 181, 147, 0.4);
+        
+        .logo-image {
+            height: 80px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
         }
-        .modern-button {
-            width: 100%;
-            background: linear-gradient(135deg, #38B593 0%, #2d8f73 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 16px 24px;
-            font-size: 16px;
+        
+        .brand-name {
+            font-size: 1.75rem;
             font-weight: 700;
-            text-transform: uppercase;
+            color: #1a202c;
+            letter-spacing: -0.5px;
+            margin-top: 1rem;
+        }
+        
+        .brand-tagline {
+            font-size: 0.875rem;
+            color: #718096;
+            font-weight: 500;
             letter-spacing: 0.5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(56, 181, 147, 0.3);
+            margin-top: 0.5rem;
         }
-        .modern-button:hover {
-            background: linear-gradient(135deg, #2d8f73 0%, #38B593 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(56, 181, 147, 0.4);
+        
+        .form-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
         }
-        .modern-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 10px rgba(56, 181, 147, 0.3);
+        
+        .form-subtitle {
+            font-size: 0.9375rem;
+            color: #718096;
+            font-weight: 400;
         }
-        .modern-button:focus {
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(56, 181, 147, 0.2), 0 8px 25px rgba(56, 181, 147, 0.4);
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
         }
-        .modern-button svg {
-            transition: transform 0.3s ease;
+        
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
         }
-        .modern-button:hover svg {
-            transform: translateX(4px);
-        }
-        .modern-input {
-            background: #ffffff;
+        
+        .input-field {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            font-size: 0.9375rem;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 16px 20px;
-            font-size: 15px;
-            transition: all 0.3s ease;
+            border-radius: 0.5rem;
+            background: #ffffff;
+            color: #1a202c;
+            transition: all 0.2s ease;
         }
-        .modern-input:focus {
+        
+        .input-field:focus {
             outline: none;
-            border-color: #38B593;
-            background: #f9fafb;
-            box-shadow: 0 0 0 4px rgba(56, 181, 147, 0.1);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
-        .modern-input::placeholder {
+        
+        .input-field::placeholder {
             color: #9ca3af;
         }
-        .input-wrapper {
-            position: relative;
-        }
+        
         .input-icon {
             position: absolute;
-            left: 18px;
+            left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #6b7280;
+            color: #9ca3af;
+            font-size: 1rem;
             pointer-events: none;
-            z-index: 10;
         }
-        .input-with-icon {
-            padding-left: 50px !important;
-        }
-        .checkbox-modern {
-            width: 20px;
-            height: 20px;
-            border-radius: 6px;
-            border: 2px solid #d1d5db;
+        
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
             cursor: pointer;
-            transition: all 0.2s ease;
+            padding: 0.5rem;
+            transition: color 0.2s;
         }
+        
+        .password-toggle:hover {
+            color: #667eea;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
         .custom-checkbox {
-            appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 1.125rem;
+            height: 1.125rem;
             border: 2px solid #d1d5db;
-            border-radius: 6px;
-            background-color: white;
+            border-radius: 0.25rem;
+            background: white;
             cursor: pointer;
             position: relative;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
+        
         .custom-checkbox:checked {
-            background-color: #38B593;
-            border-color: #38B593;
+            background: #667eea;
+            border-color: #667eea;
         }
+        
         .custom-checkbox:checked::after {
             content: '✓';
             position: absolute;
@@ -141,220 +172,227 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            font-size: 14px;
+            font-size: 0.75rem;
             font-weight: bold;
         }
-        .custom-checkbox:hover {
-            border-color: #38B593;
+        
+        .checkbox-label {
+            font-size: 0.875rem;
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
         }
-        .link-modern {
-            color: #38B593;
+        
+        .forgot-link {
+            font-size: 0.875rem;
+            color: #667eea;
             font-weight: 600;
             text-decoration: none;
-            transition: all 0.2s ease;
-            position: relative;
+            transition: color 0.2s;
         }
-        .link-modern:hover {
-            color: #2d8f73;
+        
+        .forgot-link:hover {
+            color: #5568d3;
             text-decoration: underline;
         }
-        .link-modern::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -2px;
-            left: 0;
-            background-color: #38B593;
-            transition: width 0.3s ease;
-        }
-        .link-modern:hover::after {
+        
+        .submit-button {
             width: 100%;
+            padding: 0.875rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-button:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .error-text {
+            color: #dc2626;
+            font-size: 0.8125rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .footer-text {
+            text-align: center;
+            font-size: 0.8125rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 2rem;
+        }
+        
+        .footer-link {
+            color: white;
+            text-decoration: underline;
+            font-weight: 500;
         }
     </style>
 </head>
 
-<body class="min-h-screen relative overflow-hidden">
-    <!-- Animated Background -->
-    <div class="absolute inset-0 gradient-bg opacity-90"></div>
-    
-    <!-- Decorative Shapes -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 float-animation"></div>
-        <div class="absolute top-40 right-10 w-72 h-72 bg-secondary/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 float-animation" style="animation-delay: 2s;"></div>
-        <div class="absolute -bottom-8 left-1/2 w-72 h-72 bg-accent/20 rounded-full mix-blend-multiply filter blur-xl opacity-70 float-animation" style="animation-delay: 4s;"></div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 z-10">
-        <div class="w-full max-w-md">
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md fade-in-up">
+        <div class="login-container rounded-2xl p-8 sm:p-10">
             <!-- Logo Section -->
-            <div class="text-center mb-8 sm:mb-10 float-animation">
-                <img src="{{ asset('Group.png') }}" alt="SuperNovaSchool Logo" 
-                     class="mx-auto max-w-[280px] sm:max-w-[320px] drop-shadow-2xl" />
+            <div class="logo-container text-center">
+                <img src="{{ asset('assets/logo/academiqo.png') }}" alt="Academiqo Logo" class="logo-image mx-auto" />
+                <h1 class="brand-name">Academiqo</h1>
+                <p class="brand-tagline">Innovate. Educate. Elevate.</p>
             </div>
-
-            <!-- Login Card -->
-            <div class="card glass-effect shadow-2xl border-0">
-                <div class="card-body p-6 sm:p-8 lg:p-10">
-                    <!-- Header -->
-                    <div class="text-center mb-6 sm:mb-8">
-                        <h2 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-3">
-                            Welcome Back
-                        </h2>
-                        <p class="text-base sm:text-lg text-base-content/70 font-medium">
-                            Sign in to continue to SuperNovaSchool
-                        </p>
+            <!-- Error Messages -->
+            @if ($errors->any())
+                <div class="error-message">
+                    <div class="flex flex-col gap-1">
+                        @foreach ($errors->all() as $error)
+                            <span>{{ $error }}</span>
+                        @endforeach
                     </div>
-
-                    <!-- Error Messages -->
-                    @if ($errors->any())
-                        <div class="alert alert-error mb-4 sm:mb-6 shadow-lg animate-pulse">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div class="flex flex-col gap-1">
-                                @foreach ($errors->all() as $error)
-                                    <span class="text-sm font-medium">{{ $error }}</span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (session('status'))
-                        <div class="alert alert-success mb-4 sm:mb-6 shadow-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span class="text-sm font-medium">{{ session('status') }}</span>
-                        </div>
-                    @endif
-
-                    <!-- Login Form -->
-                    <form method="POST" action="{{ route('login') }}" class="space-y-5 sm:space-y-6">
-                        @csrf
-
-                        <!-- Email/Username Field -->
-                        <div class="form-control">
-                            <label class="label pb-3" for="email">
-                                <span class="label-text font-semibold text-base-content text-sm sm:text-base">
-                                    Username or Email
-                                </span>
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-user input-icon"></i>
-                                <input 
-                                    type="text" 
-                                    name="email" 
-                                    id="email"
-                                    value="{{ old('email') }}"
-                                    placeholder="Enter your username or email"
-                                    class="modern-input input-with-icon w-full @error('email') border-error @enderror"
-                                    required 
-                                    autofocus
-                                    autocomplete="username"
-                                />
-                            </div>
-                            @error('email')
-                                <label class="label pt-2 pb-0">
-                                    <span class="label-text-alt text-error font-medium flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {{ $message }}
-                                    </span>
-                                </label>
-                            @enderror
-                        </div>
-
-                        <!-- Password Field -->
-                        <div class="form-control">
-                            <label class="label pb-3" for="password">
-                                <span class="label-text font-semibold text-base-content text-sm sm:text-base">
-                                    Password
-                                </span>
-                            </label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-lock input-icon"></i>
-                                <input 
-                                    type="password" 
-                                    name="password" 
-                                    id="password"
-                                    placeholder="Enter your password"
-                                    class="modern-input input-with-icon w-full pr-14 @error('password') border-error @enderror"
-                                    required
-                                    autocomplete="current-password"
-                                />
-                                <button 
-                                    type="button"
-                                    onclick="togglePassword()"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
-                                    aria-label="Toggle password visibility"
-                                >
-                                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                    <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                    </svg>
-                                </button>
-                            </div>
-                            @error('password')
-                                <label class="label pt-2 pb-0">
-                                    <span class="label-text-alt text-error font-medium flex items-center gap-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {{ $message }}
-                                    </span>
-                                </label>
-                            @enderror
-                        </div>
-
-                        <!-- Remember Me & Forgot Password -->
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 pt-1">
-                            <label class="flex items-center gap-3 cursor-pointer group" for="remember">
-                                <input 
-                                    type="checkbox" 
-                                    name="remember" 
-                                    id="remember"
-                                    class="custom-checkbox"
-                                />
-                                <span class="text-sm sm:text-base font-medium text-gray-700 group-hover:text-gray-900 transition-colors cursor-pointer select-none">
-                                    Remember me
-                                </span>
-                            </label>
-                            <a 
-                                href="{{ route('password.request') }}" 
-                                class="link-modern text-sm sm:text-base"
-                            >
-                                Forgot Password?
-                            </a>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="form-control mt-8 sm:mt-10">
-                            <button 
-                                type="submit" 
-                                class="modern-button"
-                            >
-                                <span>Sign In</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </button>
-                        </div>
-                    </form>
                 </div>
-            </div>
+            @endif
 
-            <!-- Footer Text -->
-            <p class="text-center text-xs sm:text-sm text-white/90 mt-8 sm:mt-10 px-4 font-medium drop-shadow-lg">
-                By continuing, you indicate that you have read and agreed to the 
-                <a href="#" class="link link-info hover:link-hover font-semibold underline">Terms of Use</a>
-            </p>
+            @if (session('status'))
+                <div class="success-message">
+                    {{ session('status') }}
+                </div>
+            @endif
+
+            <!-- Login Form -->
+            <form method="POST" action="{{ route('login') }}">
+                @csrf
+
+                <!-- Email/Username Field -->
+                <div class="input-group">
+                    <label class="input-label" for="email">
+                        Username or Email
+                    </label>
+                    <div style="position: relative;">
+                        <i class="fas fa-user input-icon"></i>
+                        <input 
+                            type="text" 
+                            name="email" 
+                            id="email"
+                            value="{{ old('email') }}"
+                            placeholder="Enter your username or email"
+                            class="input-field @error('email') border-red-500 @enderror"
+                            required 
+                            autofocus
+                            autocomplete="username"
+                        />
+                    </div>
+                    @error('email')
+                        <div class="error-text">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+
+                <!-- Password Field -->
+                <div class="input-group">
+                    <label class="input-label" for="password">
+                        Password
+                    </label>
+                    <div style="position: relative;">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="password"
+                            placeholder="Enter your password"
+                            class="input-field pr-12 @error('password') border-red-500 @enderror"
+                            required
+                            autocomplete="current-password"
+                        />
+                        <button 
+                            type="button"
+                            onclick="togglePassword()"
+                            class="password-toggle"
+                            aria-label="Toggle password visibility"
+                        >
+                            <i id="eye-icon" class="fas fa-eye"></i>
+                            <i id="eye-off-icon" class="fas fa-eye-slash hidden"></i>
+                        </button>
+                    </div>
+                    @error('password')
+                        <div class="error-text">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ $message }}
+                        </div>
+                    @enderror
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex justify-between items-center mb-6">
+                    <label class="checkbox-wrapper">
+                        <input 
+                            type="checkbox" 
+                            name="remember" 
+                            id="remember"
+                            class="custom-checkbox"
+                        />
+                        <span class="checkbox-label">Remember me</span>
+                    </label>
+                    <a href="{{ route('password.request') }}" class="forgot-link">
+                        Forgot Password?
+                    </a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-button">
+                    <span>Sign In</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </button>
+            </form>
         </div>
+
+        <!-- Footer -->
+        <p class="footer-text">
+            By continuing, you indicate that you have read and agreed to the 
+            <a href="#" class="footer-link">Terms of Use</a>
+        </p>
     </div>
 
     <script>

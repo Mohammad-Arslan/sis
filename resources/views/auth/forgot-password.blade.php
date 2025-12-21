@@ -2,7 +2,7 @@
     <x-guest-layout>
         <div class="form-inline form-bg">
             <div class="form-img get-center">
-                <img src="{{ asset('registration_slip_logo_twofactor.png') }}" alt="img">
+                <img src="{{ asset('assets/logo/academiqo.png') }}" alt="Academiqo Logo">
                 {{-- <x-slot name="logo">
                     <a href="/">
                         <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
